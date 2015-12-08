@@ -4,13 +4,14 @@ from datetime import datetime
 from tryp import _
 
 from trypnv.machine import may_handle, message
+from trypnv import Log
 
 from proteome.state import ProteomeComponent
 from proteome.env import Env
 from proteome.git import HistoryGit
 from proteome.project import Project
+from proteome.plugins.core import Init
 
-Init = message('Init')
 Commit = message('Commit')
 
 

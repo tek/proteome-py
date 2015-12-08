@@ -4,10 +4,10 @@ import neovim  # type: ignore
 
 from tryp import List
 
-from trypnv import command, NvimStatePlugin, msg_command
+from trypnv import command, NvimStatePlugin, msg_command, Log
 
 from proteome.plugins.core import (AddByName, Show, Create, SwitchRoot, Next,
-                                   Prev)
+                                   Prev, Init)
 from proteome.main import Proteome
 from proteome.nvim import NvimFacade
 
@@ -40,6 +40,7 @@ class ProteomeNvimPlugin(NvimStatePlugin):
             .get_or_else(List())
         plugins = self.vim.pl('plugins') | List()
         self.pro = Proteome(self.vim, Path(config_path), plugins, bases)
+        self.pro.send(Init())
         self.vim.vim.call('ptplugin#runtime_after')
 
     @command()

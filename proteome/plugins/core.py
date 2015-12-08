@@ -10,6 +10,7 @@ from proteome.project import Project
 from proteome.env import Env
 
 
+Init = message('Init')
 Add = message('Add')
 AddByName = message('AddByName', 'name')
 Create = message('Create', 'name', 'root')
@@ -17,6 +18,7 @@ Next = message('Next')
 Prev = message('Prev')
 SetRoot = message('SetRoot')
 SwitchRoot = message('SwitchRoot', 'name')
+Save = message('Save')
 
 
 class Show(Message):
@@ -26,6 +28,18 @@ class Show(Message):
 
 
 class Plugin(ProteomeComponent):
+
+    @property
+    def _default_current(self):
+        tpe = self.vim.pvar('current_project_type')
+        return Project('current', Path.cwd(), tpe)
+
+    @may_handle(Init)
+    def init(self, env: Env, msg):
+        current = self.vim.pvar('current_project')\
+            .flat_map(env.loader.by_name)\
+            .get_or_else(self._default_current)
+        return env.add(current)
 
     @may_handle(Add)
     def add(self, env: Env, msg):
