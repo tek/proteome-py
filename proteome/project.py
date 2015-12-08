@@ -51,6 +51,11 @@ class Project(object):
         if self.tag_file.exists():
             self.tag_file.unlink()
 
+    @property
+    def fqn(self):
+        t = self.tpe.get_or_else('notype')
+        return '{}__{}'.format(t, self.name)
+
 
 class Projects(object):
 

@@ -1,31 +1,48 @@
+from typing import Callable, Any
+from datetime import datetime
+
 from tryp import _
 
 from trypnv.machine import may_handle, message
 
 from proteome.state import ProteomeComponent
 from proteome.env import Env
-from proteome.git import GitExecutor
+from proteome.git import HistoryGit
 from proteome.project import Project
 
+Init = message('Init')
 Commit = message('Commit')
 
 
 class Plugin(ProteomeComponent):
 
-    git = GitExecutor()
+    def __init__(self, *a, **kw):
+        super(Plugin, self).__init__(*a, **kw)
+        var = self.vim.pvar('history_base')
+        base = var.filter(_.is_dir)
+        if not base.isJust:
+            msg = 'g:proteome_history_base is not a directory ({})'
+            Log.error(msg.format(var))
+        self.git = HistoryGit(base.get_or_else('/dev/null'))
 
     def _commit(self, pro: Project):
-        return self.git.run(pro)
+        return self.git.commit_all(pro, datetime.now().isoformat())
 
-    @may_handle(Init)
-    def commit(self, env: Env, msg):
-        pass
+    def _init(self, pro: Project):
+        return self.git.init(pro)
 
-    @may_handle(Commit)
-    def commit(self, env: Env, msg):
+    def _handle(self, env: Env, handler: Callable[[Project], Any]):
         if self.git.ready:
             env.projects.projects\
                 .filter(_.want_history)\
-                .map(self._commit)
+                .map(handler)
+
+    @may_handle(Init)
+    def init(self, env: Env, msg):
+        self._handle(env, self._init)
+
+    @may_handle(Commit)
+    def commit(self, env: Env, msg):
+        self._handle(env, self._commit)
 
 __all__ = ['Commit', 'Plugin']
