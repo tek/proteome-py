@@ -37,7 +37,7 @@ class Project(object):
 
     @property
     def ctags_langs(self):
-        return self.langs + self.tpe.toList
+        return (self.langs + self.tpe.toList).distinct
 
     @property
     def want_ctags(self):
