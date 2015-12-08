@@ -20,6 +20,7 @@ class ProteomeComponent(Generic[A], Machine[A]):
     def __init__(self, name: str, v: NvimFacade) -> None:
         self.name = name
         self.vim = v
+        super(ProteomeComponent, self).__init__()
 
     def _command_by_message_name(self, name: str):
         msg_name = camelcaseify(name)
@@ -37,7 +38,7 @@ class ProteomeComponent(Generic[A], Machine[A]):
         return Empty()
 
 
-class ProteomeState(Generic[A], StateMachine[A]):
+class ProteomeState(StateMachine):
 
     def __init__(self, vim: NvimFacade) -> None:
         self.vim = vim
