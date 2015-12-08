@@ -3,9 +3,10 @@ from pathlib import Path
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
 
-from proteome import Proteome, Create, Projects
-from proteome.project import Project
+from proteome.nvim_plugin import Create
+from proteome.project import Project, Projects
 from proteome.plugins.core import Next, Prev
+from proteome.main import Proteome
 
 from tryp import List, Just, _
 

@@ -5,8 +5,7 @@ from fn import _  # type: ignore
 
 from tryp import Just, List
 
-from proteome import Projects
-from proteome.project import Project
+from proteome.project import Project, Projects
 
 from unit._support.loader import _LoaderSpec
 
