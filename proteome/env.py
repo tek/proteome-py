@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from proteome.project import Projects, Resolver, ProjectLoader
+from proteome.project import Projects, Resolver, ProjectLoader, Project
 
 from tryp import List, Map
 
@@ -42,5 +42,8 @@ class Env(pyrsistent.PRecord):
     def inc(self, num):
         new_index = (self.current_index + num) % self.project_count
         return self.set(current_index=new_index)
+
+    def add(self, pro: Project):
+        return self.set(projects=self.projects + pro)
 
 __all__ = ['Env']
