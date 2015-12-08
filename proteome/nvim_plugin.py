@@ -4,10 +4,10 @@ import neovim  # type: ignore
 
 from tryp import List
 
-from trypnv import command, NvimStatePlugin, msg_command, Log
+from trypnv import command, NvimStatePlugin, msg_command
 
 from proteome.plugins.core import (AddByName, Show, Create, SwitchRoot, Next,
-                                   Prev, Init)
+                                   Prev, Init, Save)
 from proteome.main import Proteome
 from proteome.nvim import NvimFacade
 
@@ -69,6 +69,10 @@ class ProteomeNvimPlugin(NvimStatePlugin):
 
     @msg_command(Prev)
     def pro_prev(self):
+        pass
+
+    @msg_command(Save)
+    def pro_save(self):
         pass
 
 
