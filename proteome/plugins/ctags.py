@@ -4,7 +4,7 @@ from trypnv.machine import may_handle, message
 
 from proteome.state import ProteomeComponent
 from proteome.env import Env
-from proteome.ctags import CTagsExecutor
+from proteome.ctags import Ctags
 from proteome.project import Project
 
 Gen = message('Gen')
@@ -13,7 +13,7 @@ Kill = message('Kill')
 
 class Plugin(ProteomeComponent):
 
-    ctags = CTagsExecutor()
+    ctags = Ctags()
 
     def _gen(self, pro: Project):
         return self.ctags.run(pro)
