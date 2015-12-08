@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Callable
 from pathlib import Path
 import shutil
 
@@ -7,7 +7,7 @@ from fn import F  # type: ignore
 import asyncio
 from asyncio.subprocess import PIPE  # type: ignore
 
-from tryp import Map, List
+from tryp import Map, List, Future
 
 from proteome.project import Project
 
@@ -16,14 +16,20 @@ from trypnv import Log
 
 class Result(object):
 
-    def __init__(self, success: bool, msg: str) -> None:
+    def __init__(self, job: 'Job', success: bool, out: str, err: str) -> None:
+        self.job = job
         self.success = success
-        self.msg = msg
+        self.out = out
+        self.err = err
 
     def __str__(self):
         return ('subprocess finished successfully'
                 if self.success
-                else 'subprocess failed: {}'.format(self.msg))
+                else 'subprocess failed: {} ({})'.format(self.msg, self.job))
+
+    @property
+    def msg(self):
+        return self.err if self.err else self.out
 
 
 class Job(object):
@@ -36,14 +42,15 @@ class Job(object):
         self.project = project
         self.exe = exe
         self.args = args
-        self.status = asyncio.Future()  # type: asyncio.Future
+        self.status = Future()  # type: Future
 
     def finish(self, f):
-        err, msg = f.result()
-        self.status.set_result(Result(err == 0, msg))
+        code, out, err = f.result()
+        self.status.set_result(Result(self, code == 0, out, err))
 
     def cancel(self, reason: str):
-        self.status.set_result(Result(False, 'canceled: {}'.format(reason)))
+        self.status.set_result(
+            Result(self, False, '', 'canceled: {}'.format(reason)))
 
     @property
     def valid(self):
@@ -66,27 +73,29 @@ class Job(object):
 
 class ProcessExecutor(object):
 
-    def __init__(self, current: Map[Project, Job]=Map()) -> None:
-        self.current = current
+    def __init__(self) -> None:
+        self.current = Map()  # type: Map[Project, Job]
 
-    @asyncio.coroutine
-    def process(self, job: Job):
-        return (yield from asyncio.create_subprocess_exec(  # type: ignore
+    async def process(self, job: Job):
+        return await asyncio.create_subprocess_exec(
             job.exe,
             *job.args,
             stdout=PIPE,
             stderr=PIPE,
             cwd=str(job.cwd),
-        ))
+        )
 
-    @asyncio.coroutine
-    def execute(self, job: Job):
-        proc = yield from self.process(job)
-        yield from proc.wait()  # type: ignore
-        err = yield from proc.stderr.readline()
-        return proc.returncode, err.decode()
+    async def execute(self, job: Job):
+        try:
+            proc = await self.process(job)
+            await proc.wait()  # type: ignore
+            out = await proc.stdout.read()
+            err = await proc.stderr.read()
+            return proc.returncode, out.decode(), err.decode()
+        except Exception as e:
+            return -111, '', 'exception: {}'.format(e)
 
-    def run(self, job: Job):
+    def run(self, job: Job) -> Future[Result]:
         ''' return values of execute are set as result of the task
         returned by ensure_future(), obtainable via task.result()
         '''
@@ -98,7 +107,7 @@ class ProcessExecutor(object):
         else:
             Log.error('invalid execution job: {}'.format(job))
             job.cancel('invalid')
-        return job
+        return job.status
 
     def _can_execute(self, job: Job):
         return job.project not in self.current and job.valid

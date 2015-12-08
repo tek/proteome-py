@@ -16,7 +16,7 @@ class Plugin(ProteomeComponent):
     ctags = Ctags()
 
     def _gen(self, pro: Project):
-        return self.ctags.run(pro)
+        return self.ctags.gen(pro)
 
     @may_handle(Gen)
     def gen(self, env: Env, msg):
