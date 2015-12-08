@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Callable, Any
 from datetime import datetime
 
@@ -20,7 +21,7 @@ class Plugin(ProteomeComponent):
     def __init__(self, *a, **kw):
         super(Plugin, self).__init__(*a, **kw)
         var = self.vim.pvar('history_base')
-        base = var.filter(_.is_dir)
+        base = var.map(lambda a: Path(a)).filter(_.is_dir)
         if not base.isJust:
             msg = 'g:proteome_history_base is not a directory ({})'
             Log.error(msg.format(var))
@@ -35,7 +36,7 @@ class Plugin(ProteomeComponent):
     def _handle(self, env: Env, handler: Callable[[Project], Any]):
         if self.git.ready:
             env.projects.projects\
-                .filter(_.want_history)\
+                .filter(_.history)\
                 .map(handler)
 
     @may_handle(Init)

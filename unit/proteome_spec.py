@@ -14,6 +14,8 @@ from unit._support.spec import MockNvimSpec
 from unit._support.loader import _LoaderSpec
 from unit._support.async import test_loop
 
+from tek.test import temp_dir
+
 
 class Proteome_(MockNvimSpec, _LoaderSpec):
 
@@ -79,5 +81,24 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
         plug.ctags.current.keys.should.be.empty
         p1.tag_file.exists().should.be.ok
         p2.tag_file.exists().should.be.ok
+
+    def history(self):
+        history_base = temp_dir('proteome', 'history')
+        self.vim.vars['proteome_history_base'] = str(history_base)
+        plug_name = 'proteome.plugins.history'
+        p1 = self.mk_project('pro1', 'c')
+        p2 = self.mk_project('pro2', 'go')
+        prot = Proteome(self.vim, Path('/dev/null'), List(plug_name), List())
+        plug = prot.plugin('history')._get
+        pros = List(p1, p2)
+        prot._data = prot._data.set(projects=Projects(pros))
+        with test_loop() as loop:
+            prot.plug_command('history', 'init', List())
+            plug.git.current.values\
+                .map(_.status)\
+                .foreach(loop.run_until_complete)
+        plug.git.current.keys.should.be.empty
+        (history_base / p1.fqn / 'HEAD').exists().should.be.ok
+        (history_base / p2.fqn / 'HEAD').exists().should.be.ok
 
 __all__ = ['Proteome_']

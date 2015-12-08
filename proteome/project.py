@@ -18,12 +18,14 @@ class Project(object):
             tpe: Maybe[str]=Empty(),
             types: List[str]=List(),
             langs: List[str]=List(),
+            history: bool=True,
     ) -> None:
         self.name = name
         self.root = root
         self.tpe = tpe
         self.types = types
         self.langs = langs
+        self.history = history
 
     @property
     def info(self) -> str:
