@@ -4,8 +4,8 @@ import sure  # NOQA
 from flexmock import flexmock  # NOQA
 
 from proteome.nvim_plugin import Create
-from proteome.project import Project, Projects
-from proteome.plugins.core import Next, Prev
+from proteome.project import Project, Projects, ProjectAnalyzer
+from proteome.plugins.core import Next, Prev, Init
 from proteome.main import Proteome
 
 from tryp import List, Just, _
@@ -100,5 +100,15 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
         plug.git.current.keys.should.be.empty
         (history_base / p1.fqn / 'HEAD').exists().should.be.ok
         (history_base / p2.fqn / 'HEAD').exists().should.be.ok
+
+    def current_project(self):
+        p = self.pypro1_root
+        flexmock(ProjectAnalyzer).should_receive('current_dir').and_return(p)
+        prot = Proteome(self.vim, Path('/dev/null'), List(),
+                        List(self.project_base))
+        prot.send(Init())
+        prot._data.projects.projects.head.should.equal(
+            Just(Project(self.pypro1_name, p, Just(self.pypro1_type)))
+        )
 
 __all__ = ['Proteome_']

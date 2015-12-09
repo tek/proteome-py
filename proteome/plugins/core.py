@@ -29,21 +29,14 @@ class Show(Message):
 
 class Plugin(ProteomeComponent):
 
-    @property
-    def _default_current(self):
-        tpe = self.vim.pvar('current_project_type')
-        return Project('current', Path.cwd(), tpe)
-
     @may_handle(Init)
     def init(self, env: Env, msg):
-        current = self.vim.pvar('current_project')\
-            .flat_map(env.loader.by_name)\
-            .get_or_else(self._default_current)
-        return env.add(current)
+        anal = env.analyzer(self.vim)  # type: ignore
+        return env.add(anal.current)
 
     @may_handle(Add)
     def add(self, env: Env, msg):
-        return env
+        pass
 
     @handle(AddByName)
     def add_by_name(self, env: Env, msg):
@@ -60,14 +53,12 @@ class Plugin(ProteomeComponent):
         lines = env.projects.show(List.wrap(msg.names))
         header = List('Projects:')  # type: List[str]
         Log.info('\n'.join(header + lines))
-        return env
 
     @may_handle(SwitchRoot)
     def switch_root(self, env: Env, msg):
         env.projects.project(msg.name)\
             .map(lambda a: a.root)\
             .foreach(self.vim.switch_root)
-        return env
 
     @may_handle(Next)
     def next(self, env: Env, msg):

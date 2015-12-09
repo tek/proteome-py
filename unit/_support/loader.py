@@ -13,15 +13,17 @@ class _LoaderSpec(Spec):
 
     def setup(self, *a, **kw):
         super(_LoaderSpec, self).setup(*a, **kw)
-        self.name = 'pypro1'
+        self.pypro1_name = 'pypro1'
         self.config = Path(fixture_path('conf'))
         self.project_base = Path(fixture_path('projects'))
         self.pypro1_type = 'python'
-        self.pypro1_root = self.project_base / self.pypro1_type / self.name
+        self.pypro1_root = (self.project_base / self.pypro1_type /
+                            self.pypro1_name)
         self.type1_base = Path(fixture_path('type1_projects'))
-        self.res = Resolver(List(self.project_base),
-                            Map(dict(type1=self.type1_base)))
-        self.loader = ProjectLoader(self.config, self.res)
+        self.type1pro_name = 'type1pro'
+        self.resolver = Resolver(List(self.project_base),
+                                 Map({ self.type1_base: List('type1') }))
+        self.loader = ProjectLoader(self.config, self.resolver)
         self.temp_projects = Path(temp_dir('projects'))
 
     def mk_project(self, name, tpe):

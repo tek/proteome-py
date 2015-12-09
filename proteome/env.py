@@ -1,6 +1,8 @@
 from pathlib import Path
 
-from proteome.project import Projects, Resolver, ProjectLoader, Project
+from proteome.project import (Projects, Resolver, ProjectLoader, Project,
+                              ProjectAnalyzer)
+from proteome.nvim import NvimFacade
 
 from tryp import List, Map
 
@@ -45,5 +47,8 @@ class Env(pyrsistent.PRecord):
 
     def add(self, pro: Project):
         return self.set(projects=self.projects + pro)
+
+    def analyzer(self, vim: NvimFacade):
+        return ProjectAnalyzer(vim, self.loader)
 
 __all__ = ['Env']
