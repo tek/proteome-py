@@ -21,7 +21,8 @@ class Plugin(ProteomeComponent):
     def __init__(self, *a, **kw):
         super(Plugin, self).__init__(*a, **kw)
         var = self.vim.pvar('history_base')
-        base = var.map(lambda a: Path(a)).filter(_.is_dir)
+        base = var.map(lambda a: Path(a))\
+            .filter(lambda a: a.is_dir())
         if not base.isJust:
             msg = 'g:proteome_history_base is not a directory ({})'
             Log.error(msg.format(var))
