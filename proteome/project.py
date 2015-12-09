@@ -10,6 +10,14 @@ from trypnv import Log
 from trypnv.nvim import NvimFacade, HasNvim
 
 
+def mkpath(path: str):
+    return Path(os.path.expanduser(path))
+
+
+def format_path(path: Path):
+    return str(path).replace(str(Path.home()), '~')
+
+
 class Project(object):
 
     def __init__(
@@ -30,7 +38,8 @@ class Project(object):
 
     @property
     def info(self) -> str:
-        return '{}: {}'.format(self.name, self.root)
+        tp = self.tpe.map(_ + '/').get_or_else('')
+        return '{}{}: {}'.format(tp, self.name, format_path(self.root))
 
     def __str__(self):
         return self.info
@@ -180,8 +189,12 @@ class ProjectLoader(object):
             .map(lambda a: Project(name, a))
 
     def json_by_name(self, name: str):
-        return self.config \
+        return self.config\
             .find(lambda a: a.get('name').contains(name))
+
+    def json_by_root(self, root: Path):
+        return self.config\
+            .find(lambda a: a.get('root').map(mkpath).contains(root))
 
     def by_name(self, name: str):
         return self.json_by_name(name)\
@@ -190,7 +203,7 @@ class ProjectLoader(object):
     def from_json(self, json: Map) -> Maybe[Project]:
         def from_type(tpe: str, name: str):
             root = json.get('root') \
-                .map(os.path.expanduser)\
+                .map(mkpath)\
                 .get_or_else(self.resolver.type_name(tpe, name))
             return Project(name, Path(root), Just(tpe))
         return json.get('type') \
@@ -214,8 +227,11 @@ class ProjectAnalyzer(HasNvim):
             .map(lambda a: Map({'name': a[1], 'root': str(wd), 'type': a[0]}))
 
     def _detect_data(self, wd: Path):
-        return self.vim.pvar('project_detector')\
-            .flat_map(lambda a: self.vim.call(a, str(wd)))\
+        return self.loader.json_by_root(wd)\
+            .or_else(
+                self.vim.pvar('project_detector')
+                .flat_map(lambda a: self.vim.call(a, str(wd)))
+            )\
             .or_else(self._default_detect_data(wd))
 
     @property
