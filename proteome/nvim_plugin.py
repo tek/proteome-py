@@ -2,7 +2,7 @@ from pathlib import Path
 
 import neovim  # type: ignore
 
-from tryp import List
+from tryp import List, Map
 
 from trypnv import command, NvimStatePlugin, msg_command
 
@@ -37,9 +37,15 @@ class ProteomeNvimPlugin(NvimStatePlugin):
         config_path = self.vim.ps('config_path')\
             .get_or_else('/dev/null')
         bases = self.vim.pl('base_dirs')\
-            .get_or_else(List())
+            .get_or_else(List())\
+            .map(Path)
+        type_bases = self.vim.pd('type_base_dirs')\
+            .get_or_else(Map())\
+            .keymap(Path)\
+            .valmap(List.wrap)
         plugins = self.vim.pl('plugins') | List()
-        self.pro = Proteome(self.vim, Path(config_path), plugins, bases)
+        self.pro = Proteome(self.vim, Path(config_path), plugins, bases,
+                            type_bases)
         self.pro.send(Init())
         self.vim.vim.call('ptplugin#runtime_after')
 
