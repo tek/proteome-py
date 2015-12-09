@@ -21,8 +21,9 @@ class _LoaderSpec(Spec):
                             self.pypro1_name)
         self.type1_base = Path(fixture_path('type1_projects'))
         self.type1pro_name = 'type1pro'
+        self.type_bases = Map({self.type1_base: List('type1')})
         self.resolver = Resolver(List(self.project_base),
-                                 Map({ self.type1_base: List('type1') }))
+                                 self.type_bases)
         self.loader = ProjectLoader(self.config, self.resolver)
         self.temp_projects = Path(temp_dir('projects'))
 

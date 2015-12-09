@@ -4,7 +4,7 @@ import importlib
 
 from fn import _  # type: ignore
 
-from tryp import List, may
+from tryp import List, may, Map
 
 from trypnv import Log
 
@@ -21,10 +21,12 @@ class Proteome(ProteomeState):
             vim: NvimFacade,
             config_path: Path,
             plugins: List[str],
-            bases: List[Path]
+            bases: List[Path],
+            type_bases: Map[Path, List[str]],
     ) -> None:
         self._config_path = config_path
         self._bases = bases
+        self._type_bases = type_bases
         core = 'proteome.plugins.core'
         super(Proteome, self).__init__(vim)
         self.plugins = (plugins + [core]).flat_map(self.start_plugin)
@@ -45,6 +47,7 @@ class Proteome(ProteomeState):
         return Env(  # type: ignore
             config_path=self._config_path,
             bases=self._bases,
+            type_bases=self._type_bases,
             projects=Projects()
         )
 

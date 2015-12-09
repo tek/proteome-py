@@ -105,7 +105,7 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
         p = self.pypro1_root
         flexmock(ProjectAnalyzer).should_receive('current_dir').and_return(p)
         prot = Proteome(self.vim, Path('/dev/null'), List(),
-                        List(self.project_base))
+                        List(self.project_base), self.type_bases)
         prot.send(Init())
         prot._data.projects.projects.head.should.equal(
             Just(Project(self.pypro1_name, p, Just(self.pypro1_type)))

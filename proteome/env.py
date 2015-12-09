@@ -16,6 +16,7 @@ def field(tpe, **kw):
 class Env(pyrsistent.PRecord):
     config_path = field(Path)
     bases = field(List)
+    type_bases = field(Map)
     projects = field(Projects)
     current_index = field(int, initial=0)
 
@@ -25,7 +26,7 @@ class Env(pyrsistent.PRecord):
 
     @property
     def resolver(self):
-        return Resolver(self.bases, Map())
+        return Resolver(self.bases, self.type_bases)
 
     def __str__(self):
         return '{}({})'.format(
