@@ -2,6 +2,7 @@ from typing import TypeVar, Generic
 
 from trypnv.machine import Machine, StateMachine
 from trypnv.cmd import StateCommand
+from trypnv.nvim import HasNvim
 from trypnv import Log
 
 from proteome.nvim import NvimFacade
@@ -15,12 +16,12 @@ from tek.tools import camelcaseify  # type: ignore
 A = TypeVar('A')
 
 
-class ProteomeComponent(Generic[A], Machine[A]):
+class ProteomeComponent(Generic[A], Machine[A], HasNvim):
 
-    def __init__(self, name: str, v: NvimFacade) -> None:
+    def __init__(self, name: str, vim: NvimFacade) -> None:
         self.name = name
-        self.vim = v
-        super(ProteomeComponent, self).__init__()
+        Machine.__init__(self)
+        HasNvim.__init__(self, vim)
 
     def _command_by_message_name(self, name: str):
         msg_name = camelcaseify(name)
@@ -38,11 +39,12 @@ class ProteomeComponent(Generic[A], Machine[A]):
         return Empty()
 
 
-class ProteomeState(StateMachine):
+class ProteomeState(StateMachine, HasNvim):
 
     def __init__(self, vim: NvimFacade) -> None:
         self.vim = vim
-        super(ProteomeState, self).__init__()
+        StateMachine.__init__(self)
+        HasNvim.__init__(self, vim)
 
 
 __all__ = ['ProteomeComponent', 'ProteomeState']
