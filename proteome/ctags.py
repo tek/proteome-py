@@ -1,5 +1,5 @@
 from proteome.project import Project
-from proteome.process import ProcessExecutor, Job
+from proteome.process import ProcessExecutor, Job  # type: ignore
 
 
 class Ctags(ProcessExecutor):
