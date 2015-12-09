@@ -37,6 +37,14 @@ class Project(object):
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__, repr(self.name))
 
+    def __eq__(self, other):
+        return (
+            isinstance(other, Project) and
+            self.name == other.name and
+            self.root == other.root and
+            self.tpe == other.tpe
+        )
+
     @property
     def ctags_langs(self):
         return (self.langs + self.tpe.toList).distinct
