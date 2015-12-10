@@ -10,7 +10,7 @@ from proteome.logging import Logging
 class NvimFacade(Logging, trypnv.nvim.NvimFacade):
 
     def __init__(self, nvim: neovim.Nvim) -> None:
-        super(NvimFacade, self).__init__(nvim, 'proteome')
+        trypnv.nvim.NvimFacade.__init__(self, nvim, 'proteome')
 
     def switch_root(self, path: Path):
         p = str(path)
