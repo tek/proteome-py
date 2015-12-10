@@ -19,13 +19,8 @@ class Plugin(ProteomeComponent):
 
     def __init__(self, *a, **kw):
         super(Plugin, self).__init__(*a, **kw)
-        var = self.vim.pvar('history_base')
-        base = var.map(lambda a: Path(a))\
-            .filter(lambda a: a.is_dir())
-        if not base.isJust:
-            msg = 'g:proteome_history_base is not a directory ({})'
-            Log.error(msg.format(var))
-        self.git = HistoryGit(base.get_or_else('/dev/null'))
+        base = self.vim.pdir('history_base').get_or_else(Path('/dev/null'))
+        self.git = HistoryGit(base)
 
     def _commit(self, pro: Project):
         return self.git.commit_all(pro, datetime.now().isoformat())
@@ -33,10 +28,20 @@ class Plugin(ProteomeComponent):
     def _init(self, pro: Project):
         return self.git.init(pro)
 
+    @property
+    def all_projects_history(self):
+        return self.pflags.all_projects_history
+
+    @property
+    def ready(self):
+        return self.git is not None and self.git.ready
+
     def _handle(self, env: Env, handler: Callable[[Project], Any]):
-        if self.git.ready:
-            env.projects.projects\
-                .filter(_.history)\
+        if self.ready:
+            projects = env.projects
+            if not self.all_projects_history:
+                projects = projects.filter(_.history)
+            return projects\
                 .map(handler)
 
     @may_handle(Init)
