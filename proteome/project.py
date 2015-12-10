@@ -58,6 +58,9 @@ class Project(object):
             self.tpe == other.tpe
         )
 
+    def __hash__(self):
+        return hash((self.name, self.root, self.tpe))
+
     @property
     def ctags_langs(self):
         return (self.langs + self.tpe.toList).distinct
