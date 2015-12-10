@@ -18,12 +18,11 @@ class Ctags_(_LoaderSpec):
     def run(self):
         with test_loop() as loop:
             ctags = Ctags()
-            p = Project(self.name, self.pypro1_root,
+            p = Project(self.pypro1_name, self.pypro1_root,
                         tpe=Just(self.pypro1_type),
                         langs=List(self.pypro1_type))
             p.remove_tag_file()
-            job = ctags.gen(p)
-            result = loop.run_until_complete(job.status)
+            result = loop.run_until_complete(ctags.gen(p))
             result.success.should.be.ok
         p.tag_file.exists().should.be.ok
         ctags.current.keys.should.be.empty
@@ -33,8 +32,7 @@ class Ctags_(_LoaderSpec):
             ctags = Ctags()
             p = Project('invalid', Path(temp_path('invalid')), tpe=Just('c'),
                         langs=List('c'))
-            job = ctags.gen(p)
-            result = loop.run_until_complete(job.status)
+            result = loop.run_until_complete(ctags.gen(p))
             result.success.should_not.be.ok
 
 __all__ = ['Ctags_']

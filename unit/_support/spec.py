@@ -16,7 +16,7 @@ class MockNvimFacade(NvimFacade):
         super(MockNvimFacade, self).__init__(None)
 
     @may
-    def var(self, name: str) -> Maybe[str]:
+    def var(self, name: str) -> Maybe[str]:  # type: ignore
         v = self.vars.get(name)
         if v is None:
             self.log.error('variable not found: {}'.format(name))

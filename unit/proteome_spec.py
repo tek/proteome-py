@@ -8,7 +8,7 @@ from proteome.project import Project, Projects, ProjectAnalyzer
 from proteome.plugins.core import Next, Prev, Init
 from proteome.main import Proteome
 
-from tryp import List, Just, _
+from tryp import List, Just, _, Map
 
 from unit._support.spec import MockNvimSpec
 from unit._support.loader import _LoaderSpec
@@ -22,7 +22,7 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
     def create(self):
         name = 'proj'
         root = Path('/dev/null')
-        prot = Proteome(self.vim, root, List(), List())
+        prot = Proteome(self.vim, root, List(), List(), Map())
         prot.send(Create(name, root))
         p = prot._data.projects.projects[0]
         p.name.should.equal(name)
@@ -33,7 +33,7 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
         name = 'proj'
         name2 = 'proj2'
         root = Path('/dev/null')
-        prot = Proteome(self.vim, root, List(), List())
+        prot = Proteome(self.vim, root, List(), List(), Map())
         pros = List(Project(name, root), Project(name2, root))
         prot._data = prot._data.set(projects=Projects(pros))
         prot._data.current.should.equal(Just(pros[0]))
@@ -47,7 +47,7 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
             def init(self):
                 return dict()
         plug = 'unit._support.test_plug'
-        prot = P(self.vim, Path('/dev/null'), List(plug), List())
+        prot = P(self.vim, Path('/dev/null'), List(plug), List(), Map())
         data = 'message_data'
         prot.plug_command('test_plug', 'do', [data])
         prot._data.should.have.key(data).being.equal(data)
@@ -57,7 +57,7 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
             def init(self):
                 return dict()
         plug = 'unit._support.test_plug'
-        prot = P(self.vim, Path('/dev/null'), List(plug), List())
+        prot = P(self.vim, Path('/dev/null'), List(plug), List(), Map())
         data = 'message_data'
         prot.plug_command('test_plug', 'do', [data])
         prot.plug_command('test_plug', 'dont', [data])
@@ -67,7 +67,8 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
         plug_name = 'proteome.plugins.ctags'
         p1 = self.mk_project('pro1', 'c')
         p2 = self.mk_project('pro2', 'go')
-        prot = Proteome(self.vim, Path('/dev/null'), List(plug_name), List())
+        prot = Proteome(self.vim, Path('/dev/null'), List(plug_name), List(),
+                        Map())
         plug = prot.plugin('ctags')._get
         pros = List(p1, p2)
         prot._data = prot._data.set(projects=Projects(pros))
@@ -88,7 +89,8 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
         plug_name = 'proteome.plugins.history'
         p1 = self.mk_project('pro1', 'c')
         p2 = self.mk_project('pro2', 'go')
-        prot = Proteome(self.vim, Path('/dev/null'), List(plug_name), List())
+        prot = Proteome(self.vim, Path('/dev/null'), List(plug_name), List(),
+                        Map())
         plug = prot.plugin('history')._get
         pros = List(p1, p2)
         prot._data = prot._data.set(projects=Projects(pros))
