@@ -38,7 +38,7 @@ class Plugin(ProteomeComponent):
 
     def _handle(self, env: Env, handler: Callable[[Project], Any]):
         if self.ready:
-            projects = env.projects
+            projects = env.all_projects
             if not self.all_projects_history:
                 projects = projects.filter(_.history)
             return projects\

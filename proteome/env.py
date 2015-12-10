@@ -55,4 +55,8 @@ class Env(pyrsistent.PRecord):
     def project_by_name(self, name: str):
         return self.projects.project(name)
 
+    @property
+    def all_projects(self):
+        return self.projects.projects
+
 __all__ = ['Env']
