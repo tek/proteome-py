@@ -83,4 +83,4 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
         pass
 
 
-__all__ = ['NvimStatePlugin']
+__all__ = ['ProteomeNvimPlugin']
