@@ -55,9 +55,9 @@ class Plugin(ProteomeComponent):
 
     @may_handle(SwitchRoot)
     def switch_root(self, env: Env, msg):
-        env.projects.project(msg.name)\
+        env.project_by_name(msg.name)\
             .map(lambda a: a.root)\
-            .foreach(self.vim.switch_root)
+            .foreach(self.vim.switch_root)  # type: ignore
 
     @may_handle(Next)
     def next(self, env: Env, msg):
@@ -69,6 +69,6 @@ class Plugin(ProteomeComponent):
 
     @handle(SetRoot)
     def set_root(self, env: Env, msg):
-        return env.current.map(lambda a: (env, SwitchRoot(a)))
+        return env.current.map(lambda a: (env, SwitchRoot(a.name)))
 
 __all__ = ['Add', 'Create', 'AddByName', 'Plugin', 'Show']
