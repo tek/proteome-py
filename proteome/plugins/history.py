@@ -23,9 +23,11 @@ class Plugin(ProteomeComponent):
         self.git = HistoryGit(base)
 
     def _commit(self, pro: Project):
+        self.log.debug('commiting to history repo for {}'.format(pro))
         return self.git.commit_all(pro, datetime.now().isoformat())
 
     def _init(self, pro: Project):
+        self.log.debug('initializing history repo for {}'.format(pro))
         return self.git.init(pro)
 
     @property
