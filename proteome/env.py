@@ -52,4 +52,7 @@ class Env(pyrsistent.PRecord):
     def analyzer(self, vim: NvimFacade):
         return ProjectAnalyzer(vim, self.loader)
 
+    def project_by_name(self, name: str):
+        return self.projects.project(name)
+
 __all__ = ['Env']
