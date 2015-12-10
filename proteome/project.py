@@ -209,13 +209,14 @@ class ProjectLoader(Logging):
 
     def from_json(self, json: Map) -> Maybe[Project]:
         def from_type(tpe: str, name: str):
-            root = json.get('root') \
+            return json.get('root') \
                 .map(mkpath)\
-                .get_or_else(self.resolver.type_name(tpe, name))
-            return Project(name, Path(root), Just(tpe))
+                .or_else(self.resolver.type_name(tpe, name))\
+                .map(lambda r: Project(name, Path(r), Just(tpe)))
         return json.get('type') \
             .zip(json.get('name')) \
-            .smap(from_type)
+            .smap(from_type)\
+            .flatten
 
     @may
     def create(self, name: str, root: Path, **kw):
