@@ -4,7 +4,7 @@ import tek  # type: ignore
 
 import tryp
 from tryp import may, Maybe
-from tryp.logging import tryp_logging
+from tryp.logging import tryp_stdout_logging
 
 from proteome.nvim import NvimFacade
 
@@ -27,7 +27,7 @@ class Spec(tek.Spec):
 
     def setup(self, *a, **kw):
         tryp.development = True
-        tryp_logging()
+        tryp_stdout_logging()
         super(Spec, self).setup(*a, **kw)
 
 
