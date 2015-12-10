@@ -35,8 +35,8 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
 
     @command()
     def proteome_start(self):
-        config_path = self.vim.ps('config_path')\
-            .get_or_else('/dev/null')
+        config_path = self.vim.ppath('config_path')\
+            .get_or_else(Path('/dev/null'))
         bases = self.vim.pl('base_dirs')\
             .get_or_else(List())\
             .map(Path)
