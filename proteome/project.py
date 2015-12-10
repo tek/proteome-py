@@ -8,6 +8,8 @@ from fn import _  # type: ignore
 
 from trypnv.nvim import NvimFacade, HasNvim
 
+from typing import Tuple
+
 from proteome.logging import Logging
 
 
@@ -134,30 +136,30 @@ class Resolver(object):
         self.bases = bases
         self.types = types
 
-    def type_name(self, tpe: str, name: str):
+    def type_name(self, tpe: str, name: str) -> Maybe[Path]:
         return self.bases\
             .map(_ / tpe / name)\
             .find(lambda a: a.is_dir())\
             .or_else(lambda: self.specific(tpe, name))
 
-    def specific(self, tpe: str, name: str):
+    def specific(self, tpe: str, name: str) -> Maybe[Path]:
         self.types\
             .valfilter(_.call('contains', tpe))\
             .keys\
             .map(_ / name)\
             .find(lambda a: a.is_dir())
 
-    def dir(self, path: Path):
+    def dir(self, path: Path) -> Maybe[Tuple[str, str]]:
         return self.dir_in_bases(path)\
             .or_else(lambda: self.dir_in_types(path))
 
-    def dir_in_bases(self, path: Path):
+    def dir_in_bases(self, path: Path) -> Maybe[Tuple[str, str]]:
         return sub_paths(self.bases, path)\
             .filter(lambda a: len(a) >= 2)\
             .map(lambda a: (a[0], a[-1]))\
             .head
 
-    def dir_in_types(self, path: Path):
+    def dir_in_types(self, path: Path) -> Maybe[Tuple[str, str]]:
         trans = lambda a, b: b.head.zip(sub_path(a, path).flat_map(_.last))
         return self.types\
             .flat_map(trans)\
