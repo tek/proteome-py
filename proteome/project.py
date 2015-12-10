@@ -18,7 +18,8 @@ def mkpath(path: str):
 
 
 def format_path(path: Path):
-    return str(path).replace(str(Path.home()), '~')
+    h = str(Path.home())  # type: ignore
+    return str(path).replace(h, '~')
 
 
 class Project(object):
