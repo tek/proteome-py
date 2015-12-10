@@ -10,9 +10,10 @@ from proteome.plugins.core import (AddByName, Show, Create, SwitchRoot, Next,
                                    Prev, Init, Save)
 from proteome.main import Proteome
 from proteome.nvim import NvimFacade
+from proteome.logging import Logging
 
 
-class ProteomeNvimPlugin(NvimStatePlugin):
+class ProteomeNvimPlugin(NvimStatePlugin, Logging):
 
     def __init__(self, vim: neovim.Nvim) -> None:
         super(ProteomeNvimPlugin, self).__init__(NvimFacade(vim))

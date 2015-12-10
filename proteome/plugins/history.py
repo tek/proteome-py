@@ -5,7 +5,6 @@ from datetime import datetime
 from tryp import _
 
 from trypnv.machine import may_handle, message
-from trypnv import Log
 
 from proteome.state import ProteomeComponent
 from proteome.env import Env

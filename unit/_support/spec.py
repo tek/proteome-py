@@ -2,10 +2,9 @@ from flexmock import flexmock  # type: ignore
 
 import tek  # type: ignore
 
+import tryp
 from tryp import may, Maybe
-
-import trypnv
-from trypnv import Log
+from tryp.logging import tryp_logging
 
 from proteome.nvim import NvimFacade
 
@@ -17,17 +16,18 @@ class MockNvimFacade(NvimFacade):
         super(MockNvimFacade, self).__init__(None)
 
     @may
-    def var(self, name) -> Maybe[str]:
+    def var(self, name: str) -> Maybe[str]:
         v = self.vars.get(name)
         if v is None:
-            Log.error('variable not found: {}'.format(name))
+            self.log.error('variable not found: {}'.format(name))
         return v
 
 
 class Spec(tek.Spec):
 
     def setup(self, *a, **kw):
-        trypnv.development = True
+        tryp.development = True
+        tryp_logging()
         super(Spec, self).setup(*a, **kw)
 
 

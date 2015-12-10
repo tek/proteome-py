@@ -6,8 +6,9 @@ from tryp import Maybe, Empty, Just, List, Map, may
 
 from fn import _  # type: ignore
 
-from trypnv import Log
 from trypnv.nvim import NvimFacade, HasNvim
+
+from proteome.logging import Logging
 
 
 def mkpath(path: str):
@@ -163,7 +164,7 @@ class Resolver(object):
             .head
 
 
-class ProjectLoader(object):
+class ProjectLoader(Logging):
 
     def __init__(self, config_path: Path, resolver: Resolver) -> None:
         self.resolver = resolver
@@ -176,7 +177,7 @@ class ProjectLoader(object):
                 try:
                     return List.wrap(map(Map, json.loads(f.read())))
                 except Exception as e:
-                    Log.error('parse error in {}: {}'.format(path, e))
+                    self.log.error('parse error in {}: {}'.format(path, e))
                     return List()
         if (self.config_path.is_dir()):
             return List.wrap(self.config_path.glob('*.json')) \

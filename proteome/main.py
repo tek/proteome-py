@@ -6,8 +6,6 @@ from fn import _  # type: ignore
 
 from tryp import List, may, Map
 
-from trypnv import Log
-
 from proteome.nvim import NvimFacade
 from proteome.env import Env
 from proteome.state import ProteomeState
@@ -37,7 +35,7 @@ class Proteome(ProteomeState):
             mod = importlib.import_module(path)
         except ImportError as e:
             msg = 'invalid proteome plugin module "{}": {}'.format(path, e)
-            Log.error(msg)
+            self.log.error(msg)
         else:
             if hasattr(mod, 'Plugin'):
                 name = path.split('.')[-1]

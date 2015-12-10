@@ -3,9 +3,9 @@ from typing import TypeVar, Generic
 from trypnv.machine import Machine, StateMachine
 from trypnv.cmd import StateCommand
 from trypnv.nvim import HasNvim
-from trypnv import Log
 
 from proteome.nvim import NvimFacade
+from proteome.logging import Logging
 
 from fn import F, _  # type: ignore
 
@@ -16,7 +16,7 @@ from tek.tools import camelcaseify  # type: ignore
 A = TypeVar('A')
 
 
-class ProteomeComponent(Generic[A], Machine[A], HasNvim):
+class ProteomeComponent(Generic[A], Machine[A], HasNvim, Logging):
 
     def __init__(self, name: str, vim: NvimFacade) -> None:
         self.name = name
@@ -35,11 +35,12 @@ class ProteomeComponent(Generic[A], Machine[A], HasNvim):
                   F(self._invalid_command, name))
 
     def _invalid_command(self, name):
-        Log.error('plugin "{}" has no command "{}"'.format(self.name, name))
+        self.log.error(
+            'plugin "{}" has no command "{}"'.format(self.name, name))
         return Empty()
 
 
-class ProteomeState(StateMachine, HasNvim):
+class ProteomeState(StateMachine, HasNvim, Logging):
 
     def __init__(self, vim: NvimFacade) -> None:
         self.vim = vim

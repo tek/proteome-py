@@ -10,9 +10,7 @@ from asyncio.subprocess import PIPE  # type: ignore
 from tryp import Map, List, Future
 
 from proteome.project import Project
-
-from trypnv import Log
-
+from proteome.logging import Logging
 
 class Result(object):
 
@@ -71,7 +69,7 @@ class Job(object):
                                         ' '.join(self.args))
 
 
-class ProcessExecutor(object):
+class ProcessExecutor(Logging):
 
     def __init__(self) -> None:
         self.current = Map()  # type: Map[Project, Job]
@@ -105,7 +103,7 @@ class ProcessExecutor(object):
             task.add_done_callback(F(self.job_done, job))
             self.current[job.project] = job
         else:
-            Log.error('invalid execution job: {}'.format(job))
+            self.log.error('invalid execution job: {}'.format(job))
             job.cancel('invalid')
         return job.status
 

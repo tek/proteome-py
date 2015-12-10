@@ -1,11 +1,13 @@
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
+import logging
 
 from fn import _  # type: ignore
 
 from tryp import Just, List
 
 from proteome.project import Project, Projects
+from proteome.logging import Logging
 
 from unit._support.loader import _LoaderSpec
 from unit._support.spec import MockNvimSpec
@@ -55,7 +57,7 @@ class ProjectLoader_(_LoaderSpec):
         pro.tpe.should.equal(Just(self.pypro1_type))
 
 
-class ProjectResolver_(_LoaderSpec, MockNvimSpec):
+class ProjectResolver_(_LoaderSpec, MockNvimSpec, Logging):
 
     def setup(self, *a, **kw):
         super(ProjectResolver_, self).setup(*a, **kw)
