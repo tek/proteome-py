@@ -10,7 +10,7 @@ from proteome.state import ProteomeComponent
 from proteome.env import Env
 from proteome.git import HistoryGit
 from proteome.project import Project
-from proteome.plugins.core import Init
+from proteome.plugins.core import Ready
 
 Commit = message('Commit')
 
@@ -35,22 +35,22 @@ class Plugin(ProteomeComponent):
         return self.pflags.all_projects_history
 
     @property
-    def ready(self):
+    def git_ready(self):
         return self.git is not None and self.git.ready
 
     def _handle(self, env: Env, handler: Callable[[Project], Any]):
-        if self.ready:
+        if self.git_ready:
             projects = env.all_projects
             if not self.all_projects_history:
                 projects = projects.filter(_.history)
-            return projects\
-                .map(handler)
-
-    @may_handle(Init)
-    def init(self, env: Env, msg):
+            projects.map(handler)
+            self.git.exec_pending()
         else:
             err = 'tried to run {} on history while not ready'
             self.log.debug(err.format(handler.__name__))
+
+    @may_handle(Ready)
+    def ready(self, env: Env, msg):
         self._handle(env, self._init)
 
     @may_handle(Commit)

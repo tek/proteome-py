@@ -10,6 +10,7 @@ from proteome.env import Env
 
 
 Init = message('Init')
+Ready = message('Ready')
 Add = message('Add')
 AddByName = message('AddByName', 'name')
 Create = message('Create', 'name', 'root')

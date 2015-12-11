@@ -7,7 +7,7 @@ from tryp import List, Map
 from trypnv import command, NvimStatePlugin, msg_command
 
 from proteome.plugins.core import (AddByName, Show, Create, SwitchRoot, Next,
-                                   Prev, Init, Save)
+                                   Prev, Init, Save, Ready)
 from proteome.main import Proteome
 from proteome.nvim import NvimFacade
 from proteome.logging import Logging
@@ -18,11 +18,13 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     def __init__(self, vim: neovim.Nvim) -> None:
         super(ProteomeNvimPlugin, self).__init__(NvimFacade(vim))
         self.pro = None  # type: Proteome
+        self._initialized = False
+        self._post_initialized = False
 
     def state(self):
         return self.pro
 
-    @neovim.command('ProteomeReload', nargs=0)
+    @command()
     def proteome_reload(self):
         self.proteome_quit()
         self.proteome_start()
@@ -81,6 +83,18 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     @msg_command(Save)
     def pro_save(self):
         pass
+
+    @neovim.autocmd('VimEnter')
+    def init(self):
+        if not self._initialized:
+            self._initialized = True
+            self.proteome_reload()
+
+    @neovim.autocmd('CursorHold,InsertEnter')
+    def post_init(self):
+        if not self._post_initialized:
+            self._post_initialized = True
+            self.pro.send(Ready())
 
 
 __all__ = ['ProteomeNvimPlugin']
