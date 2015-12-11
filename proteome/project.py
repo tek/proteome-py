@@ -206,7 +206,7 @@ class ProjectLoader(Logging):
 
     def resolve(self, tpe: str, name: str):
         return self.resolver.type_name(tpe, name)\
-            .map(lambda a: Project(name, a))
+            .map(lambda a: Project(name, a, Just(tpe)))
 
     @flat_may
     def resolve_ident(self, ident: str):

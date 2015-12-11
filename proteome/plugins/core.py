@@ -1,5 +1,7 @@
 from pathlib import Path  # type: ignore
 
+from fn import _  # type: ignore
+
 from tryp import List
 
 from trypnv.machine import Message, handle, may_handle, message
@@ -56,7 +58,7 @@ class Plugin(ProteomeComponent):
     @may_handle(SwitchRoot)
     def switch_root(self, env: Env, msg):
         env.project(msg.name)\
-            .map(lambda a: a.root)\
+            .map(_.root)\
             .foreach(self.vim.switch_root)  # type: ignore
 
     @may_handle(Next)
