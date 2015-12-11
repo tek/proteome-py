@@ -76,9 +76,7 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
         p2.tag_file.exists().should_not.be.ok
         with test_loop() as loop:
             prot.plug_command('ctags', 'gen', List())
-            plug.ctags.current.values\
-                .map(_.status)\
-                .foreach(loop.run_until_complete)
+            plug.ctags.exec_pending()
         plug.ctags.current.keys.should.be.empty
         p1.tag_file.exists().should.be.ok
         p2.tag_file.exists().should.be.ok
@@ -95,10 +93,8 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
         pros = List(p1, p2)
         prot._data = prot._data.set(projects=Projects(pros))
         with test_loop() as loop:
-            prot.plug_command('history', 'init', List())
-            plug.git.current.values\
-                .map(_.status)\
-                .foreach(loop.run_until_complete)
+            prot.plug_command('history', 'ready', List())
+            plug.git.exec_pending()
         plug.git.current.keys.should.be.empty
         (history_base / p1.fqn / 'HEAD').exists().should.be.ok
         (history_base / p2.fqn / 'HEAD').exists().should.be.ok

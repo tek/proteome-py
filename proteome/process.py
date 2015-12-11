@@ -123,4 +123,8 @@ class ProcessExecutor(Logging):
     def ready(self):
         return self.current.is_empty
 
+    def exec_pending(self):
+        loop = asyncio.get_event_loop()
+        self.current.valmap(lambda job: loop.run_until_complete(job.status))
+
 __all__ = ['Executor']

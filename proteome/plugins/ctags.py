@@ -29,6 +29,7 @@ class Plugin(ProteomeComponent):
             env.projects.projects\
                 .filter(_.want_ctags)\
                 .map(self._gen)
+            self.ctags.exec_pending()
 
     # TODO kill dangling procs
     @may_handle(Kill)
