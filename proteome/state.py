@@ -19,8 +19,7 @@ A = TypeVar('A')
 class ProteomeComponent(Generic[A], Machine[A], HasNvim, Logging):
 
     def __init__(self, name: str, vim: NvimFacade) -> None:
-        self.name = name
-        Machine.__init__(self)
+        Machine.__init__(self, name)
         HasNvim.__init__(self, vim)
 
     def _command_by_message_name(self, name: str):
@@ -44,7 +43,7 @@ class ProteomeState(StateMachine, HasNvim, Logging):
 
     def __init__(self, vim: NvimFacade) -> None:
         self.vim = vim
-        StateMachine.__init__(self)
+        StateMachine.__init__(self, 'proteome')
         HasNvim.__init__(self, vim)
 
 
