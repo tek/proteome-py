@@ -86,11 +86,14 @@ class ProcessExecutor(Logging):
     async def execute(self, job: Job):
         try:
             proc = await self.process(job)
-            await proc.wait()  # type: ignore
+            await proc.wait()
             out = await proc.stdout.read()
             err = await proc.stderr.read()
+            msg = '{} executed successfully ({}, {})'.format(job, out, err)
+            self.log.debug(msg)
             return proc.returncode, out.decode(), err.decode()
         except Exception as e:
+            self.log.debug('{} failed with {}'.format(job, e))
             return -111, '', 'exception: {}'.format(e)
 
     def run(self, job: Job) -> Future[Result]:
@@ -98,7 +101,8 @@ class ProcessExecutor(Logging):
         returned by ensure_future(), obtainable via task.result()
         '''
         if self._can_execute(job):
-            task = asyncio.ensure_future(self.execute(job))  # type: ignore
+            self.log.debug('executing {}'.format(job))
+            task = asyncio.ensure_future(self.execute(job))
             task.add_done_callback(job.finish)
             task.add_done_callback(F(self.job_done, job))
             self.current[job.project] = job
@@ -111,6 +115,7 @@ class ProcessExecutor(Logging):
         return job.project not in self.current and job.valid
 
     def job_done(self, job, status):
+        self.log.debug('{} is done with status {}'.format(job, status))
         if job.project in self.current:
             self.current.pop(job.project)
 
