@@ -47,6 +47,18 @@ class ProjectLoader_(_LoaderSpec):
         self.loader.json_by_name(self.pypro1_name)\
             .flat_map(lambda a: a.get('type'))\
             .should.equal(Just(self.pypro1_type))
+        self.loader.by_name(self.pypro1_name)\
+            .flat_map(_.tpe)\
+            .should.equal(Just(self.pypro1_type))
+
+    def json_by_type_name(self):
+        type_name = '{}/{}'.format(self.pypro1_type, self.pypro1_name)
+        self.loader.json_by_name(type_name)\
+            .flat_map(lambda a: a.get('type'))\
+            .should.equal(Just(self.pypro1_type))
+        self.loader.by_name(type_name)\
+            .flat_map(_.tpe)\
+            .should.equal(Just(self.pypro1_type))
 
     def from_file(self):
         pj = self.loader.by_name(self.pypro1_name)

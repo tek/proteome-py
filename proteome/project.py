@@ -2,7 +2,7 @@ from pathlib import Path
 import json
 import os
 
-from tryp import Maybe, Empty, Just, List, Map, may
+from tryp import Maybe, Empty, Just, List, Map, may, Boolean
 
 from fn import _  # type: ignore
 
@@ -197,7 +197,18 @@ class ProjectLoader(Logging):
 
     def json_by_name(self, name: str):
         return self.config\
-            .find(lambda a: a.get('name').contains(name))
+            .find(lambda a: a.get('name').contains(name))\
+            .or_else(
+                lambda: Boolean('/' in name)
+                .flat_maybe(self.json_by_type_name(*name.split('/', 1)))
+            )
+
+    def json_by_type_name(self, tpe, name):
+        def matcher(record: Map) -> Boolean:
+            return (record.get('name').contains(name) and
+                    record.get('type').contains(tpe))
+        return self.config\
+            .find(matcher)
 
     def json_by_root(self, root: Path):
         return self.config\
