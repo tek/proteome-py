@@ -15,6 +15,7 @@ class Git(ProcessExecutor):
         return self.run(Job(project, 'git', args))
 
     # TODO remove dangling lock file
+    # and set the excludesfile
     def init(self, project: Project):
         return self.command(project, 'init')
 

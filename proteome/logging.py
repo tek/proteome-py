@@ -1,4 +1,4 @@
-import logging
+import logging  # type: ignore
 
 from trypnv.logging import trypnv_logger
 

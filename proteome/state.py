@@ -31,8 +31,8 @@ class ProteomeComponent(Generic[A], Machine[A], HasNvim, Logging):
     def command(self, name: str, args: list):
         return self._command_by_message_name(name)\
             .map(lambda a: StateCommand(a[0]))\
-            .cata(_.call('dispatch', self, args),
-                  F(self._invalid_command, name))
+            .map(_.call('dispatch', self, args))\
+            .or_else(F(self._invalid_command, name))
 
     def _invalid_command(self, name):
         self.log.error(
