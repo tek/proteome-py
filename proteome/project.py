@@ -2,7 +2,7 @@ from pathlib import Path
 import json
 import os
 
-from tryp import Maybe, Empty, Just, List, Map, may, Boolean
+from tryp import Maybe, Empty, Just, List, Map, may, Boolean, flat_may
 
 from fn import _  # type: ignore
 
@@ -195,13 +195,14 @@ class ProjectLoader(Logging):
         return self.resolver.type_name(tpe, name) \
             .map(lambda a: Project(name, a))
 
+    @flat_may
+    def resolve_ident(self, ident: str):
+        if '/' in ident:
+            return self.resolve(*ident.split('/', 1))
+
     def json_by_name(self, name: str):
         return self.config\
-            .find(lambda a: a.get('name').contains(name))\
-            .or_else(
-                lambda: Boolean('/' in name)
-                .flat_maybe(self.json_by_type_name(*name.split('/', 1)))
-            )
+            .find(lambda a: a.get('name').contains(name))
 
     def json_by_type_name(self, tpe, name):
         def matcher(record: Map) -> Boolean:
@@ -210,12 +211,20 @@ class ProjectLoader(Logging):
         return self.config\
             .find(matcher)
 
+    def json_by_ident(self, ident: str):
+        @flat_may
+        def try_split():
+            if '/' in ident:
+                return self.json_by_type_name(*ident.split('/', 1))
+        return self.json_by_name(ident)\
+            .or_else(try_split)
+
     def json_by_root(self, root: Path):
         return self.config\
             .find(lambda a: a.get('root').map(mkpath).contains(root))
 
-    def by_name(self, name: str):
-        return self.json_by_name(name)\
+    def by_ident(self, name: str):
+        return self.json_by_ident(name)\
             .flat_map(self.from_json)
 
     def from_json(self, json: Map) -> Maybe[Project]:
@@ -226,8 +235,7 @@ class ProjectLoader(Logging):
                 .map(lambda r: Project(name, Path(r), Just(tpe)))
         return json.get('type') \
             .zip(json.get('name')) \
-            .smap(from_type)\
-            .flatten
+            .flat_smap(from_type)
 
     @may
     def create(self, name: str, root: Path, **kw):
@@ -280,7 +288,7 @@ class ProjectAnalyzer(HasNvim):
     @property
     def current(self):
         return self.vim.pvar('current_project')\
-            .flat_map(self.loader.by_name)\
+            .flat_map(self.loader.by_ident)\
             .or_else(self._auto_current)\
             .get_or_else(self._fallback_current)
 

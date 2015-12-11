@@ -49,6 +49,9 @@ class Env(pyrsistent.PRecord):
     def add(self, pro: Project):
         return self.set(projects=self.projects + pro)
 
+    def __add__(self, pro: Project):
+        return self.add(pro)
+
     def analyzer(self, vim: NvimFacade):
         return ProjectAnalyzer(vim, self.loader)
 

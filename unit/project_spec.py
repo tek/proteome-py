@@ -4,7 +4,7 @@ import logging
 
 from fn import _  # type: ignore
 
-from tryp import Just, List
+from tryp import Just, List, Empty
 
 from proteome.project import Project, Projects
 from proteome.logging import Logging
@@ -33,35 +33,47 @@ class ProjectLoader_(_LoaderSpec):
         super(ProjectLoader_, self).setup(*a, **kw)
 
     def resolve(self):
-        self.loader \
-            .resolve(self.pypro1_type, self.pypro1_name) \
-            .map(_.root) \
+        type_name = '{}/{}'.format(self.pypro1_type, self.pypro1_name)
+        split = self.loader\
+            .resolve(self.pypro1_type, self.pypro1_name)
+        split\
+            .map(_.root)\
             .should.equal(Just(self.pypro1_root))
+        self.loader\
+            .resolve_ident(type_name)\
+            .should.equal(split)
 
     def config(self):
+        res = self.loader.config.lift(0)\
+            .flat_map(lambda a: a.get('name'))
         self.loader.config.lift(0)\
             .flat_map(lambda a: a.get('name'))\
             .should.equal(Just(self.pypro1_name))
 
     def json_by_name(self):
+        self.loader.json_by_ident(self.pypro1_name)\
+            .flat_map(lambda a: a.get('type'))\
+            .should.equal(Just(self.pypro1_type))
         self.loader.json_by_name(self.pypro1_name)\
             .flat_map(lambda a: a.get('type'))\
             .should.equal(Just(self.pypro1_type))
-        self.loader.by_name(self.pypro1_name)\
+        self.loader.by_ident(self.pypro1_name)\
             .flat_map(_.tpe)\
             .should.equal(Just(self.pypro1_type))
 
     def json_by_type_name(self):
         type_name = '{}/{}'.format(self.pypro1_type, self.pypro1_name)
-        self.loader.json_by_name(type_name)\
+        self.loader.json_by_ident(type_name)\
             .flat_map(lambda a: a.get('type'))\
             .should.equal(Just(self.pypro1_type))
-        self.loader.by_name(type_name)\
+        self.loader.by_ident(type_name)\
             .flat_map(_.tpe)\
             .should.equal(Just(self.pypro1_type))
+        self.loader.by_ident('invalid')\
+            .should.equal(Empty())
 
     def from_file(self):
-        pj = self.loader.by_name(self.pypro1_name)
+        pj = self.loader.by_ident(self.pypro1_name)
         pj.should.be.a(Just)
         pro = pj._get
         pro.should.be.a(Project)

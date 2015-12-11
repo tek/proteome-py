@@ -11,8 +11,7 @@ from proteome.env import Env
 
 Init = message('Init')
 Ready = message('Ready')
-Add = message('Add')
-AddByName = message('AddByName', 'name')
+AddByIdent = message('AddByIdent', 'name')
 Create = message('Create', 'name', 'root')
 Next = message('Next')
 Prev = message('Prev')
@@ -31,22 +30,17 @@ class Plugin(ProteomeComponent):
 
     @may_handle(Init)
     def init(self, env: Env, msg):
-        anal = env.analyzer(self.vim)  # type: ignore
-        return env.add(anal.current)
+        return env + env.analyzer(self.vim).current  # type: ignore
 
-    @may_handle(Add)
-    def add(self, env: Env, msg):
-        pass
-
-    @handle(AddByName)
-    def add_by_name(self, env: Env, msg):
-        return env.loader.by_name(msg.name)\
-            .map(lambda a: env.set(projects=env.projects + a))
+    @handle(AddByIdent)
+    def add_by_ident(self, env: Env, msg):
+        return env.loader.by_ident(msg.name)\
+            .or_else(env.loader.resolve_ident(msg.name))\
+            .map(env.add)
 
     @may_handle(Create)
     def create(self, env: Env, msg):
-        new = env.projects + Project(msg.name, Path(msg.root))
-        return env.set(projects=new)
+        return env + Project(msg.name, Path(msg.root))
 
     @may_handle(Show)
     def show(self, env: Env, msg: Show):
@@ -72,4 +66,4 @@ class Plugin(ProteomeComponent):
     def set_root(self, env: Env, msg):
         return env.current.map(lambda a: (env, SwitchRoot(a.name)))
 
-__all__ = ['Add', 'Create', 'AddByName', 'Plugin', 'Show']
+__all__ = ['Create', 'AddByIdent', 'Plugin', 'Show', 'Init', 'Ready']

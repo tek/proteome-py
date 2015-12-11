@@ -6,7 +6,7 @@ from tryp import List, Map
 
 from trypnv import command, NvimStatePlugin, msg_command
 
-from proteome.plugins.core import (AddByName, Show, Create, SwitchRoot, Next,
+from proteome.plugins.core import (AddByIdent, Show, Create, SwitchRoot, Next,
                                    Prev, Init, Save, Ready)
 from proteome.main import Proteome
 from proteome.nvim import NvimFacade
@@ -60,7 +60,7 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     def pro_create(self):
         pass
 
-    @msg_command(AddByName)
+    @msg_command(AddByIdent)
     def pro_add(self):
         pass
 
