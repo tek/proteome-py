@@ -41,15 +41,18 @@ class Project(object):
         self.history = history
 
     @property
+    def ident(self):
+        return self.tpe.map(_ + '/').get_or_else('') + self.name
+
+    @property
     def info(self) -> str:
-        tp = self.tpe.map(_ + '/').get_or_else('')
-        return '{}{}: {}'.format(tp, self.name, format_path(self.root))
+        return '{}: {}'.format(self.ident, format_path(self.root))
 
     def __str__(self):
         return self.info
 
     def __repr__(self):
-        return '{}({})'.format(self.__class__.__name__, repr(self.name))
+        return '{}({})'.format(self.__class__.__name__, repr(self.ident))
 
     def __eq__(self, other):
         return (
@@ -92,6 +95,9 @@ class Projects(object):
     def __add__(self, pro: Project) -> 'Projects':
         return Projects(self.projects + [pro])
 
+    def __sub__(self, pro: Project) -> 'Projects':
+        return Projects(self.projects.without(pro))
+
     def __pow__(self, pros: List[Project]) -> 'Projects':
         return Projects(self.projects + pros)
 
@@ -102,8 +108,15 @@ class Projects(object):
             pros = names.flat_map(self.project)
         return pros.map(_.info)
 
-    def project(self, name: str) -> Maybe[Project]:
-        return self.projects.find(_.name == name)
+    def project(self, ident: str) -> Maybe[Project]:
+        @flat_may
+        def try_split():
+            if '/' in ident:
+                tpe, name = ident.split('/', 1)
+                return self.projects.find(
+                    lambda a: a.name == name and a.tpe == Just(tpe))
+        return self.projects.find(_.name == ident)\
+            .or_else(try_split)
 
     def ctags(self, names: List[str]):
         matching = names.flat_map(self.project)

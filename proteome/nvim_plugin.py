@@ -7,7 +7,7 @@ from tryp import List, Map
 from trypnv import command, NvimStatePlugin, msg_command
 
 from proteome.plugins.core import (AddByIdent, Show, Create, SwitchRoot, Next,
-                                   Prev, Init, Save, Ready)
+                                   Prev, Init, Save, Ready, RemoveByIdent)
 from proteome.main import Proteome
 from proteome.nvim import NvimFacade
 from proteome.logging import Logging
@@ -62,6 +62,10 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
 
     @msg_command(AddByIdent)
     def pro_add(self):
+        pass
+
+    @msg_command(RemoveByIdent)
+    def pro_remove(self):
         pass
 
     @msg_command(Show, sync=True)

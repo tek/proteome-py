@@ -1,6 +1,7 @@
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
 import logging
+from pathlib import Path
 
 from fn import _  # type: ignore
 
@@ -25,6 +26,15 @@ class Projects_(_LoaderSpec):
         p2.show().should.equal(List('{}: {}'.format(n, d)))
         p2.show(List(n)).should.equal(List('{}: {}'.format(n, d)))
         str(p2).should.equal("Projects(Project('{}'))".format(n))
+
+    def remove(self):
+        n = 'some name'
+        d = '/dir/to/project'
+        t = 'sometype'
+        p2 = Projects() + Project(n, Path(d), Just(t))
+        pro = p2.project('{}/{}'.format(t, n))
+        pro.map(_.root).should.equal(Just(Path(d)))
+        (p2 - pro._get).projects.should.be.empty
 
 
 class ProjectLoader_(_LoaderSpec):

@@ -47,16 +47,23 @@ class Env(pyrsistent.PRecord):
         return self.set(current_index=new_index)
 
     def add(self, pro: Project):
-        return self.set(projects=self.projects + pro)
+        return self if pro in self else self.set(projects=self.projects + pro)
 
     def __add__(self, pro: Project):
         return self.add(pro)
 
+    def remove(self, ident: str):
+        return self.project(ident)\
+            .cata(lambda pro: self.set(projects=self.projects - pro), self)
+
+    def __sub__(self, ident: str):
+        return self.remove(ident)
+
     def analyzer(self, vim: NvimFacade):
         return ProjectAnalyzer(vim, self.loader)
 
-    def project_by_name(self, name: str):
-        return self.projects.project(name)
+    def project(self, ident: str):
+        return self.projects.project(ident)
 
     @property
     def all_projects(self):

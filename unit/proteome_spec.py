@@ -5,7 +5,7 @@ from flexmock import flexmock  # NOQA
 
 from proteome.nvim_plugin import Create
 from proteome.project import Project, Projects, ProjectAnalyzer
-from proteome.plugins.core import Next, Prev, Init
+from proteome.plugins.core import Next, Prev, Init, AddByIdent, RemoveByIdent
 from proteome.main import Proteome
 
 from tryp import List, Just, _, Map
@@ -74,7 +74,7 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
         prot._data = prot._data.set(projects=Projects(pros))
         p1.tag_file.exists().should_not.be.ok
         p2.tag_file.exists().should_not.be.ok
-        with test_loop() as loop:
+        with test_loop():
             prot.plug_command('ctags', 'gen', List())
             plug.ctags.exec_pending()
         plug.ctags.current.keys.should.be.empty
@@ -92,7 +92,7 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
         plug = prot.plugin('history')._get
         pros = List(p1, p2)
         prot._data = prot._data.set(projects=Projects(pros))
-        with test_loop() as loop:
+        with test_loop():
             prot.plug_command('history', 'ready', List())
             plug.git.exec_pending()
         plug.git.current.keys.should.be.empty
@@ -108,5 +108,15 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
         prot._data.projects.projects.head.should.equal(
             Just(Project(self.pypro1_name, p, Just(self.pypro1_type)))
         )
+
+    def add_remove_project(self):
+        prot = Proteome(self.vim, self.config, List(),
+                        List(self.project_base), self.type_bases)
+        prot.send(AddByIdent(self.pypro1_name))
+        prot._data.project(self.pypro1_name)\
+            .map(_.root)\
+            .should.equal(Just(self.pypro1_root))
+        prot.send(RemoveByIdent(self.pypro1_name))
+        prot._data.all_projects.should.be.empty
 
 __all__ = ['Proteome_']

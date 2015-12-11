@@ -11,7 +11,8 @@ from proteome.env import Env
 
 Init = message('Init')
 Ready = message('Ready')
-AddByIdent = message('AddByIdent', 'name')
+AddByIdent = message('AddByIdent', 'ident')
+RemoveByIdent = message('RemoveByIdent', 'ident')
 Create = message('Create', 'name', 'root')
 Next = message('Next')
 Prev = message('Prev')
@@ -34,9 +35,13 @@ class Plugin(ProteomeComponent):
 
     @handle(AddByIdent)
     def add_by_ident(self, env: Env, msg):
-        return env.loader.by_ident(msg.name)\
-            .or_else(env.loader.resolve_ident(msg.name))\
+        return env.loader.by_ident(msg.ident)\
+            .or_else(env.loader.resolve_ident(msg.ident))\
             .map(env.add)
+
+    @may_handle(RemoveByIdent)
+    def remove_by_ident(self, env: Env, msg):
+        return env - msg.ident
 
     @may_handle(Create)
     def create(self, env: Env, msg):
@@ -50,7 +55,7 @@ class Plugin(ProteomeComponent):
 
     @may_handle(SwitchRoot)
     def switch_root(self, env: Env, msg):
-        env.project_by_name(msg.name)\
+        env.project(msg.name)\
             .map(lambda a: a.root)\
             .foreach(self.vim.switch_root)  # type: ignore
 
