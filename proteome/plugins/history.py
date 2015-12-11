@@ -48,6 +48,9 @@ class Plugin(ProteomeComponent):
 
     @may_handle(Init)
     def init(self, env: Env, msg):
+        else:
+            err = 'tried to run {} on history while not ready'
+            self.log.debug(err.format(handler.__name__))
         self._handle(env, self._init)
 
     @may_handle(Commit)

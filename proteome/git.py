@@ -9,9 +9,10 @@ class Git(ProcessExecutor):
     def pre_args(self, project: Project):
         return []
 
-    def command(self, project: Project, name: str, *args):
-        job = Job(project, 'git', self.pre_args(project) + [name] + list(args))
-        return self.run(job)
+    def command(self, project: Project, name: str, *cmd_args):
+        args = self.pre_args(project) + [name] + list(cmd_args)
+        self.log.debug('running git {}'.format(' '.join(args)))
+        return self.run(Job(project, 'git', args))
 
     # TODO remove dangling lock file
     def init(self, project: Project):
