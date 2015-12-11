@@ -160,7 +160,7 @@ class Resolver(object):
             .or_else(lambda: self.specific(tpe, name))
 
     def specific(self, tpe: str, name: str) -> Maybe[Path]:
-        self.types\
+        return self.types\
             .valfilter(_.call('contains', tpe))\
             .keys\
             .map(_ / name)\
@@ -205,7 +205,7 @@ class ProjectLoader(Logging):
             return parse(self.config_path)
 
     def resolve(self, tpe: str, name: str):
-        return self.resolver.type_name(tpe, name) \
+        return self.resolver.type_name(tpe, name)\
             .map(lambda a: Project(name, a))
 
     @flat_may
