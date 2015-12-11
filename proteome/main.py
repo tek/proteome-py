@@ -62,10 +62,12 @@ class Proteome(ProteomeState):
 
     def plug_command(self, plug_name: str, cmd_name: str, args: list):
         plug = self.plugin(plug_name)
-        plug.zip(plug.map(lambda a: a.command(cmd_name, List(args))))\
-            .smap(self.send_plug_command)
+        cmd = plug.flat_map(lambda a: a.command(cmd_name, List(args)))
+        plug.zip(cmd).smap(self.send_plug_command)
 
     def send_plug_command(self, plug, msg):
+        self.log.debug('sending command {} to plugin {}'.format(msg,
+                                                                plug.name))
         self._data = plug.process(self._data, msg)
 
 __all__ = ['Proteome']
