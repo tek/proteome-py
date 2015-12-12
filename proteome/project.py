@@ -22,6 +22,7 @@ def format_path(path: Path):
     return str(path).replace(h, '~')
 
 
+# TODO subprojects, e.g. sbt projects
 class Project(object):
 
     def __init__(
