@@ -20,6 +20,7 @@ class Env(pyrsistent.PRecord, Data):
     type_bases = field(Map)
     projects = field(Projects)
     current_index = field(int, initial=0)
+    initialized = field(bool, initial=False)
 
     @property
     def loader(self):
