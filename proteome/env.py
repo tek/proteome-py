@@ -5,7 +5,7 @@ from proteome.project import (Projects, Resolver, ProjectLoader, Project,
 from proteome.nvim import NvimFacade
 from trypnv.machine import Data
 
-from tryp import List, Map
+from tryp import List, Map, Just
 
 import pyrsistent  # type: ignore
 
@@ -54,11 +54,13 @@ class Env(pyrsistent.PRecord, Data):
     def __add__(self, pro: Project):
         return self.add(pro)
 
-    def remove(self, ident: str):
-        return self.project(ident)\
-            .cata(lambda pro: self.set(projects=self.projects - pro), self)
+    def remove(self, ident):
+        pro = (Just(ident) if isinstance(ident, Project) else
+               self.project(ident))
+        return pro\
+            .cata(lambda p: self.set(projects=self.projects - p), self)
 
-    def __sub__(self, ident: str):
+    def __sub__(self, ident):
         return self.remove(ident)
 
     def analyzer(self, vim: NvimFacade):
