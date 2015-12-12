@@ -16,7 +16,6 @@ class NvimFacade(Logging, trypnv.nvim.NvimFacade):
         p = str(path)
         self.vim.chdir(p)
         self.pautocmd('SwitchedRoot')
-        self.log.info('switched root to {}'.format(p))
         self.set_pvar('root', p)
         self.set_pvar('root_name', str(path.name))
 

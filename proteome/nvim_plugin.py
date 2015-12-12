@@ -7,7 +7,8 @@ from tryp import List, Map
 from trypnv import command, NvimStatePlugin, msg_command
 
 from proteome.plugins.core import (AddByIdent, Show, Create, SwitchRoot, Next,
-                                   Prev, Init, Save, Ready, RemoveByIdent)
+                                   Prev, Init, Save, Ready, RemoveByIdent,
+                                   BufEnter)
 from proteome.main import Proteome
 from proteome.nvim import NvimFacade
 from proteome.logging import Logging
@@ -99,6 +100,11 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
         if not self._post_initialized:
             self._post_initialized = True
             self.pro.send(Ready())
+
+    @neovim.autocmd('BufEnter')
+    def buf_enter(self):
+        if self._initialized:
+            self.pro.send(BufEnter(self.vim.current_buffer))
 
 
 __all__ = ['ProteomeNvimPlugin']

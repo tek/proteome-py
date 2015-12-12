@@ -13,6 +13,7 @@ from proteome.env import Env
 
 Init = message('Init')
 Ready = message('Ready')
+Add = message('Add', 'project')
 AddByIdent = message('AddByIdent', 'ident')
 RemoveByIdent = message('RemoveByIdent', 'ident')
 Create = message('Create', 'name', 'root')
@@ -21,6 +22,11 @@ Prev = message('Prev')
 SetRoot = message('SetRoot')
 SwitchRoot = message('SwitchRoot', 'name')
 Save = message('Save')
+Added = message('Added', 'project')
+Removed = message('Removed', 'project')
+ProjectChanged = message('ProjectChanged', 'project')
+BufEnter = message('BufEnter', 'buffer')
+Initialized = message('Initialized')
 
 
 class Show(Message):
@@ -33,17 +39,32 @@ class Plugin(ProteomeComponent):
 
     @may_handle(Init)
     def init(self, env: Env, msg):
-        return env + env.analyzer(self.vim).current  # type: ignore
+        return (Add(env.analyzer(self.vim).current),  # type: ignore
+                BufEnter(self.vim.current_buffer).pub, Initialized())
+
+    @may_handle(Initialized)
+    def initialized(self, env, msg):
+        env.set(initialized=True)
 
     @handle(AddByIdent)
     def add_by_ident(self, env: Env, msg):
         return env.loader.by_ident(msg.ident)\
             .or_else(env.loader.resolve_ident(msg.ident))\
-            .map(env.add)
+            .map(Add)
 
-    @may_handle(RemoveByIdent)
+    @may_handle(Add)
+    def add(self, env: Env, msg):
+        if msg.project not in env:
+            return env.add(msg.project), Added(msg.project).pub
+
+    @may_handle(Added)
+    def added(self, env, nsg):
+        return SetRoot()
+
+    @handle(RemoveByIdent)
     def remove_by_ident(self, env: Env, msg):
-        return env - msg.ident
+        return env.project(msg.ident)\
+            .map(lambda a: (env - a, Removed(a).pub))
 
     @may_handle(Create)
     def create(self, env: Env, msg):
@@ -55,11 +76,19 @@ class Plugin(ProteomeComponent):
         header = List('Projects:')  # type: List[str]
         self.vim.echo('\n'.join(header + lines))
 
-    @may_handle(SwitchRoot)
+    @handle(SwitchRoot)
     def switch_root(self, env: Env, msg):
-        env.project(msg.name)\
-            .map(_.root)\
+        pro = env.project(msg.name)
+        pro.map(_.root)\
             .foreach(self.vim.switch_root)  # type: ignore
+        if env.initialized:
+            info = 'switched root to {}'
+            pro.foreach(lambda a: self.log.info(info.format(a.ident)))
+        return pro.map(ProjectChanged)
+
+    @handle(SetRoot)
+    def set_root(self, env: Env, msg):
+        return env.current.map(_.name).map(SwitchRoot)
 
     @may_handle(Next)
     def next(self, env: Env, msg):
@@ -68,9 +97,5 @@ class Plugin(ProteomeComponent):
     @may_handle(Prev)
     def prev(self, env: Env, msg):
         return env.inc(-1), SetRoot()
-
-    @handle(SetRoot)
-    def set_root(self, env: Env, msg):
-        return env.current.map(lambda a: (env, SwitchRoot(a.name)))
 
 __all__ = ['Create', 'AddByIdent', 'Plugin', 'Show', 'Init', 'Ready']
