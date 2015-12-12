@@ -50,7 +50,7 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
         self.pro = Proteome(self.vim, Path(config_path), plugins, bases,
                             type_bases)
         self.pro.send(Init())
-        self.vim.vim.call('ptplugin#runtime_after')
+        self.vim.call('ptplugin#runtime_after')
 
     @command()
     def pro_plug(self, plug_name, cmd_name, *args):
