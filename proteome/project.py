@@ -135,6 +135,11 @@ class Projects(object):
     def __len__(self):
         return len(self.projects)
 
+    def __contains__(self, item):
+        return (
+            (isinstance(item, Project) and item in self.projects) or
+            (isinstance(item, str) and self.project(item).isJust)
+        )
 
 def sub_path(base: Path, path: Path):
     check = lambda: path.relative_to(base)

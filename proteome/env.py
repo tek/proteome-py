@@ -73,4 +73,7 @@ class Env(pyrsistent.PRecord, Data):
     def all_projects(self):
         return self.projects.projects
 
+    def __contains__(self, item):
+        return item in self.projects
+
 __all__ = ['Env']
