@@ -1,12 +1,15 @@
 from fn import _  # type: ignore
 
 from trypnv.machine import may_handle, message
+from trypnv.nvim import Buffer
+
+from tryp import List
 
 from proteome.state import ProteomeComponent
 from proteome.env import Env
 from proteome.ctags import Ctags
 from proteome.project import Project
-from proteome.plugins.core import Save
+from proteome.plugins.core import Save, Added, BufEnter
 
 Gen = message('Gen')
 Kill = message('Kill')
@@ -15,6 +18,10 @@ Kill = message('Kill')
 class Plugin(ProteomeComponent):
 
     ctags = Ctags()
+
+    @property
+    def _tags_file_name(self):
+        return '.tags'
 
     def _gen(self, pro: Project):
         return self.ctags.gen(pro)
@@ -35,5 +42,18 @@ class Plugin(ProteomeComponent):
     @may_handle(Kill)
     def kill(self, env: Env, msg):
         pass
+
+    @may_handle(BufEnter)
+    def buf_enter(self, env, msg):
+        self.set_buffer_tags(env, List(msg.buffer))
+
+    # FIXME need to use setlocal for all buffers, this is ineffective
+    @may_handle(Added)
+    def added(self, env: Env, msg: Added):
+        self.set_buffer_tags(env, self.vim.buffers)
+
+    def set_buffer_tags(self, env: Env, bufs: List[Buffer]):
+        files = env.all_projects.map(_.root / self._tags_file_name)
+        bufs.foreach(lambda a: a.amend_optionl('tags', files))
 
 __all__ = ['Gen', 'Plugin']
