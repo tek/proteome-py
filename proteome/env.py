@@ -46,7 +46,10 @@ class Env(pyrsistent.PRecord, Data):
 
     def inc(self, num):
         new_index = (self.current_index + num) % self.project_count
-        return self.set(current_index=new_index)
+        return self.set_index(new_index)
+
+    def set_index(self, index):
+        return self.set(current_index=index)
 
     def add(self, pro: Project):
         return self if pro in self else self.set(projects=self.projects + pro)

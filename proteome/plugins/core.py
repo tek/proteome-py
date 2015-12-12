@@ -20,6 +20,7 @@ Create = message('Create', 'name', 'root')
 Next = message('Next')
 Prev = message('Prev')
 SetRoot = message('SetRoot')
+SetRootIndex = message('SetRootIndex', 'index')
 SwitchRoot = message('SwitchRoot', 'name')
 Save = message('Save')
 Added = message('Added', 'project')
@@ -40,7 +41,9 @@ class Plugin(ProteomeComponent):
     @may_handle(Init)
     def init(self, env: Env, msg):
         return (Add(env.analyzer(self.vim).current),  # type: ignore
-                BufEnter(self.vim.current_buffer).pub, Initialized())
+                BufEnter(self.vim.current_buffer).pub,
+                Initialized(),
+                SetRoot())
 
     @may_handle(Initialized)
     def initialized(self, env, msg):
@@ -58,8 +61,9 @@ class Plugin(ProteomeComponent):
             return env.add(msg.project), Added(msg.project).pub
 
     @may_handle(Added)
-    def added(self, env, nsg):
-        return SetRoot()
+    def added(self, env, msg):
+        if env.initialized:
+            return SetRootIndex(-1)
 
     @handle(RemoveByIdent)
     def remove_by_ident(self, env: Env, msg):
@@ -89,6 +93,10 @@ class Plugin(ProteomeComponent):
     @handle(SetRoot)
     def set_root(self, env: Env, msg):
         return env.current.map(_.name).map(SwitchRoot)
+
+    @handle(SetRootIndex)
+    def set_root_index(self, env, msg):
+        return env.set_index(msg.index), SetRoot()
 
     @may_handle(Next)
     def next(self, env: Env, msg):
