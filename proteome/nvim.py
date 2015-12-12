@@ -12,7 +12,7 @@ class NvimFacade(Logging, trypnv.nvim.NvimFacade):
     def __init__(self, nvim: neovim.Nvim) -> None:
         trypnv.nvim.NvimFacade.__init__(self, nvim, 'proteome')
 
-    def switch_root(self, path: Path):
+    def switch_root(self, path):
         p = str(path)
         self.vim.chdir(p)
         self.pautocmd('SwitchedRoot')

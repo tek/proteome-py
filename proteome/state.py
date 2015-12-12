@@ -1,5 +1,3 @@
-from typing import TypeVar, Generic
-
 from trypnv.machine import Machine, StateMachine
 from trypnv.cmd import StateCommand
 from trypnv.nvim import HasNvim
@@ -13,10 +11,7 @@ from tryp import Empty
 
 from tek.tools import camelcaseify  # type: ignore
 
-A = TypeVar('A')
-
-
-class ProteomeComponent(Generic[A], Machine[A], HasNvim, Logging):
+class ProteomeComponent(Machine, HasNvim, Logging):
 
     def __init__(self, name: str, vim: NvimFacade) -> None:
         Machine.__init__(self, name)

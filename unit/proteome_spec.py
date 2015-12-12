@@ -13,6 +13,7 @@ from tryp import List, Just, _, Map
 from unit._support.spec import MockNvimSpec
 from unit._support.loader import _LoaderSpec
 from unit._support.async import test_loop
+from unit._support.test_plug import Plugin
 
 from tek.test import temp_dir
 
@@ -46,6 +47,8 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
         class P(Proteome):
             def init(self):
                 return dict()
+        P._data_type = dict
+        Plugin._data_type = dict
         plug = 'unit._support.test_plug'
         prot = P(self.vim, Path('/dev/null'), List(plug), List(), Map())
         data = 'message_data'
@@ -112,11 +115,11 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
     def add_remove_project(self):
         prot = Proteome(self.vim, self.config, List(),
                         List(self.project_base), self.type_bases)
-        prot.send(AddByIdent(self.pypro1_name))
-        prot._data.project(self.pypro1_name)\
+        prot.send(AddByIdent(self.pypro1_name))\
+            .project(self.pypro1_name)\
             .map(_.root)\
             .should.equal(Just(self.pypro1_root))
-        prot.send(RemoveByIdent(self.pypro1_name))
-        prot._data.all_projects.should.be.empty
+        prot.send(RemoveByIdent(self.pypro1_name))\
+            .all_projects.should.be.empty
 
 __all__ = ['Proteome_']

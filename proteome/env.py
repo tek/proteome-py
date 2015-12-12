@@ -3,6 +3,7 @@ from pathlib import Path
 from proteome.project import (Projects, Resolver, ProjectLoader, Project,
                               ProjectAnalyzer)
 from proteome.nvim import NvimFacade
+from trypnv.machine import Data
 
 from tryp import List, Map
 
@@ -13,7 +14,7 @@ def field(tpe, **kw):
     return pyrsistent.field(type=tpe, mandatory=True, **kw)
 
 
-class Env(pyrsistent.PRecord):
+class Env(pyrsistent.PRecord, Data):
     config_path = field(Path)
     bases = field(List)
     type_bases = field(Map)

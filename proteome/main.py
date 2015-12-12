@@ -1,6 +1,7 @@
 from pathlib import Path  # type: ignore
-from functools import reduce  # type: ignore
 import importlib
+
+from toolz.itertoolz import cons
 
 from fn import _  # type: ignore
 
@@ -27,7 +28,7 @@ class Proteome(ProteomeState):
         self._type_bases = type_bases
         core = 'proteome.plugins.core'
         super(Proteome, self).__init__(vim)
-        self.plugins = (plugins + [core]).flat_map(self.start_plugin)
+        self.sub = List.wrap(cons(core, plugins)).flat_map(self.start_plugin)
 
     @may
     def start_plugin(self, path: str):
@@ -53,12 +54,8 @@ class Proteome(ProteomeState):
     def projects(self):
         return self.env.projects
 
-    @may
-    def unhandled(self, env, msg):
-        return reduce(lambda e, plug: plug.process(e, msg), self.plugins, env)
-
     def plugin(self, name):
-        return self.plugins.find(_.name == name)
+        return self.sub.find(_.name == name)
 
     def plug_command(self, plug_name: str, cmd_name: str, args: list):
         plug = self.plugin(plug_name)
@@ -68,6 +65,7 @@ class Proteome(ProteomeState):
     def send_plug_command(self, plug, msg):
         self.log.debug('sending command {} to plugin {}'.format(msg,
                                                                 plug.name))
-        self._data = plug.process(self._data, msg)
+        d2, pub = plug.process(self._data, msg)
+        self._data = self._publish_results(d2, pub)
 
 __all__ = ['Proteome']
