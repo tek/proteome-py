@@ -50,7 +50,11 @@ class Plugin(ProteomeComponent):
     # FIXME need to use setlocal for all buffers, this is ineffective
     @may_handle(Added)
     def added(self, env: Env, msg: Added):
-        self.set_buffer_tags(env, self.vim.buffers)
+        if env.initialized:
+            bufs = self.vim.buffers
+        else:
+            bufs = self.vim.current_buffer
+        self.set_buffer_tags(env, bufs)
 
     def set_buffer_tags(self, env: Env, bufs: List[Buffer]):
         files = env.all_projects.map(_.root / self._tags_file_name)
