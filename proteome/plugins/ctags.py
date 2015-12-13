@@ -53,7 +53,7 @@ class Plugin(ProteomeComponent):
         if env.initialized:
             bufs = self.vim.buffers
         else:
-            bufs = [self.vim.current_buffer]
+            bufs = List(self.vim.current_buffer)
         self.set_buffer_tags(env, bufs)
 
     def set_buffer_tags(self, env: Env, bufs: List[Buffer]):
