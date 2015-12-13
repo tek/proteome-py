@@ -47,7 +47,7 @@ class Plugin(ProteomeComponent):
 
     @may_handle(Initialized)
     def initialized(self, env, msg):
-        env.set(initialized=True)
+        return env.set(initialized=True)
 
     @handle(AddByIdent)
     def add_by_ident(self, env: Env, msg):
