@@ -8,6 +8,8 @@ from tryp.logging import tryp_stdout_logging
 
 from proteome.nvim import NvimFacade
 
+from trypnv.nvim import Buffer
+
 
 class MockNvimFacade(NvimFacade):
 
@@ -21,6 +23,13 @@ class MockNvimFacade(NvimFacade):
         if v is None:
             self.log.error('variable not found: {}'.format(name))
         return v
+
+    @property
+    def current_buffer(self):
+        return Buffer(self, self.prefix)
+
+    def switch_root(self, root):
+        pass
 
 
 class Spec(tek.Spec):
