@@ -38,6 +38,9 @@ class Show(Message):
 
 class Plugin(ProteomeComponent):
 
+    def _no_such_ident(self, ident: str):
+        self.log.error('no project found matching \'{}\''.format(ident))
+
     @may_handle(Init)
     def init(self, env: Env, msg):
         return (Add(env.analyzer(self.vim).current),  # type: ignore
@@ -53,7 +56,8 @@ class Plugin(ProteomeComponent):
     def add_by_ident(self, env: Env, msg):
         return env.loader.by_ident(msg.ident)\
             .or_else(env.loader.resolve_ident(msg.ident))\
-            .map(Add)
+            .map(Add)\
+            .error(lambda: self._no_such_ident(msg.ident))
 
     @may_handle(Add)
     def add(self, env: Env, msg):
