@@ -94,7 +94,7 @@ class Plugin(ProteomeComponent):
     def set_root(self, env: Env, msg):
         return env.current.map(_.name).map(SwitchRoot)
 
-    @handle(SetRootIndex)
+    @may_handle(SetRootIndex)
     def set_root_index(self, env, msg):
         return env.set_index(msg.index), SetRoot()
 
