@@ -7,10 +7,10 @@ from proteome.nvim_plugin import Create
 from proteome.project import Project, Projects, ProjectAnalyzer
 from proteome.plugins.core import Next, Prev, Init, AddByIdent, RemoveByIdent
 from proteome.main import Proteome
+from proteome.test.spec import MockNvimSpec
 
 from tryp import List, Just, _, Map
 
-from unit._support.spec import MockNvimSpec
 from unit._support.loader import _LoaderSpec
 from unit._support.async import test_loop
 from unit._support.test_plug import Plugin

@@ -9,9 +9,9 @@ from tryp import Just, List, Empty
 
 from proteome.project import Project, Projects
 from proteome.logging import Logging
+from proteome.test.spec import MockNvimSpec
 
 from unit._support.loader import _LoaderSpec
-from unit._support.spec import MockNvimSpec
 
 
 class Projects_(_LoaderSpec):

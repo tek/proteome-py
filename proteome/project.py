@@ -141,6 +141,7 @@ class Projects(object):
             (isinstance(item, str) and self.project(item).isJust)
         )
 
+
 def sub_path(base: Path, path: Path):
     check = lambda: path.relative_to(base)
     return Maybe.from_call(check)\

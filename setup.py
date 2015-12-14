@@ -8,7 +8,8 @@ setup(
     author_email='torstenschmits@gmail.com',
     license='MIT',
     url='https://github.com/tek/proteome',
-    packages=find_packages(exclude=['unit', 'unit.*']),
+    packages=find_packages(
+        exclude=['unit', 'unit.*', 'integration', 'integration.*']),
     install_requires=[
         'tryp-nvim',
         'pyrsistent',
