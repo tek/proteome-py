@@ -28,7 +28,7 @@ class Plugin(ProteomeComponent):
 
     @may_handle(Save)
     def save(self, env: Env, msg):
-        return self.gen(env, msg)
+        self.gen(env, msg)
 
     @may_handle(Gen)
     def gen(self, env: Env, msg):
@@ -47,7 +47,6 @@ class Plugin(ProteomeComponent):
     def buf_enter(self, env, msg):
         self.set_buffer_tags(env, List(msg.buffer))
 
-    # FIXME need to use setlocal for all buffers, this is ineffective
     @may_handle(Added)
     def added(self, env: Env, msg: Added):
         if env.initialized:
