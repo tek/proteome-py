@@ -10,7 +10,7 @@ from proteome.state import ProteomeComponent
 from proteome.env import Env
 from proteome.git import HistoryGit
 from proteome.project import Project
-from proteome.plugins.core import Ready
+from proteome.plugins.core import Ready, Save
 
 Commit = message('Commit')
 
@@ -56,5 +56,9 @@ class Plugin(ProteomeComponent):
     @may_handle(Commit)
     def commit(self, env: Env, msg):
         self._handle(env, self._commit)
+
+    @may_handle(Save)
+    def save(self, env, msg):
+        self.commit(env, msg)
 
 __all__ = ['Commit', 'Plugin']
