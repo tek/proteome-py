@@ -1,13 +1,14 @@
+from pathlib import Path
+import os
+
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
 
 import neovim  # type: ignore
 
-from fn import _  # type: ignore
-
 from integration._support.base import IntegrationSpec
 
-from tryp import List, Just, Empty, Maybe
+from tryp import List
 
 from proteome.nvim_plugin import ProteomeNvimPlugin
 from proteome.project import Project
@@ -16,6 +17,7 @@ from proteome.project import Project
 class ProteomePlugin_(IntegrationSpec):
 
     def setup(self):
+        self.cwd = Path.cwd()
         super(ProteomePlugin_, self).setup()
         argv = ['nvim', '--embed', '-V/tmp/proteome_vim.log', '-u', 'NONE']
         self.neovim = neovim.attach('child', argv=argv)
@@ -26,6 +28,11 @@ class ProteomePlugin_(IntegrationSpec):
         self.vim.set_pvar('type_base_dirs', self.type_bases.keymap(str))
         self.pros = self.add_projects(
             ('python', 'pro1'), ('python', 'pro2'), ('vim', 'pro3'))
+
+    def teardown(self):
+        super(ProteomePlugin_, self).teardown()
+        self.neovim.quit()
+        os.chdir(str(self.cwd))
 
     @property
     def _env(self):
