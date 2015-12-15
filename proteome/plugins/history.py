@@ -45,12 +45,12 @@ class Plugin(ProteomeComponent):
             if not self.all_projects_history:
                 projects = projects.filter(_.history)
             inf = 'running history handler {} on {}'
-            self.log.debug(inf.format(name, projects))
+            self.log.verbose(inf.format(name, projects))
             projects.map(handler)
             self.git.exec_pending()
         else:
             err = 'tried to run {} on history while not ready'
-            self.log.debug(err.format(name))
+            self.log.verbose(err.format(name))
 
     @may_handle(Ready)
     def ready(self, env: Env, msg):
