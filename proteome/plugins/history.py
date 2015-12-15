@@ -39,15 +39,18 @@ class Plugin(ProteomeComponent):
         return self.git is not None and self.git.ready
 
     def _handle(self, env: Env, handler: Callable[[Project], Any]):
+        name = handler.__name__
         if self.git_ready:
             projects = env.all_projects
             if not self.all_projects_history:
                 projects = projects.filter(_.history)
+            inf = 'running history handler {} on {}'
+            self.log.debug(inf.format(name, projects))
             projects.map(handler)
             self.git.exec_pending()
         else:
             err = 'tried to run {} on history while not ready'
-            self.log.debug(err.format(handler.__name__))
+            self.log.debug(err.format(name))
 
     @may_handle(Ready)
     def ready(self, env: Env, msg):
