@@ -94,8 +94,8 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
         if not self._initialized:
             self._initialized = True
             self.proteome_reload()
+            self.vim.delay(self.post_init, 1.0)
 
-    @neovim.autocmd('CursorHold,InsertEnter')
     def post_init(self):
         if not self._post_initialized:
             self._post_initialized = True
