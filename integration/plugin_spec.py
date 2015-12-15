@@ -34,6 +34,9 @@ class ProteomePlugin_(IntegrationSpec):
         self.vim.set_pvar('config_path', str(self.config))
         self.vim.set_pvar('base_dirs', List(str(self.base)))
         self.vim.set_pvar('type_base_dirs', self.type_bases.keymap(str))
+        self.vim.set_pvar('history_base', str(self.history_base))
+        self.vim.set_pvar('plugins', List('proteome.plugins.history',
+                                          'proteome.plugins.ctags'))
         self.pros = self.add_projects(
             ('python', 'pro1'), ('python', 'pro2'), ('vim', 'pro3'))
 
@@ -41,7 +44,7 @@ class ProteomePlugin_(IntegrationSpec):
         super(ProteomePlugin_, self).teardown()
         self.neovim.quit()
         os.chdir(str(self.cwd))
-        self.logfile.read_text().should.be.empty
+        self.logfile.read_text().splitlines().should.be.empty
 
     @property
     def _env(self):
@@ -57,16 +60,13 @@ class ProteomePlugin_(IntegrationSpec):
         self._projects.should.contain(self.pros[1])
 
     def ctags(self):
-        self.vim.set_pvar('plugins', List('proteome.plugins.ctags'))
         self.proteome.proteome_start()
         self.pros.foreach(lambda a: self.proteome.pro_add([a.ident]))
         self.proteome.pro_save()
         self.pros.foreach(lambda a: a.tag_file.should.exist)
 
     def history(self):
-        self.vim.set_pvar('history_base', str(self.history_base))
         self.vim.set_pvar('all_projects_history', 1)
-        self.vim.set_pvar('plugins', List('proteome.plugins.history'))
         self.proteome.proteome_start()
         self.pros.foreach(lambda a: self.proteome.pro_add([a.ident]))
         self.proteome.post_init()
