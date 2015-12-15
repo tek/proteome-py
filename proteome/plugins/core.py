@@ -45,8 +45,11 @@ class Plugin(ProteomeComponent):
     def init(self, env: Env, msg):
         return (Add(env.analyzer(self.vim).current),  # type: ignore
                 BufEnter(self.vim.current_buffer).pub,
-                Initialized(),
                 SetRoot())
+
+    @may_handle(Ready)
+    def ready(self, env, msg):
+        return Initialized()
 
     @may_handle(Initialized)
     def initialized(self, env, msg):
