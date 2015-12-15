@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import logging
 
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
@@ -9,6 +10,9 @@ import neovim  # type: ignore
 from integration._support.base import IntegrationSpec
 
 from tryp import List
+import tryp.logging
+
+from tek.test import temp_dir
 
 from proteome.nvim_plugin import ProteomeNvimPlugin
 from proteome.project import Project
@@ -19,7 +23,11 @@ class ProteomePlugin_(IntegrationSpec):
     def setup(self):
         self.cwd = Path.cwd()
         super(ProteomePlugin_, self).setup()
-        argv = ['nvim', '--embed', '-V/tmp/proteome_vim.log', '-u', 'NONE']
+        self.logfile = temp_dir('log') / 'proteome_spec'
+        self.logfile.touch()
+        tryp.logging.logfile = self.logfile
+        tryp.logging.tryp_file_logging(handler_level=logging.WARN)
+        argv = ['nvim', '--embed', '-V/dev/null', '-u', 'NONE']
         self.neovim = neovim.attach('child', argv=argv)
         self.proteome = ProteomeNvimPlugin(self.neovim)
         self.vim = self.proteome.vim
@@ -33,6 +41,7 @@ class ProteomePlugin_(IntegrationSpec):
         super(ProteomePlugin_, self).teardown()
         self.neovim.quit()
         os.chdir(str(self.cwd))
+        self.logfile.read_text().should.be.empty
 
     @property
     def _env(self):
