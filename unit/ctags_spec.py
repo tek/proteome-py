@@ -17,7 +17,7 @@ class Ctags_(_LoaderSpec):
 
     def run(self):
         with test_loop() as loop:
-            ctags = Ctags()
+            ctags = Ctags(None, loop)
             p = Project(self.pypro1_name, self.pypro1_root,
                         tpe=Just(self.pypro1_type),
                         langs=List(self.pypro1_type))
@@ -29,7 +29,7 @@ class Ctags_(_LoaderSpec):
 
     def fail(self):
         with test_loop() as loop:
-            ctags = Ctags()
+            ctags = Ctags(None, loop)
             p = Project('invalid', Path(temp_path('invalid')), tpe=Just('c'),
                         langs=List('c'))
             result = loop.run_until_complete(ctags.gen(p))

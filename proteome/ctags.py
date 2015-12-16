@@ -1,8 +1,8 @@
 from proteome.project import Project
-from proteome.process import ProcessExecutor, Job  # type: ignore
+from trypnv import ProcessExecutor, Job  # type: ignore
 
 
-class Ctags(ProcessExecutor):
+class Ctags(ProcessExecutor):  # type: ignore
 
     def gen(self, project: Project):
         langs = ','.join(project.ctags_langs)
@@ -14,7 +14,7 @@ class Ctags(ProcessExecutor):
             str(tag_file),
             str(project.root)
         ]
-        job = Job(project, 'ctags', args)
+        job = Job(project, 'ctags', args, self.loop)
         return self.run(job)
 
 __all__ = ['Ctags']

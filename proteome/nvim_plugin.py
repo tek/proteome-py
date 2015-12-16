@@ -34,6 +34,7 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     def proteome_quit(self):
         if self.pro is not None:
             self.vim.clean()
+            self.pro.stop()
             self.pro = None
 
     @command()
@@ -48,8 +49,9 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
             .keymap(Path)\
             .valmap(List.wrap)
         plugins = self.vim.pl('plugins') | List()
-        self.pro = Proteome(self.vim, Path(config_path), plugins, bases,
+        self.pro = Proteome(self.vim.proxy, Path(config_path), plugins, bases,
                             type_bases)
+        self.pro.start()
         self.pro.send(Init())
         self.vim.call('ptplugin#runtime_after')
 
@@ -104,7 +106,7 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     @neovim.autocmd('BufEnter')
     def buf_enter(self):
         if self._initialized:
-            self.pro.send(BufEnter(self.vim.current_buffer))
+            self.pro.send(BufEnter(self.vim.current_buffer.proxy))
 
 
 __all__ = ['ProteomeNvimPlugin']

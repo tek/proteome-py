@@ -3,6 +3,7 @@ from typing import Callable, Any
 from datetime import datetime
 
 from tryp import _
+from tryp.lazy import lazy
 
 from trypnv.machine import may_handle, message
 
@@ -17,10 +18,10 @@ Commit = message('Commit')
 
 class Plugin(ProteomeComponent):
 
-    def __init__(self, *a, **kw):
-        super(Plugin, self).__init__(*a, **kw)
+    @lazy
+    def git(self):
         base = self.vim.pdir('history_base').get_or_else(Path('/dev/null'))
-        self.git = HistoryGit(base)
+        return HistoryGit(base, self.vim)
 
     def _commit(self, pro: Project):
         self.log.debug('commiting to history repo for {}'.format(pro))
@@ -47,7 +48,7 @@ class Plugin(ProteomeComponent):
             inf = 'running history handler {} on {}'
             self.log.verbose(inf.format(name, projects))
             projects.map(handler)
-            self.git.exec_pending()
+            self.git.exec()
         else:
             err = 'tried to run {} on history while not ready'
             self.log.verbose(err.format(name))

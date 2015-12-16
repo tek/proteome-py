@@ -17,11 +17,11 @@ class Git_(_LoaderSpec):
 
     def commit_all(self):
         history_base = temp_dir('git', 'history')
-        git = HistoryGit(history_base)
         p = self.mk_project('pro1', 'py')
         (p.root / 'test_file').touch()
         history_repo = history_base / p.fqn
         with test_loop() as loop:
+            git = HistoryGit(history_base, None, loop)
             run = lambda f: loop.run_until_complete(f).success.should.be.ok
             run(git.init(p))
             run(git.add_commit_all(p, 'test'))

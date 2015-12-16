@@ -1,4 +1,4 @@
-from trypnv.machine import Machine, StateMachine
+from trypnv import Machine, PluginStateMachine
 from trypnv.cmd import StateCommand
 from trypnv.nvim import HasNvim
 
@@ -7,7 +7,7 @@ from proteome.logging import Logging
 
 from fn import F, _  # type: ignore
 
-from tryp import Empty
+from tryp import Empty, List
 
 from tek.tools import camelcaseify  # type: ignore
 
@@ -34,11 +34,11 @@ class ProteomeComponent(Machine, HasNvim, Logging):
         return Empty()
 
 
-class ProteomeState(StateMachine, HasNvim, Logging):
+class ProteomeState(PluginStateMachine, HasNvim, Logging):
 
-    def __init__(self, vim: NvimFacade) -> None:
+    def __init__(self, vim: NvimFacade, plugins: List[str]) -> None:
         self.vim = vim
-        StateMachine.__init__(self, 'proteome')
+        PluginStateMachine.__init__(self, 'proteome', plugins)
         HasNvim.__init__(self, vim)
 
 

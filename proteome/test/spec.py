@@ -1,3 +1,6 @@
+from typing import Callable, Any
+from contextlib import contextmanager
+
 from flexmock import flexmock  # type: ignore
 
 import tryp
@@ -25,10 +28,17 @@ class MockNvimFacade(NvimFacade):
 
     @property
     def current_buffer(self):
-        return Buffer(self, self.prefix)
+        return Buffer(self, self, self.prefix)
 
     def switch_root(self, root):
         pass
+
+    def async(self, f: Callable[['NvimFacade'], Any]):
+        return f(self)
+
+    @contextmanager
+    def main_event_loop(self):
+        yield
 
 
 class Spec(tryp.test.Spec):

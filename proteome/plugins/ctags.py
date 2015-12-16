@@ -4,6 +4,7 @@ from trypnv.machine import may_handle, message
 from trypnv.nvim import Buffer
 
 from tryp import List
+from tryp.lazy import lazy
 
 from proteome.state import ProteomeComponent
 from proteome.env import Env
@@ -17,14 +18,20 @@ Kill = message('Kill')
 
 class Plugin(ProteomeComponent):
 
-    ctags = Ctags()
+    @property
+    def ctags(self) -> Ctags:
+        return self._ctags  # type: ignore
+
+    @lazy
+    def _ctags(self):
+        return Ctags(self.vim)
 
     @property
     def _tags_file_name(self):
         return '.tags'
 
     def _gen(self, pro: Project):
-        return self.ctags.gen(pro)
+        self.ctags.gen(pro)
 
     @may_handle(Save)
     def save(self, env: Env, msg):
@@ -36,7 +43,7 @@ class Plugin(ProteomeComponent):
             env.projects.projects\
                 .filter(_.want_ctags)\
                 .map(self._gen)
-            self.ctags.exec_pending()
+            self.ctags.exec()
 
     # TODO kill dangling procs
     @may_handle(Kill)

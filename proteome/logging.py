@@ -1,5 +1,6 @@
 import logging  # type: ignore
 
+import tryp.logging
 from trypnv.logging import trypnv_logger
 
 from tryp.lazy import lazy  # type: ignore
@@ -12,14 +13,10 @@ def proteome_logger(name: str):
     return proteome_root_logger.getChild(name)
 
 
-class Logging(object):
-
-    @property
-    def log(self) -> logging.Logger:
-        return self._log   # type: ignore
+class Logging(tryp.logging.Logging):
 
     @lazy
-    def _log(self) -> logging.Logger:
+    def _log(self) -> tryp.logging.Logger:
         return proteome_logger(self.__class__.__name__)
 
-__all__ = ['proteome_logger']
+__all__ = ['proteome_logger', 'Logging']

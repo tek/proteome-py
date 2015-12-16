@@ -8,6 +8,7 @@ Do = message('Do', 'msg')
 
 
 class Plugin(ProteomeComponent):
+    _data_type = dict
 
     @may_handle(Do)
     def doit(self, env: dict, msg):
