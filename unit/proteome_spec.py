@@ -10,7 +10,7 @@ from trypnv.machine import Nop
 
 from proteome.nvim_plugin import Create
 from proteome.project import Project, Projects, ProjectAnalyzer
-from proteome.plugins.core import Next, Prev, Init, AddByIdent, RemoveByIdent
+from proteome.plugins.core import Next, Prev, Init, AddByParams, RemoveByIdent
 from proteome.main import Proteome
 from proteome.test.spec import MockNvimSpec
 
@@ -31,13 +31,13 @@ class DictProteome(Proteome):
 
 class Proteome_(MockNvimSpec, _LoaderSpec):
 
-    def _prot(self, *a):
+    def _prot(self, p=List(), b=List(), t=Map()):
         trypnv.in_vim = False
-        return Proteome(self.vim, self.config, *a).transient()
+        return Proteome(self.vim, self.config, p, b, t).transient()
 
     def create(self):
         name = 'proj'
-        with self._prot(List(), List(), Map()) as prot:
+        with self._prot() as prot:
             data = prot.send_wait(Create(name, null))
         p = data.projects.projects[0]
         p.name.should.equal(name)
@@ -47,7 +47,7 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
         self.vim_mock.should_receive('switch_root').and_return(None)
         name = 'proj'
         name2 = 'proj2'
-        with self._prot(List(), List(), Map()) as prot:
+        with self._prot() as prot:
             pros = List(Project(name, null), Project(name2, null))
             prot.data = prot.data.set(projects=Projects(pros))
             prot.data.current.should.equal(Just(pros[0]))
@@ -75,7 +75,7 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
         plug_name = 'proteome.plugins.ctags'
         p1 = self.mk_project('pro1', 'c')
         p2 = self.mk_project('pro2', 'go')
-        with self._prot(List(plug_name), List(), Map()) as prot:
+        with self._prot(List(plug_name)) as prot:
             plug = prot.plugin('ctags')._get
             pros = List(p1, p2)
             prot.data = prot.data.set(projects=Projects(pros))
@@ -94,7 +94,7 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
         plug_name = 'proteome.plugins.history'
         p1 = self.mk_project('pro1', 'c')
         p2 = self.mk_project('pro2', 'go')
-        with self._prot(List(plug_name), List(), Map()) as prot:
+        with self._prot(List(plug_name)) as prot:
             plug = prot.plugin('history')._get
             pros = List(p1, p2)
             prot.data = prot.data.set(projects=Projects(pros))
@@ -108,7 +108,7 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
     def current_project(self):
         p = self.pypro1_root
         flexmock(ProjectAnalyzer).should_receive('current_dir').and_return(p)
-        ctx = self._prot(List(), List(self.project_base), self.type_bases)
+        ctx = self._prot(b=List(self.project_base), t=self.type_bases)
         target = Project(self.pypro1_name, p, Just(self.pypro1_type))
         with ctx as prot:
             prot.send_wait(Init())
@@ -119,11 +119,25 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
     def add_remove_project(self):
         ctx = self._prot(List(), List(self.project_base), self.type_bases)
         with ctx as prot:
-            prot.send_wait(AddByIdent(self.pypro1_name))\
+            prot.send_wait(AddByParams(self.pypro1_name))\
                 .project(self.pypro1_name)\
                 .map(_.root)\
-                .should.equal(Just(self.pypro1_root))
+                .should.contain(self.pypro1_root)
             prot.send_wait(RemoveByIdent(self.pypro1_name))\
                 .all_projects.should.be.empty
+
+    def add_by_params(self):
+        tpe = 'ptype'
+        name = 'pname'
+        root = temp_dir('proteome/add_by_params')
+        params = Map(
+            type=tpe,
+            root=root
+        )
+        with self._prot() as prot:
+            prot.send_wait(AddByParams(name, params))\
+                .project(name)\
+                .map(_.root)\
+                .should.contain(root)
 
 __all__ = ['Proteome_']

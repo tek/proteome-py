@@ -2,13 +2,14 @@ from pathlib import Path
 import os
 import logging
 from contextlib import contextmanager
+import json
 
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
 
 import neovim  # type: ignore
 
-from tryp import List
+from tryp import List, Map, Just
 import tryp.logging
 
 from tek.test import temp_dir
@@ -18,6 +19,21 @@ from proteome.project import Project
 from proteome.nvim import NvimFacade
 
 from integration._support.base import IntegrationSpec, main_looped
+
+
+@contextmanager
+def _nop_main_loop(self):
+    yield
+
+
+def _mock_async(self, f):
+    ret = f(self)
+    return ret
+
+
+@property
+def _mock_proxy(self):
+    return self
 
 
 class ProteomePlugin_(IntegrationSpec):
@@ -31,18 +47,9 @@ class ProteomePlugin_(IntegrationSpec):
         tryp.logging.tryp_file_logging(handler_level=logging.WARN)
         argv = ['nvim', '--embed', '-V/dev/null', '-u', 'NONE']
         self.neovim = neovim.attach('child', argv=argv)
-        @contextmanager
-        def nop_main_loop(self):
-            yield
-        def mock_async(self, f):
-            ret = f(self)
-            return ret
-        @property
-        def mock_proxy(self):
-            return self
-        NvimFacade.async = mock_async
-        NvimFacade.main_event_loop = nop_main_loop
-        NvimFacade.proxy = mock_proxy
+        NvimFacade.async = _mock_async
+        NvimFacade.main_event_loop = _nop_main_loop
+        NvimFacade.proxy = _mock_proxy
         self.proteome = ProteomeNvimPlugin(self.neovim)
         self.vim = self.proteome.vim
         self.vim.set_pvar('config_path', str(self.config))
@@ -76,32 +83,51 @@ class ProteomePlugin_(IntegrationSpec):
     def add_from_base(self):
         self.proteome.proteome_start()
         self.proteome.pro_add(['python/pro2'])
+        self._await()
         self._projects.should.contain(self.pros[1])
+
+    @main_looped
+    def add_from_params(self):
+        tpe = 'ptype'
+        name = 'pname'
+        ident = '{}/{}'.format(tpe, name)
+        root = temp_dir('plugin/from_params')
+        params = Map(
+            root=str(root),
+            history=False
+        )
+        self.proteome.proteome_start()
+        self.proteome.pro_add([ident] + json.dumps(params).split(' '))
+        self._await()
+        self._projects.last.should.contain(Project(name, root, Just(tpe)))
 
     @main_looped
     def ctags(self):
         self.proteome.proteome_start()
         self.pros.foreach(lambda a: self.proteome.pro_add([a.ident]))
         self.proteome.pro_save()
+        self._await()
         self.pros.foreach(lambda a: a.tag_file.should.exist)
 
     @main_looped
     def history(self):
+        def check_commit(pro: Project):
+            objdir = self.history_base / pro.fqn / 'objects'
+            files = list((objdir).iterdir())
+            len(files)\
+                .should.be.greater_than(2)
         self.vim.set_pvar('all_projects_history', 1)
         self.proteome.proteome_start()
         self.pros.foreach(lambda a: self.proteome.pro_add([a.ident]))
         self.proteome.post_init()
+        self._await()
         self.pros\
             .map(lambda a: self.history_base / a.fqn)\
             .foreach(lambda a: a.should.exist)
         self.pros\
             .foreach(lambda a: (a.root / 'test_file').touch())
         self.proteome.pro_save()
-        def check_commit(pro: Project):  # NOQA
-            objdir = self.history_base / pro.fqn / 'objects'
-            files = list((objdir).iterdir())
-            len(files)\
-                .should.be.greater_than(2)
+        self._await()
         self.pros.foreach(check_commit)
 
 __all__ = ['ProteomePlugin_']

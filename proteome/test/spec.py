@@ -18,6 +18,7 @@ class MockNvimFacade(NvimFacade):
     def __init__(self):
         self.vars = {}
         super(MockNvimFacade, self).__init__(None)
+        self.target = self
 
     @may
     def var(self, name: str) -> Maybe[str]:  # type: ignore
@@ -39,6 +40,9 @@ class MockNvimFacade(NvimFacade):
     @contextmanager
     def main_event_loop(self):
         yield
+
+    def cmd(self, *a, **kw):
+        pass
 
 
 class Spec(tryp.test.Spec):

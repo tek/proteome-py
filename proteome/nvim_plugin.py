@@ -4,9 +4,9 @@ import neovim  # type: ignore
 
 from tryp import List, Map
 
-from trypnv import command, NvimStatePlugin, msg_command
+from trypnv import command, NvimStatePlugin, msg_command, json_msg_command
 
-from proteome.plugins.core import (AddByIdent, Show, Create, SwitchRoot, Next,
+from proteome.plugins.core import (AddByParams, Show, Create, SwitchRoot, Next,
                                    Prev, Init, Save, Ready, RemoveByIdent,
                                    BufEnter)
 from proteome.main import Proteome
@@ -62,7 +62,7 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     def pro_create(self):
         pass
 
-    @msg_command(AddByIdent)
+    @json_msg_command(AddByParams)
     def pro_add(self):
         pass
 

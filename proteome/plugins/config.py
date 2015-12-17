@@ -10,7 +10,6 @@ from proteome.plugins.core import CurrentAdded, Ready
 class Plugin(ProteomeComponent):
 
     def _runtime(self, project, base):
-        self.log.error('runtime {}'.format(project))
         run = F(self.vim.runtime) << F('{}/{}'.format, base)
         project.all_types.foreach(run)
         project.tpe.map(_ + '/' + project.name).foreach(run)

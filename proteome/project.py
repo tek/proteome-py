@@ -1,6 +1,5 @@
 from pathlib import Path
 import json
-import os
 
 from tryp import Maybe, Empty, Just, List, Map, may, Boolean, flat_may
 
@@ -14,7 +13,7 @@ from proteome.logging import Logging
 
 
 def mkpath(path: str):
-    return Path(os.path.expanduser(path))
+    return Path(path).expanduser()
 
 
 def format_path(path: Path):
@@ -233,7 +232,7 @@ class ProjectLoader(Logging):
             .map(lambda a: Project(name, a, Just(tpe)))
 
     @flat_may
-    def resolve_ident(self, ident: str):
+    def resolve_ident(self, ident: str, params: Map=Map()):
         if '/' in ident:
             return self.resolve(*ident.split('/', 1))
 
@@ -274,10 +273,19 @@ class ProjectLoader(Logging):
             .zip(json.get('name')) \
             .flat_smap(from_type)
 
+    # TODO log error if not a dir
+    # use Either
     @may
     def create(self, name: str, root: Path, **kw):
-        if root.is_dir():
+        if root.expanduser().is_dir():
             return Project(name, root, **kw)
+
+    def from_params(self, ident: str, root: Path, params: Map):
+        parts = List(*reversed(ident.split('/', 1)))
+        name = parts[0]
+        tpe = parts.lift(1).or_else(params.get('type'))
+        kw = params.at('types', 'langs', 'history')
+        return self.create(name, root, tpe=tpe, **kw)
 
 
 class ProjectAnalyzer(HasNvim):

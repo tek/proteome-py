@@ -1,11 +1,12 @@
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
-import logging
 from pathlib import Path
 
 from fn import _  # type: ignore
 
-from tryp import Just, List, Empty
+from tek.test import temp_dir
+
+from tryp import Just, List, Empty, Map
 
 from proteome.project import Project, Projects
 from proteome.logging import Logging
@@ -54,8 +55,6 @@ class ProjectLoader_(_LoaderSpec):
             .should.equal(split)
 
     def config(self):
-        res = self.loader.config.lift(0)\
-            .flat_map(lambda a: a.get('name'))
         self.loader.config.lift(0)\
             .flat_map(lambda a: a.get('name'))\
             .should.equal(Just(self.pypro1_name))
@@ -89,6 +88,30 @@ class ProjectLoader_(_LoaderSpec):
         pro.should.be.a(Project)
         pro.name.should.equal(self.pypro1_name)
         pro.tpe.should.equal(Just(self.pypro1_type))
+
+    def from_params(self):
+        tpe = 'ptype'
+        name = 'pname'
+        ident = '{}/{}'.format(tpe, name)
+        root = temp_dir('loader/from_params')
+        types = ['a', 'b']
+        langs = ['c', 'd']
+        params = Map(
+            types=types,
+            langs=langs,
+            history=False,
+        )
+        pro = self.loader.from_params(ident, root, params)
+        pro.should.contain(Project(name, root, Just(tpe)))
+        pro.x.types.should.equal(types)
+        pro.x.langs.should.equal(langs)
+        pro.x.history.should_not.be.ok
+
+    def from_params_no_type(self):
+        name = 'pname'
+        root = temp_dir('loader/from_params')
+        pro = self.loader.from_params(name, root, Map())
+        pro.should.contain(Project(name, root, Empty()))
 
 
 class ProjectResolver_(_LoaderSpec, MockNvimSpec, Logging):

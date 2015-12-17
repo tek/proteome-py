@@ -2,19 +2,18 @@ from pathlib import Path  # type: ignore
 
 from fn import _  # type: ignore
 
-from tryp import List
+from tryp import List, Map
 
 from trypnv.machine import Message, handle, may_handle, message
 
 from proteome.state import ProteomeComponent
-from proteome.project import Project
+from proteome.project import Project, mkpath
 from proteome.env import Env
 
 
 Init = message('Init')
 Ready = message('Ready')
 Add = message('Add', 'project')
-AddByIdent = message('AddByIdent', 'ident')
 RemoveByIdent = message('RemoveByIdent', 'ident')
 Create = message('Create', 'name', 'root')
 Next = message('Next')
@@ -37,9 +36,16 @@ class Show(Message):
         self.names = names
 
 
+class AddByParams(Message):
+
+    def __init__(self, ident: str, params: Map=Map()):
+        self.ident = ident
+        self.params = params
+
+
 class Plugin(ProteomeComponent):
 
-    def _no_such_ident(self, ident: str):
+    def _no_such_ident(self, ident: str, params):
         self.log.error('no project found matching \'{}\''.format(ident))
 
     @may_handle(Init)
@@ -57,12 +63,17 @@ class Plugin(ProteomeComponent):
     def initialized(self, env, msg):
         return env.set(initialized=True)
 
-    @handle(AddByIdent)
-    def add_by_ident(self, env: Env, msg):
-        return env.loader.by_ident(msg.ident)\
-            .or_else(env.loader.resolve_ident(msg.ident))\
+    @handle(AddByParams)
+    def add_by_params(self, env: Env, msg):
+        params = Map(msg.params)
+        return params.get('root').map(mkpath)\
+            .map(lambda a: env.loader.from_params(msg.ident, a, params))\
+            .get_or_else(
+                env.loader.by_ident(msg.ident)
+                .or_else(env.loader.resolve_ident(msg.ident, params))
+            )\
             .map(Add)\
-            .error(lambda: self._no_such_ident(msg.ident))
+            .error(lambda: self._no_such_ident(msg.ident, params))
 
     @may_handle(Add)
     def add(self, env: Env, msg):
@@ -118,4 +129,4 @@ class Plugin(ProteomeComponent):
     def prev(self, env: Env, msg):
         return env.inc(-1), SetRoot()
 
-__all__ = ['Create', 'AddByIdent', 'Plugin', 'Show', 'Init', 'Ready']
+__all__ = ['Create', 'AddByParams', 'Plugin', 'Show', 'Init', 'Ready']
