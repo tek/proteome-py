@@ -41,12 +41,12 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     def proteome_start(self):
         config_path = self.vim.ppath('config_path')\
             .get_or_else(Path('/dev/null'))
-        bases = self.vim.pl('base_dirs')\
+        bases = self.vim.ppathl('base_dirs')\
             .get_or_else(List())\
             .map(Path)
         type_bases = self.vim.pd('type_base_dirs')\
             .get_or_else(Map())\
-            .keymap(Path)\
+            .keymap(lambda a: Path(a).expanduser())\
             .valmap(List.wrap)
         plugins = self.vim.pl('plugins') | List()
         self.pro = Proteome(self.vim.proxy, Path(config_path), plugins, bases,
