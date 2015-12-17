@@ -69,7 +69,8 @@ class Plugin(ProteomeComponent):
 
     @may_handle(Added)
     def added(self, env, msg):
-        self.vim.set_pvar('added_project', str(msg.project.root))
+        self.vim.set_pvar('added_project', msg.project.json)
+        self.vim.set_pvar('projects', env.projects.json)
         self.vim.pautocmd('Added')
         if env.initialized:
             return SetRootIndex(-1)

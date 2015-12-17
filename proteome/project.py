@@ -87,6 +87,15 @@ class Project(object):
         t = self.tpe.get_or_else('notype')
         return '{}__{}'.format(t, self.name)
 
+    @property
+    def json(self):
+        return dict(
+            name=self.name,
+            root=str(self.root),
+            tpe=self.tpe | None,
+            types=self.types,
+        )
+
 
 class Projects(object):
 
@@ -140,6 +149,10 @@ class Projects(object):
             (isinstance(item, Project) and item in self.projects) or
             (isinstance(item, str) and self.project(item).isJust)
         )
+
+    @property
+    def json(self):
+        return self.projects.map(_.json)
 
 
 def sub_path(base: Path, path: Path):
