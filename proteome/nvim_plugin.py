@@ -53,7 +53,6 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
                             type_bases)
         self.pro.start()
         self.pro.send(Init())
-        self.vim.call('ptplugin#runtime_after')
 
     @command()
     def pro_plug(self, plug_name, cmd_name, *args):

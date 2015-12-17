@@ -96,6 +96,10 @@ class Project(object):
             types=self.types,
         )
 
+    @property
+    def all_types(self):
+        return self.tpe.toList + self.types
+
 
 class Projects(object):
 

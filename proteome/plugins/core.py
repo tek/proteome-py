@@ -28,6 +28,7 @@ Removed = message('Removed', 'project')
 ProjectChanged = message('ProjectChanged', 'project')
 BufEnter = message('BufEnter', 'buffer')
 Initialized = message('Initialized')
+CurrentAdded = message('CurrentAdded')
 
 
 class Show(Message):
@@ -44,6 +45,7 @@ class Plugin(ProteomeComponent):
     @may_handle(Init)
     def init(self, env: Env, msg):
         return (Add(env.analyzer(self.vim).current),  # type: ignore
+                CurrentAdded().pub,
                 BufEnter(self.vim.current_buffer).pub,
                 SetRoot())
 
