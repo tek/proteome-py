@@ -11,7 +11,7 @@ from proteome.state import ProteomeComponent
 from proteome.env import Env
 from proteome.git import HistoryGit
 from proteome.project import Project
-from proteome.plugins.core import Ready, Save
+from proteome.plugins.core import Save, StageIII
 
 Commit = message('Commit')
 
@@ -23,6 +23,7 @@ class Plugin(ProteomeComponent):
         base = self.vim.pdir('history_base').get_or_else(Path('/dev/null'))
         return HistoryGit(base, self.vim)
 
+    # TODO handle broken repo
     def _commit(self, pro: Project):
         self.log.debug('commiting to history repo for {}'.format(pro))
         return self.git.add_commit_all(pro, datetime.now().isoformat())
@@ -53,8 +54,8 @@ class Plugin(ProteomeComponent):
             err = 'tried to run {} on history while not ready'
             self.log.verbose(err.format(name))
 
-    @may_handle(Ready)
-    def ready(self, env: Env, msg):
+    @may_handle(StageIII)
+    def init(self, env: Env, msg):
         self._handle(env, self._init)
 
     @may_handle(Commit)

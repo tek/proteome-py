@@ -4,15 +4,16 @@ from fn import _  # type: ignore
 
 from tryp import List, Map
 
-from trypnv.machine import Message, handle, may_handle, message
+from trypnv.machine import Message, handle, may_handle, message  # type: ignore
 
 from proteome.state import ProteomeComponent
 from proteome.project import Project, mkpath
 from proteome.env import Env
 
 
-Init = message('Init')
-Ready = message('Ready')
+StageI = message('StageI')
+StageII = message('StageII')
+StageIII = message('StageIII')
 Add = message('Add', 'project')
 RemoveByIdent = message('RemoveByIdent', 'ident')
 Create = message('Create', 'name', 'root')
@@ -28,6 +29,7 @@ ProjectChanged = message('ProjectChanged', 'project')
 BufEnter = message('BufEnter', 'buffer')
 Initialized = message('Initialized')
 CurrentAdded = message('CurrentAdded')
+FinishInit = message('FinishInit')
 
 
 class Show(Message):
@@ -48,19 +50,25 @@ class Plugin(ProteomeComponent):
     def _no_such_ident(self, ident: str, params):
         self.log.error('no project found matching \'{}\''.format(ident))
 
-    @may_handle(Init)
+    @may_handle(StageI)
     def init(self, env: Env, msg):
         return (Add(env.analyzer(self.vim).current),  # type: ignore
                 CurrentAdded().pub,
                 BufEnter(self.vim.current_buffer).pub,
                 SetRoot())
 
-    @may_handle(Ready)
+    @may_handle(StageII)
     def ready(self, env, msg):
+        return FinishInit()
+
+    @may_handle(StageIII)
+    def finish_init(self, env, msg):
+        self.log.verbose('finish')
         return Initialized()
 
     @may_handle(Initialized)
     def initialized(self, env, msg):
+        self.log.verbose('initialized')
         return env.set(initialized=True)
 
     @handle(AddByParams)
@@ -129,4 +137,7 @@ class Plugin(ProteomeComponent):
     def prev(self, env: Env, msg):
         return env.inc(-1), SetRoot()
 
-__all__ = ['Create', 'AddByParams', 'Plugin', 'Show', 'Init', 'Ready']
+__all__ = ['Create', 'AddByParams', 'Plugin', 'Show', 'StageI', 'StageII',
+           'StageIII', 'AddByParams', 'RemoveByIdent', 'Next', 'Prev',
+           'SetRootIndex', 'Save', 'Added', 'Removed', 'ProjectChanged',
+           'BufEnter', 'Initialized', 'CurrentAdded']

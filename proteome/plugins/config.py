@@ -4,10 +4,20 @@ from trypnv.machine import may_handle
 
 from proteome.state import ProteomeComponent
 from proteome.env import Env
-from proteome.plugins.core import CurrentAdded, Ready
+from proteome.plugins.core import CurrentAdded, StageII
 
 
 class Plugin(ProteomeComponent):
+
+    @property
+    def _project_dir(self):
+        return self.vim.pvar('config_project_dir')\
+            .get_or_else('project')
+
+    @property
+    def _project_after_dir(self):
+        return self.vim.pvar('config_project_after_dir')\
+            .get_or_else('project_after')
 
     def _runtime(self, project, base):
         run = F(self.vim.runtime) << F('{}/{}'.format, base)
@@ -16,17 +26,17 @@ class Plugin(ProteomeComponent):
         run('all/*.vim')
 
     def _runtime_before(self, project):
-        return self._runtime(project, 'project')
+        return self._runtime(project, self._project_dir)
 
     def _runtime_after(self, project):
-        return self._runtime(project, 'project_after')
+        return self._runtime(project, self._project_after_dir)
 
     @may_handle(CurrentAdded)
-    def stage1(self, env: Env, msg):
+    def before(self, env: Env, msg):
         env.current.foreach(self._runtime_before)
 
-    @may_handle(Ready)
-    def stage2(self, env: Env, msg):
+    @may_handle(StageII)
+    def after(self, env: Env, msg):
         env.current.foreach(self._runtime_after)
 
 __all__ = ('Plugin')

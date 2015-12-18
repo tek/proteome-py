@@ -10,7 +10,7 @@ from trypnv.machine import Nop
 
 from proteome.nvim_plugin import Create
 from proteome.project import Project, Projects, ProjectAnalyzer
-from proteome.plugins.core import Next, Prev, Init, AddByParams, RemoveByIdent
+from proteome.plugins.core import Next, Prev, StageI, AddByParams, RemoveByIdent
 from proteome.main import Proteome
 from proteome.test.spec import MockNvimSpec
 
@@ -98,7 +98,7 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
             plug = prot.plugin('history')._get
             pros = List(p1, p2)
             prot.data = prot.data.set(projects=Projects(pros))
-            prot.plug_command('history', 'ready', List())
+            prot.plug_command('history', 'StageIII', List())
             with test_loop() as loop:
                 plug.git.await_threadsafe(loop)
             plug.git.current.keys.should.be.empty
@@ -111,7 +111,7 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
         ctx = self._prot(b=List(self.project_base), t=self.type_bases)
         target = Project(self.pypro1_name, p, Just(self.pypro1_type))
         with ctx as prot:
-            prot.send_wait(Init())
+            prot.send_wait(StageI())
             prot.send_wait(Nop())\
                 .projects.projects.head\
                 .should.equal(Just(target))

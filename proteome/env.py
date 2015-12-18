@@ -3,7 +3,7 @@ from pathlib import Path
 from proteome.project import (Projects, Resolver, ProjectLoader, Project,
                               ProjectAnalyzer)
 from proteome.nvim import NvimFacade
-from trypnv.machine import Data
+from trypnv.machine import Data  # type: ignore
 
 from tryp import List, Map, Just
 
