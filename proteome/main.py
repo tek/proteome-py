@@ -2,11 +2,7 @@ from pathlib import Path  # type: ignore
 
 from toolz.itertoolz import cons
 
-from fn import _  # type: ignore
-
-from tryp import List, may, Map
-
-from trypnv.nvim import AsyncVimProxy
+from tryp import List, Map
 
 from proteome.nvim import NvimFacade
 from proteome.env import Env
