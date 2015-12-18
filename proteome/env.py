@@ -51,6 +51,11 @@ class Env(pyrsistent.PRecord, Data):
     def set_index(self, index):
         return self.set(current_index=index)
 
+    def set_index_by_ident(self, ident):
+        return self.projects.index_of_ident(ident)\
+            .map(self.set_index)\
+            .get_or_else(self)
+
     def add(self, pro: Project):
         return self if pro in self else self.set(projects=self.projects + pro)
 

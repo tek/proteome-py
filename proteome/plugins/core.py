@@ -2,7 +2,7 @@ from pathlib import Path  # type: ignore
 
 from fn import _  # type: ignore
 
-from tryp import List, Map
+from tryp import List, Map, Empty
 
 from trypnv.machine import Message, handle, may_handle, message  # type: ignore
 
@@ -19,9 +19,11 @@ RemoveByIdent = message('RemoveByIdent', 'ident')
 Create = message('Create', 'name', 'root')
 Next = message('Next')
 Prev = message('Prev')
-SetRoot = message('SetRoot')
-SetRootIndex = message('SetRootIndex', 'index')
-SwitchRoot = message('SwitchRoot', 'name')
+InitCurrent = message('InitCurrent')
+SetProject = message('SetProject', 'ident')
+SetProjectIdent = message('SetProjectIdent', 'ident')
+SetProjectIndex = message('SetProjectIndex', 'index')
+SwitchRoot = message('SwitchRoot')
 Save = message('Save')
 Added = message('Added', 'project')
 Removed = message('Removed', 'project')
@@ -55,7 +57,7 @@ class Plugin(ProteomeComponent):
         return (Add(env.analyzer(self.vim).main),  # type: ignore
                 MainAdded().pub,
                 BufEnter(self.vim.current_buffer).pub,
-                SetRoot())
+                SwitchRoot())
 
     @may_handle(StageII)
     def ready(self, env, msg):
@@ -94,7 +96,7 @@ class Plugin(ProteomeComponent):
         self.vim.set_pvar('projects', env.projects.json)
         self.vim.pautocmd('Added')
         if env.initialized:
-            return SetRootIndex(-1)
+            return SetProjectIndex(-1)
 
     @handle(RemoveByIdent)
     def remove_by_ident(self, env: Env, msg):
@@ -111,33 +113,43 @@ class Plugin(ProteomeComponent):
         header = List('Projects:')  # type: List[str]
         self.vim.echo('\n'.join(header + lines))
 
+    @may_handle(SetProject)
+    def set_project(self, env: Env, msg):
+        if isinstance(msg.ident, int):
+            return SetProjectIndex(msg.ident)
+        elif isinstance(msg.ident, str):
+            return SetProjectIdent(msg.ident)
+
+    @may_handle(SetProjectIndex)
+    def set_project_index(self, env, msg):
+        if msg.index < env.project_count:
+            return env.set_index(msg.index), SwitchRoot()
+
+    @may_handle(SetProjectIdent)
+    def set_project_ident(self, env: Env, msg):
+        return env.set_index_by_ident(msg.ident)
+
     @handle(SwitchRoot)
     def switch_root(self, env: Env, msg):
-        pro = env.project(msg.name)
-        pro.map(_.root)\
-            .foreach(self.vim.switch_root)  # type: ignore
         if env.initialized:
+            pro = env.current
+            pro.map(_.root)\
+                .foreach(self.vim.switch_root)  # type: ignore
             info = 'switched root to {}'
             pro.foreach(lambda a: self.log.info(info.format(a.ident)))
-        return pro.map(ProjectChanged)
-
-    @handle(SetRoot)
-    def set_root(self, env: Env, msg):
-        return env.current.map(_.name).map(SwitchRoot)
-
-    @may_handle(SetRootIndex)
-    def set_root_index(self, env, msg):
-        return env.set_index(msg.index), SetRoot()
+            return pro.map(ProjectChanged)
+        else:
+            return Empty()
 
     @may_handle(Next)
     def next(self, env: Env, msg):
-        return env.inc(1), SetRoot()
+        return env.inc(1), SwitchRoot()
 
     @may_handle(Prev)
     def prev(self, env: Env, msg):
-        return env.inc(-1), SetRoot()
+        return env.inc(-1), SwitchRoot()
 
 __all__ = ['Create', 'AddByParams', 'Plugin', 'Show', 'StageI', 'StageII',
            'StageIII', 'AddByParams', 'RemoveByIdent', 'Next', 'Prev',
-           'SetRootIndex', 'Save', 'Added', 'Removed', 'ProjectChanged',
+           'SetProjectIndex', 'Save', 'Added', 'Removed', 'ProjectChanged',
            'BufEnter', 'Initialized', 'MainAdded']

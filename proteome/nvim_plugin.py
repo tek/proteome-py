@@ -7,7 +7,7 @@ from tryp import List, Map
 
 from trypnv import command, NvimStatePlugin, msg_command, json_msg_command
 
-from proteome.plugins.core import (AddByParams, Show, Create, SwitchRoot, Next,
+from proteome.plugins.core import (AddByParams, Show, Create, SetProject, Next,
                                    Prev, StageI, Save, RemoveByIdent,
                                    BufEnter, StageII, StageIII)
 from proteome.main import Proteome
@@ -93,7 +93,7 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     def pro_show(self):
         pass
 
-    @msg_command(SwitchRoot)
+    @msg_command(SetProject)
     def pro_to(self):
         pass
 
