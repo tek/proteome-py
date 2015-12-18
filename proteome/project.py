@@ -307,35 +307,35 @@ class ProjectAnalyzer(HasNvim):
             .or_else(self._default_detect_data(wd))
 
     @property
-    def current_dir(self):
+    def main_dir(self):
         return Path.cwd()
 
     @property
-    def _detect_current_data(self) -> Maybe[Map]:
-        return self._detect_data(self.current_dir)
+    def _detect_main_data(self) -> Maybe[Map]:
+        return self._detect_data(self.main_dir)
 
     @property
-    def _current_data(self) -> Maybe[Map]:
-        return self.pflags.detect_current_project\
-            .maybe(self._detect_current_data)\
+    def _main_data(self) -> Maybe[Map]:
+        return self.pflags.detect_main_project\
+            .maybe(self._detect_main_data)\
             .get_or_else(Empty())
 
     @property
-    def _auto_current(self):
-        return self._current_data\
+    def _auto_main(self):
+        return self._main_data\
             .flat_map(self.loader.from_json)
 
     @property
-    def _fallback_current(self):
-        tpe = self.vim.pvar('current_project_type')
-        return Project('current', self.current_dir, tpe)
+    def _fallback_main(self):
+        tpe = self.vim.pvar('main_project_type')
+        return Project('main', self.main_dir, tpe)
 
     @property
-    def current(self):
-        return self.vim.pvar('current_project')\
+    def main(self):
+        return self.vim.pvar('main_project')\
             .flat_map(self.loader.by_ident)\
-            .or_else(self._auto_current)\
-            .get_or_else(self._fallback_current)
+            .or_else(self._auto_main)\
+            .get_or_else(self._fallback_main)
 
 
 __all__ = ['Projects', 'Project', 'ProjectLoader', 'Resolver']

@@ -4,7 +4,7 @@ from trypnv.machine import may_handle
 
 from proteome.state import ProteomeComponent
 from proteome.env import Env
-from proteome.plugins.core import CurrentAdded, StageII
+from proteome.plugins.core import MainAdded, StageII
 
 
 class Plugin(ProteomeComponent):
@@ -31,7 +31,7 @@ class Plugin(ProteomeComponent):
     def _runtime_after(self, project):
         return self._runtime(project, self._project_after_dir)
 
-    @may_handle(CurrentAdded)
+    @may_handle(MainAdded)
     def before(self, env: Env, msg):
         env.current.foreach(self._runtime_before)
 

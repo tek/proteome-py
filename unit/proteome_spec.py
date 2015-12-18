@@ -107,7 +107,7 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
 
     def current_project(self):
         p = self.pypro1_root
-        flexmock(ProjectAnalyzer).should_receive('current_dir').and_return(p)
+        flexmock(ProjectAnalyzer).should_receive('main_dir').and_return(p)
         ctx = self._prot(b=List(self.project_base), t=self.type_bases)
         target = Project(self.pypro1_name, p, Just(self.pypro1_type))
         with ctx as prot:

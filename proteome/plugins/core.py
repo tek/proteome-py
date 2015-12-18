@@ -28,7 +28,7 @@ Removed = message('Removed', 'project')
 ProjectChanged = message('ProjectChanged', 'project')
 BufEnter = message('BufEnter', 'buffer')
 Initialized = message('Initialized')
-CurrentAdded = message('CurrentAdded')
+MainAdded = message('MainAdded')
 FinishInit = message('FinishInit')
 
 
@@ -52,8 +52,8 @@ class Plugin(ProteomeComponent):
 
     @may_handle(StageI)
     def init(self, env: Env, msg):
-        return (Add(env.analyzer(self.vim).current),  # type: ignore
-                CurrentAdded().pub,
+        return (Add(env.analyzer(self.vim).main),  # type: ignore
+                MainAdded().pub,
                 BufEnter(self.vim.current_buffer).pub,
                 SetRoot())
 
@@ -140,4 +140,4 @@ class Plugin(ProteomeComponent):
 __all__ = ['Create', 'AddByParams', 'Plugin', 'Show', 'StageI', 'StageII',
            'StageIII', 'AddByParams', 'RemoveByIdent', 'Next', 'Prev',
            'SetRootIndex', 'Save', 'Added', 'Removed', 'ProjectChanged',
-           'BufEnter', 'Initialized', 'CurrentAdded']
+           'BufEnter', 'Initialized', 'MainAdded']
