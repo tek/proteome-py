@@ -160,9 +160,9 @@ class Projects(object):
     def index_of(self, project):
         return self.projects.index_of(project)
 
-    # TODO allow short form of ident
     def index_of_ident(self, ident):
-        return self.projects.index_where(_.ident == ident)
+        return self.projects.index_where(_.ident == ident)\
+            .or_else(self.projects.index_where(_.name == ident))
 
 
 def sub_path(base: Path, path: Path):
