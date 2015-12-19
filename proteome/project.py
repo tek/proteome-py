@@ -302,8 +302,13 @@ class ProjectAnalyzer(HasNvim):
         self.loader = loader
 
     def _default_detect_data(self, wd: Path):
-        return self.loader.resolver.dir(wd)\
-            .map(lambda a: Map({'name': a[1], 'root': str(wd), 'type': a[0]}))
+        type_name = self.loader.resolver.dir(wd)
+        return type_name\
+            .flat_smap(self.loader.json_by_type_name)\
+            .or_else(
+                type_name
+                .smap(lambda t, n: Map(name=t, root=str(wd), type=n))
+            )
 
     def _detect_data(self, wd: Path):
         return self.loader.json_by_root(wd)\
