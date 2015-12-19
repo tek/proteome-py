@@ -1,5 +1,4 @@
 from pathlib import Path
-import os
 
 import neovim  # type: ignore
 
@@ -8,8 +7,8 @@ from tryp import List, Map
 from trypnv import command, NvimStatePlugin, msg_command, json_msg_command
 
 from proteome.plugins.core import (AddByParams, Show, Create, SetProject, Next,
-                                   Prev, StageI, Save, RemoveByIdent,
-                                   BufEnter, StageII, StageIII)
+                                   Prev, StageI, Save, RemoveByIdent, BufEnter,
+                                   StageII, StageIII, StageIV)
 from proteome.main import Proteome
 from proteome.nvim import NvimFacade
 from proteome.logging import Logging
@@ -17,28 +16,11 @@ from proteome.logging import Logging
 
 class ProteomeNvimPlugin(NvimStatePlugin, Logging):
 
-    def __init__(self, vim: neovim.Nvim, start: bool=True) -> None:
-        super(ProteomeNvimPlugin, self).__init__(NvimFacade(vim))
+    def __init__(self, vim: neovim.Nvim) -> None:
+        super(ProteomeNvimPlugin, self).__init__(NvimFacade(vim).proxy)
         self.pro = None  # type: Proteome
         self._initialized = False
         self._post_initialized = False
-        if start:
-            self._start_if_not_discovering_plugins()
-
-    def _start_if_not_discovering_plugins(self):
-        ''' dirty workaround for weird behaviour
-        apparently, if the nvim api is acessed during the plugin
-        discovery started by :UpdateRemotePlugins, the whole process
-        silently fails and no remote commands are discovered at all.
-        therefore, the state machine can only be started if this is a
-        regular startup, as :UpdateRemotePlugins can only be executed
-        from a running vim.
-        because of the mentioned issue, this cannot be signaled by a vim
-        variable, so an env var is used. it has to be set via the
-        autocmd VimEnter.
-        '''
-        if '_PROTEOME_VIM_STARTED' not in os.environ:
-            self.proteome_start()
 
     def state(self):
         return self.pro
@@ -56,7 +38,7 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
             self.pro.stop()
             self.pro = None
 
-    @command()
+    @command(sync=True)
     def proteome_start(self):
         config_path = self.vim.ppath('config_path')\
             .get_or_else(Path('/dev/null'))
@@ -109,6 +91,10 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     def pro_save(self):
         pass
 
+    # TODO start terminal at root dir
+    # @msg_command(Term)
+    # def pro_term(self):
+        # pass
 
     @neovim.autocmd('VimEnter')
     def vim_enter(self):
@@ -117,11 +103,9 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
             self._post_startup()
 
     def _post_startup(self):
-        self.pro.send_wait(StageII())
-        self.vim.delay(self._finish_startup, 1.0)
-
-    def _finish_startup(self):
-        self.pro.send_wait(StageIII())
+        self.pro.send(StageII().at(1))
+        self.pro.send(StageIII().at(1))
+        self.pro.send(StageIV().at(1))
 
     @neovim.autocmd('BufEnter')
     def buf_enter(self):

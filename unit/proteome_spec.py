@@ -98,7 +98,7 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
             plug = prot.plugin('history')._get
             pros = List(p1, p2)
             prot.data = prot.data.set(projects=Projects(pros))
-            prot.plug_command('history', 'StageIII', List())
+            prot.plug_command('history', 'StageIV', List())
             with test_loop() as loop:
                 plug.git.await_threadsafe(loop)
             plug.git.current.keys.should.be.empty
@@ -119,7 +119,7 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
     def add_remove_project(self):
         ctx = self._prot(List(), List(self.project_base), self.type_bases)
         with ctx as prot:
-            prot.send_wait(AddByParams(self.pypro1_name))\
+            prot.send_wait(AddByParams(self.pypro1_name, {}))\
                 .project(self.pypro1_name)\
                 .map(_.root)\
                 .should.contain(self.pypro1_root)

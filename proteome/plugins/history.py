@@ -11,7 +11,7 @@ from proteome.state import ProteomeComponent
 from proteome.env import Env
 from proteome.git import HistoryGit
 from proteome.project import Project
-from proteome.plugins.core import Save, StageIII
+from proteome.plugins.core import Save, StageIV
 
 Commit = message('Commit')
 
@@ -54,8 +54,8 @@ class Plugin(ProteomeComponent):
             err = 'tried to run {} on history while not ready'
             self.log.verbose(err.format(name))
 
-    @may_handle(StageIII)
-    def init(self, env: Env, msg):
+    @may_handle(StageIV)
+    def stage_4(self, env: Env, msg):
         self._handle(env, self._init)
 
     @may_handle(Commit)

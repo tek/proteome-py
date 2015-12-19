@@ -10,16 +10,15 @@ from proteome.state import ProteomeComponent
 from proteome.project import Project, mkpath
 from proteome.env import Env
 
-
 StageI = message('StageI')
 StageII = message('StageII')
 StageIII = message('StageIII')
+StageIV = message('StageIV')
 Add = message('Add', 'project')
 RemoveByIdent = message('RemoveByIdent', 'ident')
 Create = message('Create', 'name', 'root')
 Next = message('Next')
 Prev = message('Prev')
-InitCurrent = message('InitCurrent')
 SetProject = message('SetProject', 'ident')
 SetProjectIdent = message('SetProjectIdent', 'ident')
 SetProjectIndex = message('SetProjectIndex', 'index')
@@ -31,20 +30,8 @@ ProjectChanged = message('ProjectChanged', 'project')
 BufEnter = message('BufEnter', 'buffer')
 Initialized = message('Initialized')
 MainAdded = message('MainAdded')
-FinishInit = message('FinishInit')
-
-
-class Show(Message):
-
-    def __init__(self, *names):
-        self.names = names
-
-
-class AddByParams(Message):
-
-    def __init__(self, ident: str, params: Map=Map()):
-        self.ident = ident
-        self.params = params
+Show = message('Show', varargs='names')
+AddByParams = message('AddByParams', 'ident', 'params')
 
 
 class Plugin(ProteomeComponent):
@@ -53,24 +40,20 @@ class Plugin(ProteomeComponent):
         self.log.error('no project found matching \'{}\''.format(ident))
 
     @may_handle(StageI)
-    def init(self, env: Env, msg):
-        return (Add(env.analyzer(self.vim).main),  # type: ignore
-                MainAdded().pub,
-                BufEnter(self.vim.current_buffer).pub,
-                SwitchRoot())
+    def stage_1(self, env: Env, msg):
+        main = env.analyzer(self.vim).main
+        return Add(main), MainAdded().pub  # type: ignore
 
     @may_handle(StageII)
-    def ready(self, env, msg):
-        return FinishInit()
+    def stage_2(self, env, msg):
+        return SwitchRoot()
 
-    @may_handle(StageIII)
-    def finish_init(self, env, msg):
-        self.log.verbose('finish')
-        return Initialized()
+    @may_handle(StageIV)
+    def stage_4(self, env, msg):
+        return BufEnter(self.vim.current_buffer).pub, Initialized().pub
 
     @may_handle(Initialized)
     def initialized(self, env, msg):
-        self.log.verbose('initialized')
         return env.set(initialized=True)
 
     @handle(AddByParams)

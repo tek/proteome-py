@@ -4,7 +4,7 @@ from trypnv.machine import may_handle
 
 from proteome.state import ProteomeComponent
 from proteome.env import Env
-from proteome.plugins.core import MainAdded, StageII
+from proteome.plugins.core import MainAdded, StageIII
 
 
 class Plugin(ProteomeComponent):
@@ -35,8 +35,8 @@ class Plugin(ProteomeComponent):
     def before(self, env: Env, msg):
         env.current.foreach(self._runtime_before)
 
-    @may_handle(StageII)
-    def after(self, env: Env, msg):
+    @may_handle(StageIII)
+    def stage_3(self, env: Env, msg):
         env.current.foreach(self._runtime_after)
 
 __all__ = ('Plugin')

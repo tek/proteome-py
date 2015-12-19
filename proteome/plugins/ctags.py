@@ -10,7 +10,7 @@ from proteome.state import ProteomeComponent
 from proteome.env import Env
 from proteome.ctags import Ctags
 from proteome.project import Project
-from proteome.plugins.core import Save, Added, BufEnter
+from proteome.plugins.core import Save, Added, BufEnter, StageIV
 
 Gen = message('Gen')
 Kill = message('Kill')
@@ -33,9 +33,13 @@ class Plugin(ProteomeComponent):
     def _gen(self, pro: Project):
         self.ctags.gen(pro)
 
+    @may_handle(StageIV)
+    def stage_4(self, env: Env, msg):
+        return Gen()
+
     @may_handle(Save)
     def save(self, env: Env, msg):
-        self.gen(env, msg)
+        return Gen()
 
     @may_handle(Gen)
     def gen(self, env: Env, msg):
