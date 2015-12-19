@@ -29,7 +29,7 @@ class _LoaderSpec(Spec):
 
     def mk_project(self, name, tpe):
         root = temp_dir(str(self.temp_projects / 'projects' / tpe / name))
-        return Project(name, Path(root), tpe=Just(tpe))
+        return Project.of(name, Path(root), tpe=Just(tpe))
 
 
 __all__ = ['_LoaderSpec']

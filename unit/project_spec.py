@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
 from pathlib import Path
@@ -22,8 +24,8 @@ class Projects_(_LoaderSpec):
 
     def show(self):
         n = 'some name'
-        d = '/dir/to/project'
-        p2 = Projects() + Project(n, d)
+        d = Path('/dir/to/project')
+        p2 = Projects() + Project.of(n, d)
         p2.show().should.equal(List('{}: {}'.format(n, d)))
         p2.show(List(n)).should.equal(List('{}: {}'.format(n, d)))
         str(p2).should.equal("Projects(Project('{}'))".format(n))
@@ -32,7 +34,7 @@ class Projects_(_LoaderSpec):
         n = 'some name'
         d = '/dir/to/project'
         t = 'sometype'
-        p2 = Projects() + Project(n, Path(d), Just(t))
+        p2 = Projects() + Project.of(n, Path(d), Just(t))
         pro = p2.project('{}/{}'.format(t, n))
         pro.map(_.root).should.equal(Just(Path(d)))
         (p2 - pro._get).projects.should.be.empty
@@ -102,7 +104,7 @@ class ProjectLoader_(_LoaderSpec):
             history=False,
         )
         pro = self.loader.from_params(ident, root, params)
-        pro.should.contain(Project(name, root, Just(tpe)))
+        pro.should.contain(Project.of(name, root, Just(tpe)))
         pro.x.types.should.equal(types)
         pro.x.langs.should.equal(langs)
         pro.x.history.should_not.be.ok
@@ -111,7 +113,7 @@ class ProjectLoader_(_LoaderSpec):
         name = 'pname'
         root = temp_dir('loader/from_params')
         pro = self.loader.from_params(name, root, Map())
-        pro.should.contain(Project(name, root, Empty()))
+        pro.should.contain(Project.of(name, root, Empty()))
 
 
 class ProjectResolver_(_LoaderSpec, MockNvimSpec, Logging):

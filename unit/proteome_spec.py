@@ -48,7 +48,7 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
         name = 'proj'
         name2 = 'proj2'
         with self._prot() as prot:
-            pros = List(Project(name, null), Project(name2, null))
+            pros = List(Project.of(name, null), Project.of(name2, null))
             prot.data = prot.data.set(projects=Projects(pros))
             prot.data.current.should.equal(Just(pros[0]))
             prot.send_wait(Next())\
@@ -109,7 +109,7 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
         p = self.pypro1_root
         flexmock(ProjectAnalyzer).should_receive('main_dir').and_return(p)
         ctx = self._prot(b=List(self.project_base), t=self.type_bases)
-        target = Project(self.pypro1_name, p, Just(self.pypro1_type))
+        target = Project.of(self.pypro1_name, p, Just(self.pypro1_type))
         with ctx as prot:
             prot.send_wait(StageI())
             prot.send_wait(Nop())\

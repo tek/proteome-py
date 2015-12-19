@@ -88,7 +88,7 @@ class Plugin(ProteomeComponent):
 
     @may_handle(Create)
     def create(self, env: Env, msg):
-        return env + Project(msg.name, Path(msg.root))
+        return env + Project.of(msg.name, Path(msg.root))
 
     @may_handle(Show)
     def show(self, env: Env, msg: Show):
@@ -135,4 +135,4 @@ class Plugin(ProteomeComponent):
 __all__ = ['Create', 'AddByParams', 'Plugin', 'Show', 'StageI', 'StageII',
            'StageIII', 'AddByParams', 'RemoveByIdent', 'Next', 'Prev',
            'SetProjectIndex', 'Save', 'Added', 'Removed', 'ProjectChanged',
-           'BufEnter', 'Initialized', 'MainAdded']
+           'BufEnter', 'Initialized', 'MainAdded', 'StageIV']

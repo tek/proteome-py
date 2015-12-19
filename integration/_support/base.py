@@ -24,7 +24,7 @@ class IntegrationSpec(Spec):
 
     def mk_project(self, tpe, name):
         root = temp_dir(str(self.base / tpe / name))
-        return Project(name, Path(root), tpe=Just(tpe))
+        return Project.of(name, Path(root), tpe=Just(tpe))
 
     def add_projects(self, *pros):
         return List(*pros).smap(self.mk_project)

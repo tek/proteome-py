@@ -105,7 +105,7 @@ class ProteomePlugin_(IntegrationSpec):
         self.proteome.proteome_start()
         self.proteome.pro_add([ident] + json.dumps(params).split(' '))
         self._await()
-        self._projects.last.should.contain(Project(name, root, Just(tpe)))
+        self._projects.last.should.contain(Project.of(name, root, Just(tpe)))
 
     @main_looped
     def ctags(self):

@@ -1,17 +1,13 @@
 from pathlib import Path
 
 from proteome.project import (Projects, Resolver, ProjectLoader, Project,
-                              ProjectAnalyzer)
+                              ProjectAnalyzer, field)
 from proteome.nvim import NvimFacade
 from trypnv.machine import Data  # type: ignore
 
 from tryp import List, Map, Just
 
 import pyrsistent  # type: ignore
-
-
-def field(tpe, **kw):
-    return pyrsistent.field(type=tpe, mandatory=True, **kw)
 
 
 class Env(pyrsistent.PRecord, Data):

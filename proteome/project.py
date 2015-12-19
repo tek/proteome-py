@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Tuple
 import json
 
 from tryp import Maybe, Empty, Just, List, Map, may, Boolean, flat_may
@@ -7,9 +8,14 @@ from fn import _  # type: ignore
 
 from trypnv.nvim import NvimFacade, HasNvim
 
-from typing import Tuple
+import pyrsistent
+from pyrsistent import PRecord
 
 from proteome.logging import Logging
+
+
+def field(tpe, **kw):
+    return pyrsistent.field(type=tpe, mandatory=True, **kw)
 
 
 def mkpath(path: str):
@@ -22,23 +28,17 @@ def format_path(path: Path):
 
 
 # TODO subprojects, e.g. sbt projects
-class Project(object):
+class Project(PRecord):
+    name = field(str)
+    root = field(Path)
+    tpe = field(Maybe, initial=Empty())
+    types = field(List, initial=List())
+    langs = field(List, initial=List())
+    history = field(bool, initial=True)
 
-    def __init__(
-            self,
-            name: str,
-            root: Path,
-            tpe: Maybe[str]=Empty(),
-            types: List[str]=List(),
-            langs: List[str]=List(),
-            history: bool=True,
-    ) -> None:
-        self.name = name
-        self.root = root
-        self.tpe = tpe
-        self.types = types
-        self.langs = langs
-        self.history = history
+    @staticmethod
+    def of(name, root, tpe=Empty(), **kw):
+        return Project(name=name, root=root, tpe=tpe, **kw)
 
     @property
     def ident(self):
@@ -236,7 +236,7 @@ class ProjectLoader(Logging):
 
     def resolve(self, tpe: str, name: str):
         return self.resolver.type_name(tpe, name)\
-            .map(lambda a: Project(name, a, Just(tpe)))
+            .map(lambda a: Project.of(name, a, Just(tpe)))
 
     @flat_may
     def resolve_ident(self, ident: str, params: Map=Map()):
@@ -275,7 +275,7 @@ class ProjectLoader(Logging):
             return json.get('root') \
                 .map(mkpath)\
                 .or_else(self.resolver.type_name(tpe, name))\
-                .map(lambda r: Project(name, Path(r), Just(tpe)))
+                .map(lambda r: Project.of(name, Path(r), Just(tpe)))
         return json.get('type') \
             .zip(json.get('name')) \
             .flat_smap(from_type)
@@ -285,7 +285,7 @@ class ProjectLoader(Logging):
     @may
     def create(self, name: str, root: Path, **kw):
         if root.expanduser().is_dir():
-            return Project(name, root, **kw)
+            return Project.of(name, root, **kw)
 
     def from_params(self, ident: str, root: Path, params: Map):
         parts = List(*reversed(ident.split('/', 1)))
@@ -340,7 +340,7 @@ class ProjectAnalyzer(HasNvim):
     @property
     def _fallback_main(self):
         tpe = self.vim.pvar('main_project_type')
-        return Project('main', self.main_dir, tpe)
+        return Project.of('main', self.main_dir, tpe)
 
     @property
     def main(self):
