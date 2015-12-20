@@ -101,7 +101,7 @@ class Plugin(ProteomeComponent):
     def show(self, env: Env, msg: Show):
         lines = env.projects.show(List.wrap(msg.names))
         header = List('Projects:')  # type: List[str]
-        self.vim.echo('\n'.join(header + lines))
+        self.log.info('\n'.join(header + lines))
 
     @may_handle(SetProject)
     def set_project(self, env: Env, msg):
