@@ -3,13 +3,11 @@ from pathlib import Path
 from threading import Thread
 import asyncio
 from functools import wraps
-import logging
 
 import neovim  # type: ignore
 
 from tek.test import fixture_path, temp_dir  # type: ignore
 
-import tryp.logging
 from tryp import List, Map, Just
 
 from integration._support.spec import Spec
@@ -44,11 +42,9 @@ class VimIntegrationSpec(Spec):
         self.type1_base = temp_dir('projects', 'type1')
         self.type_bases = Map({self.type1_base: List('type1')})
         self.history_base = temp_dir('history')
-        self.logfile = temp_dir('log') / 'proteome_spec'
+        self.logfile = temp_dir('log') / self.__class__.__name__
+        os.environ['PROTEOME_LOG_FILE'] = str(self.logfile)
         self.vimlog = temp_dir('log') / 'vim'
-        self.logfile.touch()
-        tryp.logging.logfile = self.logfile
-        tryp.logging.tryp_file_logging(handler_level=logging.WARN)
         self._start_neovim()
         self._set_vars()
         rtp = fixture_path('config', 'rtp')
