@@ -55,6 +55,18 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
         self.pro.start()
         self.pro.send(StageI())
 
+    @neovim.autocmd('VimEnter')
+    def vim_enter(self):
+        if not self._post_initialized:
+            self.proteome_post_startup()
+
+    @command()
+    def proteome_post_startup(self):
+        self._post_initialized = True
+        self.pro.send(StageII().at(1))
+        self.pro.send(StageIII().at(1))
+        self.pro.send(StageIV().at(1))
+
     @command()
     def pro_plug(self, plug_name, cmd_name, *args):
         self.pro.plug_command(plug_name, cmd_name, args)
@@ -95,18 +107,6 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     # @msg_command(Term)
     # def pro_term(self):
         # pass
-
-    @neovim.autocmd('VimEnter')
-    def vim_enter(self):
-        if not self._post_initialized:
-            self._post_initialized = True
-            self.proteome_post_startup()
-
-    @command()
-    def proteome_post_startup(self):
-        self.pro.send(StageII().at(1))
-        self.pro.send(StageIII().at(1))
-        self.pro.send(StageIV().at(1))
 
     @neovim.autocmd('BufEnter')
     def buf_enter(self):
