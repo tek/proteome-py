@@ -27,9 +27,11 @@ class Env(pyrsistent.PRecord, Data):
         return Resolver(self.bases, self.type_bases)
 
     def __str__(self):
-        return '{}({})'.format(
+        return '{}({},{},{})'.format(
             self.__class__.__name__,
-            self.projects
+            self.current_index,
+            self.initialized,
+            self.projects,
         )
 
     @property
