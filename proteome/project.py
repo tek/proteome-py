@@ -18,6 +18,10 @@ def field(tpe, **kw):
     return pyrsistent.field(type=tpe, mandatory=True, **kw)
 
 
+def list_field(**kw):
+    return field(List, initial=List(), factory=List.wrap)
+
+
 def mkpath(path: str):
     return Path(path).expanduser()
 
@@ -32,8 +36,8 @@ class Project(PRecord):
     name = field(str)
     root = field(Path)
     tpe = field(Maybe, initial=Empty())
-    types = field(List, initial=List())
-    langs = field(List, initial=List())
+    types = list_field()
+    langs = list_field()
     history = field(bool, initial=True)
 
     @staticmethod
