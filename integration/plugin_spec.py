@@ -9,12 +9,10 @@ from flexmock import flexmock  # NOQA
 
 import neovim  # type: ignore
 
-from fn import _  # type: ignore
-
 from tryp import List, Map, Just
 import tryp.logging
 
-from tek.test import temp_dir
+from tek.test import temp_dir, fixture_path
 
 from proteome.nvim_plugin import ProteomeNvimPlugin
 from proteome.project import Project
@@ -44,10 +42,11 @@ class ProteomePlugin_(IntegrationSpec):
         self.cwd = Path.cwd()
         super(ProteomePlugin_, self).setup()
         self.logfile = temp_dir('log') / 'proteome_spec'
+        self.vimlog = temp_dir('log') / 'vim'
         self.logfile.touch()
         tryp.logging.logfile = self.logfile
         tryp.logging.tryp_file_logging(handler_level=logging.WARN)
-        argv = ['nvim', '--embed', '-V/dev/null', '-u', 'NONE']
+        argv = ['nvim', '--embed', '-V{}'.format(self.vimlog), '-u', 'NONE']
         self.neovim = neovim.attach('child', argv=argv)
         NvimFacade.async = _mock_async
         NvimFacade.main_event_loop = _nop_main_loop
@@ -60,12 +59,14 @@ class ProteomePlugin_(IntegrationSpec):
         self.vim.set_pvar('type_base_dirs', self.type_bases.keymap(str))
         self.vim.set_pvar('history_base', str(self.history_base))
         self.vim.set_pvar('plugins', List('proteome.plugins.history',
-                                          'proteome.plugins.ctags'))
+                                          'proteome.plugins.ctags',
+                                          'proteome.plugins.config',
+                                          ))
         self.pros = self.add_projects(
             ('python', 'pro1'), ('python', 'pro2'), ('vim', 'pro3'))
 
     def _post_startup(self):
-        self.proteome._post_startup()
+        self.proteome.proteome_post_startup()
 
     def teardown(self):
         super(ProteomePlugin_, self).teardown()

@@ -100,9 +100,10 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     def vim_enter(self):
         if not self._post_initialized:
             self._post_initialized = True
-            self._post_startup()
+            self.proteome_post_startup()
 
-    def _post_startup(self):
+    @command()
+    def proteome_post_startup(self):
         self.pro.send(StageII().at(1))
         self.pro.send(StageIII().at(1))
         self.pro.send(StageIV().at(1))
