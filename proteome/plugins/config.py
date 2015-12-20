@@ -23,7 +23,7 @@ class Plugin(ProteomeComponent):
         run = F(self.vim.runtime) << F('{}/{}'.format, base)
         project.all_types.foreach(run)
         project.tpe.map(_ + '/' + project.name).foreach(run)
-        run('all/*.vim')
+        run('all/*')
 
     def _runtime_before(self, project):
         return self._runtime(project, self._project_dir)
