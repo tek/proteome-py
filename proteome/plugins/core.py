@@ -44,17 +44,13 @@ class Plugin(ProteomeComponent):
         main = env.analyzer(self.vim).main
         return Add(main), MainAdded().pub  # type: ignore
 
-    @may_handle(StageII)
-    def stage_2(self, env, msg):
-        return SwitchRoot()
-
     @may_handle(StageIV)
     def stage_4(self, env, msg):
         return BufEnter(self.vim.current_buffer).pub, Initialized().pub
 
     @may_handle(Initialized)
     def initialized(self, env, msg):
-        return env.set(initialized=True)
+        return env.set(initialized=True), SwitchRoot()
 
     @handle(AddByParams)
     def add_by_params(self, env: Env, msg):
@@ -108,9 +104,10 @@ class Plugin(ProteomeComponent):
         if msg.index < env.project_count:
             return env.set_index(msg.index), SwitchRoot()
 
-    @may_handle(SetProjectIdent)
+    @handle(SetProjectIdent)
     def set_project_ident(self, env: Env, msg):
-        return env.set_index_by_ident(msg.ident)
+        return env.set_index_by_ident(msg.ident)\
+            .map(lambda a: (a, SwitchRoot()))
 
     @handle(SwitchRoot)
     def switch_root(self, env: Env, msg):
