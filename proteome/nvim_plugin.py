@@ -83,7 +83,7 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     def pro_remove(self):
         pass
 
-    @msg_command(Show, sync=True)
+    @msg_command(Show)
     def pro_show(self):
         pass
 
