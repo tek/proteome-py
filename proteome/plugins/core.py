@@ -52,6 +52,17 @@ class Plugin(ProteomeComponent):
     def initialized(self, env, msg):
         return env.set(initialized=True), SwitchRoot()
 
+    @may_handle(MainAdded)
+    def main_added(self, env, msg):
+        env.main.foreach(self._setup_main)
+
+    def _setup_main(self, pro: Project):
+        self.log.verbose(pro.types)
+        self.vim.set_pvar('main_name', pro.name)
+        self.vim.set_pvar('main_ident', pro.ident)
+        self.vim.set_pvar('main_type', pro.tpe | 'none')
+        self.vim.set_pvar('main_types', pro.types)
+
     @handle(AddByParams)
     def add_by_params(self, env: Env, msg):
         params = Map(msg.params)
