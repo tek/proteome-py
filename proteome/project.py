@@ -282,15 +282,14 @@ class ProjectLoader(Logging):
         that aren't contained in Project's fields.
         Try to instantiate.
         '''
-        json['tpe'] = json.get('type')
         root = json.get('root')\
             .map(mkpath)\
             .or_else(
-                json.get_all('tpe', 'name')
+                json.get_all('type', 'name')
                 .flat_smap(self.resolver.type_name)
             )
         valid_fields = root\
-            .map(lambda a: json + ('root', a))\
+            .map(lambda a: json ** Map(root=a, tpe=json.get('type')))\
             .map(lambda a: a.at(*Project._precord_fields))
         return Maybe.from_call(lambda: valid_fields.ssmap(Project)) | Empty()
 
