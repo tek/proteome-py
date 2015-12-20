@@ -51,10 +51,14 @@ class VimIntegrationSpec(Spec):
         rtp = fixture_path('config', 'rtp')
         self.vim.amend_optionl('runtimepath', rtp)
         self._setup_handlers()
+        self.tpe1 = 'tpe'
+        self.tpe2 = 'tpe2'
         self.name1 = 'pro'
         self.name2 = 'dep'
-        self.main_project = self.base / 'tpe' / self.name1
-        dep = self.base / 'tpe2' / self.name2
+        self.ident1 = '{}/{}'.format(self.tpe1, self.name1)
+        self.ident2 = '{}/{}'.format(self.tpe2, self.name2)
+        self.main_project = self.base / self.tpe1 / self.name1
+        dep = self.base / self.tpe2 / self.name2
         self.main_project.mkdir(parents=True)
         dep.mkdir(parents=True)
         self.vim.cd(str(self.main_project))
@@ -64,6 +68,11 @@ class VimIntegrationSpec(Spec):
         self.vim.cmd('ProteomePostStartup')
 
     def _start_neovim(self):
+        ''' start an embedded vim session that loads no init.vim.
+        **self.vimlog** is set as log file. aside from being convenient,
+        this is crucially necessary, as the first use of the session
+        will block if stdout is used for output.
+        '''
         argv = ['nvim', '--embed', '-V{}'.format(self.vimlog), '-u', 'NONE']
         self.neovim = neovim.attach('child', argv=argv)
         self.vim = NvimFacade(self.neovim)
@@ -109,6 +118,12 @@ class VimIntegrationSpec(Spec):
                 'type': 'command',
                 'opts': {'nargs': 0}
             },
+            {
+                'sync': 0,
+                'name': 'ProShow',
+                'type': 'command',
+                'opts': {'nargs': 0}
+            },
         ]
         self.vim.call(
             'remote#host#RegisterPlugin',
@@ -134,6 +149,10 @@ class VimIntegrationSpec(Spec):
 
     def _pvar_becomes(self, name, value):
         return self._wait_for(lambda: self.vim.pvar(name).contains(value))
+
+    @property
+    def _log_out(self):
+        return List.wrap(self.logfile.read_text().splitlines())
 
 
 def main_looped(fun):
