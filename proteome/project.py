@@ -273,14 +273,26 @@ class ProjectLoader(Logging):
             .flat_map(self.from_json)
 
     def from_json(self, json: Map) -> Maybe[Project]:
-        def from_type(tpe: str, name: str):
-            return json.get('root') \
-                .map(mkpath)\
-                .or_else(self.resolver.type_name(tpe, name))\
-                .map(lambda r: Project.of(name, Path(r), Just(tpe)))
-        return json.get('type') \
-            .zip(json.get('name')) \
-            .flat_smap(from_type)
+        ''' Try to instantiate a Project from the given json object.
+        Convert the **type** key to **tpe** and its value to
+        Maybe.
+        Make sure **root** is a directory, fall back to resolution
+        by **tpe/name**.
+        Reinsert the root dir into the json dict, filter out all keys
+        that aren't contained in Project's fields.
+        Try to instantiate.
+        '''
+        json['tpe'] = json.get('type')
+        root = json.get('root')\
+            .map(mkpath)\
+            .or_else(
+                json.get_all('tpe', 'name')
+                .flat_smap(self.resolver.type_name)
+            )
+        valid_fields = root\
+            .map(lambda a: json + ('root', a))\
+            .map(lambda a: a.at(*Project._precord_fields))
+        return Maybe.from_call(lambda: valid_fields.ssmap(Project)) | Empty()
 
     # TODO log error if not a dir
     # use Either
@@ -297,7 +309,7 @@ class ProjectLoader(Logging):
         return self.create(name, root, tpe=tpe, **kw)
 
 
-class ProjectAnalyzer(HasNvim):
+class ProjectAnalyzer(HasNvim, Logging):
 
     def __init__(self, vim: NvimFacade, loader: ProjectLoader) -> None:
         super(ProjectAnalyzer, self).__init__(vim)
