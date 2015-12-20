@@ -102,7 +102,13 @@ class VimIntegrationSpec(Spec):
                 'name': 'ProTo',
                 'type': 'command',
                 'opts': {'nargs': 1}
-            }
+            },
+            {
+                'sync': 0,
+                'name': 'ProSave',
+                'type': 'command',
+                'opts': {'nargs': 0}
+            },
         ]
         self.vim.call(
             'remote#host#RegisterPlugin',
@@ -119,6 +125,9 @@ class VimIntegrationSpec(Spec):
     def _plugins(self):
         return List()
 
+    def _pre_start(self):
+        pass
+
     @property
     def _config_path(self):
         return Path('/dev/null')
@@ -130,11 +139,11 @@ class VimIntegrationSpec(Spec):
 def main_looped(fun):
     @wraps(fun)
     def wrapper(self):
-        loop = asyncio.get_event_loop()
-        done = asyncio.Future()
         def runner():
             fun(self)
             loop.call_soon_threadsafe(lambda: done.set_result(True))
+        loop = asyncio.get_event_loop()
+        done = asyncio.Future()
         Thread(target=runner).start()
         loop.run_until_complete(done)
     return wrapper

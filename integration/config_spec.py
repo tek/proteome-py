@@ -10,9 +10,6 @@ from integration._support.base import VimIntegrationSpec
 
 class _ConfigSpec(VimIntegrationSpec):
 
-    def _pre_start(self):
-        pass
-
     @property
     def _plugins(self):
         return List('proteome.plugins.config')
@@ -28,9 +25,6 @@ class ChangeProjectSpec(_ConfigSpec):
 
 class AdditionalLangsSpec(_ConfigSpec):
 
-    def _pre_start(self):
-        pass
-
     @property
     def _config_path(self):
         return fixture_path('additional_langs', 'conf.json')
@@ -39,4 +33,4 @@ class AdditionalLangsSpec(_ConfigSpec):
         self._pvar_becomes('root_name', self.name1)
         self._pvar_becomes('main_types', List('tpe1', 'tpe2'))
 
-__all__ = ('VimSpec')
+__all__ = ('AdditionalLangsSpec', 'ChangeProjectSpec')
