@@ -20,6 +20,7 @@ class IntegrationSpec(Spec):
 
     def setup(self, *a, **kw):
         super(IntegrationSpec, self).setup(*a, **kw)
+        self.base = temp_dir('projects', 'base')
         self.config = fixture_path('conf')
         self.type1_base = temp_dir('projects', 'type1')
         self.type_bases = Map({self.type1_base: List('type1')})
@@ -74,6 +75,42 @@ class VimIntegrationSpec(Spec):
         self.vim.set_pvar('history_base', str(self.history_base))
         self.vim.set_pvar('plugins', self._plugins)
 
+    def _setup_handlers(self):
+        plug_path = fixture_path(
+            'nvim_plugin', 'rplugin', 'python3', 'proteome_nvim.py')
+        handlers = [
+            {
+                'sync': 1,
+                'name': 'ProteomeStart',
+                'type': 'command',
+                'opts': {'nargs': 0}
+            },
+            {
+                'sync': 0,
+                'name': 'ProteomePostStartup',
+                'type': 'command',
+                'opts': {'nargs': 0}
+            },
+            {
+                'sync': 0,
+                'name': 'ProAdd',
+                'type': 'command',
+                'opts': {'nargs': '+'}
+            },
+            {
+                'sync': 0,
+                'name': 'ProTo',
+                'type': 'command',
+                'opts': {'nargs': 1}
+            }
+        ]
+        self.vim.call(
+            'remote#host#RegisterPlugin',
+            'python3',
+            str(plug_path),
+            handlers,
+        )
+
     def teardown(self):
         self.neovim.quit()
         os.chdir(str(self.cwd))
@@ -85,6 +122,9 @@ class VimIntegrationSpec(Spec):
     @property
     def _config_path(self):
         return Path('/dev/null')
+
+    def _pvar_becomes(self, name, value):
+        return self._wait_for(lambda: self.vim.pvar(name).contains(value))
 
 
 def main_looped(fun):

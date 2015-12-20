@@ -1,0 +1,7 @@
+[
+  {
+    "name": "pro",
+    "type": "tpe",
+    "types": ["tpe1", "tpe2"]
+  }
+]
