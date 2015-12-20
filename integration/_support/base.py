@@ -53,11 +53,11 @@ class VimIntegrationSpec(Spec):
         self._setup_handlers()
         self.name1 = 'pro'
         self.name2 = 'dep'
-        project = self.base / 'tpe' / self.name1
+        self.main_project = self.base / 'tpe' / self.name1
         dep = self.base / 'tpe2' / self.name2
-        project.mkdir(parents=True)
+        self.main_project.mkdir(parents=True)
         dep.mkdir(parents=True)
-        self.vim.cd(str(project))
+        self.vim.cd(str(self.main_project))
         self._pre_start()
         self.vim.cmd('ProteomeStart')
         self._wait_for(lambda: self.vim.pvar('projects').is_just)
