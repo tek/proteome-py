@@ -83,7 +83,7 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     def pro_remove(self):
         pass
 
-    @msg_command(Show, sync=True)
+    @msg_command(Show)
     def pro_show(self):
         pass
 
@@ -108,7 +108,7 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     # def pro_term(self):
         # pass
 
-    @neovim.autocmd('BufEnter')
+    @neovim.autocmd('BufEnter', sync=True)
     def buf_enter(self):
         if self._post_initialized:
             self.pro.send(BufEnter(self.vim.current_buffer.proxy))
