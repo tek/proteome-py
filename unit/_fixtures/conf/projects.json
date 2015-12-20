@@ -3,5 +3,10 @@
     "name": "pypro1",
     "type": "python",
     "langs": ["python"]
+  },
+  {
+    "name": "pa_1",
+    "type": "pa_tpe_1",
+    "types": ["pa_tpe_2", "pa_tpe_3"]
   }
 ]

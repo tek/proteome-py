@@ -305,6 +305,7 @@ class ProjectAnalyzer(HasNvim):
         type_name = self.loader.resolver.dir(wd)
         return type_name\
             .flat_smap(self.loader.json_by_type_name)\
+            .map(_ + ('root', str(wd)))\
             .or_else(
                 type_name
                 .smap(lambda t, n: Map(type=t, root=str(wd), name=n))

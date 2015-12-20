@@ -10,7 +10,7 @@ from tek.test import temp_dir
 
 from tryp import Just, List, Empty, Map
 
-from proteome.project import Project, Projects
+from proteome.project import Project, Projects, ProjectAnalyzer
 from proteome.logging import Logging
 from proteome.test.spec import MockNvimSpec
 
@@ -129,4 +129,15 @@ class ProjectResolver_(_LoaderSpec, MockNvimSpec, Logging):
         self.resolver.dir(p).should.equal(
             Just(('type1', self.type1pro_name)))
 
-__all__ = ['Projects_', 'ProjectLoader_']
+
+class ProjectAnalyzer_(_LoaderSpec, MockNvimSpec, Logging):
+
+    def root_to_json(self):
+        root = self.project_base / 'pa_tpe_1' / 'pa_1'
+        anal = ProjectAnalyzer(self.vim, self.loader)
+        types = ['pa_tpe_2', 'pa_tpe_3']
+        anal._detect_data(root).map(_['types']).should.contain(types)
+
+
+__all__ = ('Projects_', 'ProjectLoader_', 'ProjectResolver_',
+            'ProjectResolver_')
