@@ -307,7 +307,7 @@ class ProjectAnalyzer(HasNvim):
             .flat_smap(self.loader.json_by_type_name)\
             .or_else(
                 type_name
-                .smap(lambda t, n: Map(name=t, root=str(wd), type=n))
+                .smap(lambda t, n: Map(type=t, root=str(wd), name=n))
             )
 
     def _detect_data(self, wd: Path):
