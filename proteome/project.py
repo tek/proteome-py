@@ -231,8 +231,10 @@ class ProjectLoader(Logging):
         if (self.config_path.is_dir()):
             return List.wrap(self.config_path.glob('*.json')) \
                 .flat_map(parse)
-        else:
+        elif self.config_path.is_file():
             return parse(self.config_path)
+        else:
+            return List()
 
     def resolve(self, tpe: str, name: str):
         return self.resolver.type_name(tpe, name)\
