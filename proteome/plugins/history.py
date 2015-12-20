@@ -14,6 +14,8 @@ from proteome.project import Project
 from proteome.plugins.core import Save, StageIV
 
 Commit = message('Commit')
+HistoryBufferPrev = message('HistoryBufferPrev')
+HistoryBufferNext = message('HistoryBufferNext')
 
 
 class Plugin(ProteomeComponent):
@@ -64,6 +66,10 @@ class Plugin(ProteomeComponent):
 
     @may_handle(Save)
     def save(self, env, msg):
-        self.commit(env, msg)
+        return Commit()
+
+    @may_handle(HistoryBufferPrev)
+    def history_buffer_prev(self, env, msg):
+        pass
 
 __all__ = ['Commit', 'Plugin']
