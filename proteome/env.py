@@ -3,16 +3,14 @@ from pathlib import Path
 from fn import _  # type: ignore
 
 from proteome.project import (Projects, Resolver, ProjectLoader, Project,
-                              ProjectAnalyzer, field)
+                              ProjectAnalyzer)
 from proteome.nvim import NvimFacade
-from trypnv.machine import Data  # type: ignore
+from trypnv.data import Data, field  # type: ignore
 
 from tryp import List, Map, Just
 
-import pyrsistent  # type: ignore
 
-
-class Env(pyrsistent.PRecord, Data):
+class Env(Data):
     config_path = field(Path)
     bases = field(List)
     type_bases = field(Map)

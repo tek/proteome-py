@@ -7,15 +7,11 @@ from tryp import Maybe, Empty, Just, List, Map, may, Boolean, flat_may
 from fn import _  # type: ignore
 
 from trypnv.nvim import NvimFacade, HasNvim
+from trypnv.data import field
 
-import pyrsistent
 from pyrsistent import PRecord
 
 from proteome.logging import Logging
-
-
-def field(tpe, **kw):
-    return pyrsistent.field(type=tpe, mandatory=True, **kw)
 
 
 def list_field(**kw):
