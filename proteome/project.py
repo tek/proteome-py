@@ -38,7 +38,7 @@ class Project(PRecord):
     tpe = field(Maybe, initial=Empty())
     types = list_field()
     langs = list_field()
-    history = field(bool, initial=True)
+    history = field(bool, initial=False)
 
     @staticmethod
     def of(name, root, tpe=Empty(), **kw):

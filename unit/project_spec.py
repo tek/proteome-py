@@ -96,8 +96,8 @@ class ProjectLoader_(_LoaderSpec):
         name = 'pname'
         ident = '{}/{}'.format(tpe, name)
         root = temp_dir('loader/from_params')
-        types = ['a', 'b']
-        langs = ['c', 'd']
+        types = List('a', 'b')
+        langs = List('c', 'd')
         params = Map(
             types=types,
             langs=langs,

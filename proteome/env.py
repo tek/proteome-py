@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from fn import _  # type: ignore
+
 from proteome.project import (Projects, Resolver, ProjectLoader, Project,
                               ProjectAnalyzer, field)
 from proteome.nvim import NvimFacade
@@ -84,5 +86,13 @@ class Env(pyrsistent.PRecord, Data):
     @property
     def main(self):
         return self.projects[0]
+
+    def history_projects(self, all_projects: bool):
+        want_history = _.history
+        has_type = _.tpe.is_just
+        filter = ((lambda a: want_history(a) or has_type(a))
+                  if all_projects
+                  else want_history)
+        return self.all_projects.filter(filter)
 
 __all__ = ['Env']
