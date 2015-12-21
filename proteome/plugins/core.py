@@ -4,7 +4,7 @@ from fn import _  # type: ignore
 
 from tryp import List, Map, Empty
 
-from trypnv.machine import Message, handle, may_handle, message  # type: ignore
+from trypnv.machine import handle, may_handle, message, Error  # type: ignore
 
 from proteome.state import ProteomeComponent
 from proteome.project import Project, mkpath
@@ -105,10 +105,14 @@ class Plugin(ProteomeComponent):
 
     @may_handle(SetProject)
     def set_project(self, env: Env, msg):
-        if isinstance(msg.ident, int):
-            return SetProjectIndex(msg.ident)
-        elif isinstance(msg.ident, str):
-            return SetProjectIdent(msg.ident)
+        if isinstance(msg.ident, str):
+            if msg.ident in env:
+                return SetProjectIdent(msg.ident)
+            elif msg.ident.isdigit():
+                return SetProjectIndex(int(msg.ident))
+            else:
+                err = '\'{}\' is not a valid project identifier'
+                return Error(err.format(msg.ident))
 
     @may_handle(SetProjectIndex)
     def set_project_index(self, env, msg):
@@ -139,6 +143,10 @@ class Plugin(ProteomeComponent):
     @may_handle(Prev)
     def prev(self, env: Env, msg):
         return env.inc(-1), SwitchRoot()
+
+    @may_handle(Error)
+    def error(self, env, msg):
+        self.log.error(msg.message)
 
 __all__ = ['Create', 'AddByParams', 'Plugin', 'Show', 'StageI', 'StageII',
            'StageIII', 'AddByParams', 'RemoveByIdent', 'Next', 'Prev',

@@ -66,6 +66,7 @@ class VimIntegrationSpec(Spec):
         self.vim.cmd('ProteomeStart')
         self._wait_for(lambda: self.vim.pvar('projects').is_just)
         self.vim.cmd('ProteomePostStartup')
+        self._pvar_becomes('root_name', self.name1)
 
     def _start_neovim(self):
         ''' start an embedded vim session that loads no init.vim.
@@ -121,6 +122,18 @@ class VimIntegrationSpec(Spec):
             {
                 'sync': 0,
                 'name': 'ProShow',
+                'type': 'command',
+                'opts': {'nargs': 0}
+            },
+            {
+                'sync': 0,
+                'name': 'ProNext',
+                'type': 'command',
+                'opts': {'nargs': 0}
+            },
+            {
+                'sync': 0,
+                'name': 'ProPrev',
                 'type': 'command',
                 'opts': {'nargs': 0}
             },
