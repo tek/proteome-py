@@ -14,6 +14,7 @@ from proteome.plugins.core import Save, Added, BufEnter, StageIV
 
 Gen = message('Gen')
 Kill = message('Kill')
+CurrentBuffer = message('CurrentBuffer')
 
 
 class Plugin(ProteomeComponent):
@@ -35,7 +36,7 @@ class Plugin(ProteomeComponent):
 
     @may_handle(StageIV)
     def stage_4(self, env: Env, msg):
-        return Gen()
+        return Gen(), CurrentBuffer()
 
     @may_handle(Save)
     def save(self, env: Env, msg):
@@ -60,11 +61,11 @@ class Plugin(ProteomeComponent):
 
     @may_handle(Added)
     def added(self, env: Env, msg: Added):
-        if env.initialized:
-            bufs = self.vim.buffers
-        else:
-            bufs = List(self.vim.current_buffer)
-        self.set_buffer_tags(env, bufs)
+        return CurrentBuffer()
+
+    @may_handle(CurrentBuffer)
+    def current_buffer(self, env: Env, msg):
+        self.set_buffer_tags(env, List(self.vim.current_buffer))
 
     def set_buffer_tags(self, env: Env, bufs: List[Buffer]):
         files = env.all_projects.map(_.root / self._tags_file_name)

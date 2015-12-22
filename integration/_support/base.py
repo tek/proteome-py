@@ -137,6 +137,12 @@ class VimIntegrationSpec(Spec):
                 'type': 'command',
                 'opts': {'nargs': 0}
             },
+            {
+                'sync': 0,
+                'name': 'BufEnter',
+                'type': 'autocmd',
+                'opts': {'pattern': '*'}
+            },
         ]
         self.vim.call(
             'remote#host#RegisterPlugin',
