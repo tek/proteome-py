@@ -61,7 +61,7 @@ class Plugin(ProteomeComponent):
         self.vim.set_pvar('main_name', pro.name)
         self.vim.set_pvar('main_ident', pro.ident)
         self.vim.set_pvar('main_type', pro.tpe | 'none')
-        self.vim.set_pvar('main_types', pro.types)
+        self.vim.set_pvar('main_types', pro.all_types)
 
     @handle(AddByParams)
     def add_by_params(self, env: Env, msg):
