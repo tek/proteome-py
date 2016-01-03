@@ -7,15 +7,11 @@ from tryp import Maybe, Empty, Just, List, Map, may, Boolean, flat_may
 from fn import _  # type: ignore
 
 from trypnv.nvim import NvimFacade, HasNvim
-from trypnv.data import field
+from trypnv.data import field, list_field
 
 from pyrsistent import PRecord
 
 from proteome.logging import Logging
-
-
-def list_field(**kw):
-    return field(List, initial=List(), factory=List.wrap)
 
 
 def mkpath(path: str):
