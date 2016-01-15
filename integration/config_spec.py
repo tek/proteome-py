@@ -31,6 +31,6 @@ class AdditionalLangsSpec(_ConfigSpec):
 
     def additional_langs(self):
         self._pvar_becomes('root_name', self.name1)
-        self._pvar_becomes('main_types', List('tpe1', 'tpe2'))
+        self._pvar_becomes('main_types', List('tpe', 'tpe1', 'tpe2'))
 
 __all__ = ('AdditionalLangsSpec', 'ChangeProjectSpec')

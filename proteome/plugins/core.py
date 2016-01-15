@@ -32,6 +32,7 @@ Initialized = message('Initialized')
 MainAdded = message('MainAdded')
 Show = message('Show', varargs='names')
 AddByParams = message('AddByParams', 'ident', 'params')
+Clone = message('Clone', 'url', 'params')
 
 
 class Plugin(ProteomeComponent):
@@ -57,7 +58,6 @@ class Plugin(ProteomeComponent):
         env.main.foreach(self._setup_main)
 
     def _setup_main(self, pro: Project):
-        self.log.verbose(pro.types)
         self.vim.set_pvar('main_name', pro.name)
         self.vim.set_pvar('main_ident', pro.ident)
         self.vim.set_pvar('main_type', pro.tpe | 'none')
@@ -88,6 +88,7 @@ class Plugin(ProteomeComponent):
         if env.initialized:
             return SetProjectIndex(-1)
 
+    # TODO switch project if removed current
     @handle(RemoveByIdent)
     def remove_by_ident(self, env: Env, msg):
         return env.project(msg.ident)\
@@ -147,6 +148,19 @@ class Plugin(ProteomeComponent):
     @may_handle(Error)
     def error(self, env, msg):
         self.log.error(msg.message)
+
+    @may_handle(Clone)
+    def clone(self, uri):
+        if uri.startswith('http'):
+            self._clone_url(uri)
+        else:
+            self._clone_github(uri)
+
+    def _clone_url(self, url: str):
+        pass
+
+    def _clone_github(self, path: str):
+        self._clone_uri('https://github.com/{}'.format(path))
 
 __all__ = ['Create', 'AddByParams', 'Plugin', 'Show', 'StageI', 'StageII',
            'StageIII', 'AddByParams', 'RemoveByIdent', 'Next', 'Prev',

@@ -338,7 +338,7 @@ class ProjectAnalyzer(HasNvim, Logging):
 
     @property
     def _main_data(self) -> Maybe[Map]:
-        return self.pflags.detect_main_project\
+        return self.pflags.get('detect_main_project', True)\
             .maybe(self._detect_main_data)\
             .get_or_else(Empty())
 
@@ -358,6 +358,5 @@ class ProjectAnalyzer(HasNvim, Logging):
             .flat_map(self.loader.by_ident)\
             .or_else(self._auto_main)\
             .get_or_else(self._fallback_main)
-
 
 __all__ = ['Projects', 'Project', 'ProjectLoader', 'Resolver']

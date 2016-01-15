@@ -10,7 +10,8 @@ from trypnv.machine import Nop
 
 from proteome.nvim_plugin import Create
 from proteome.project import Project, Projects, ProjectAnalyzer
-from proteome.plugins.core import Next, Prev, StageI, AddByParams, RemoveByIdent
+from proteome.plugins.core import (Next, Prev, StageI, AddByParams,
+                                   RemoveByIdent)
 from proteome.main import Proteome
 from proteome.test.spec import MockNvimSpec
 
@@ -90,20 +91,22 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
 
     def history(self):
         history_base = temp_dir('proteome', 'history')
+        self.vim.set_pvar('all_projects_history', 1)
         self.vim.vars['proteome_history_base'] = str(history_base)
         plug_name = 'proteome.plugins.history'
         p1 = self.mk_project('pro1', 'c')
         p2 = self.mk_project('pro2', 'go')
+        test_file = p1.root / 'test_file'
         with self._prot(List(plug_name)) as prot:
-            plug = prot.plugin('history')._get
             pros = List(p1, p2)
             prot.data = prot.data.set(projects=Projects(pros))
             prot.plug_command('history', 'StageIV', List())
-            with test_loop() as loop:
-                plug.git.await_threadsafe(loop)
-            plug.git.current.keys.should.be.empty
-        (history_base / p1.fqn / 'HEAD').exists().should.be.ok
-        (history_base / p2.fqn / 'HEAD').exists().should.be.ok
+            (history_base / p1.fqn / 'HEAD').exists().should.be.ok
+            (history_base / p2.fqn / 'HEAD').exists().should.be.ok
+            test_file.touch()
+            prot.plug_command('history', 'Commit', List())
+            prot.plug_command('history', 'HistoryPrev', List())
+            prot.plug_command('history', 'HistoryNext', List())
 
     def current_project(self):
         p = self.pypro1_root

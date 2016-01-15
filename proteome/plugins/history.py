@@ -1,19 +1,20 @@
 from pathlib import Path
-from typing import Callable, Any
 from datetime import datetime
 
-from tryp import _
+from fn import _  # type: ignore
+
 from tryp.lazy import lazy
+from tryp import Map, __, Just
 
-from trypnv.machine import may_handle, message
+from trypnv.machine import may_handle, message, handle
 
-from proteome.state import ProteomeComponent
-from proteome.env import Env
-from proteome.git import HistoryGit
-from proteome.project import Project
+from proteome.state import ProteomeComponent, ProteomeTransitions
+from proteome.git import History, HistoryT
 from proteome.plugins.core import Save, StageIV
 
 Commit = message('Commit')
+HistoryPrev = message('HistoryPrev')
+HistoryNext = message('HistoryNext')
 HistoryBufferPrev = message('HistoryBufferPrev')
 HistoryBufferNext = message('HistoryBufferNext')
 
@@ -21,53 +22,77 @@ HistoryBufferNext = message('HistoryBufferNext')
 class Plugin(ProteomeComponent):
 
     @lazy
-    def git(self):
-        base = self.vim.pdir('history_base').get_or_else(Path('/dev/null'))
-        return HistoryGit(base, self.vim)
+    def base(self):
+        return self.vim.pdir('history_base').get_or_else(Path('/dev/null'))
 
-    # TODO handle broken repo
-    def _commit(self, pro: Project):
-        self.log.debug('commiting to history repo for {}'.format(pro))
-        return self.git.add_commit_all(pro, datetime.now().isoformat())
+    class Transitions(ProteomeTransitions):
 
-    def _init(self, pro: Project):
-        self.log.debug('initializing history repo for {}'.format(pro))
-        return self.git.init(pro)
+        def _sub(self, state):
+            return self.data.with_sub_state(self.name, state)
 
-    @property
-    def all_projects_history(self):
-        return self.pflags.all_projects_history
+        @lazy
+        def history(self):
+            return HistoryT(History(
+                self.machine.base, state=self.data.sub_state(self.name, Map)))
 
-    @property
-    def git_ready(self):
-        return self.git is not None and self.git.ready
+        @property
+        def all_projects_history(self):
+            return self.pflags.all_projects_history
 
-    def _handle(self, env: Env, handler: Callable[[Project], Any]):
-        name = handler.__name__
-        if self.git_ready:
-            projects = env.history_projects(self.all_projects_history)
-            inf = 'running history handler {} on {}'
-            self.log.verbose(inf.format(name, projects))
-            projects.foreach(handler)
-            self.git.exec()
-        else:
-            err = 'tried to run {} on history while not ready'
-            self.log.verbose(err.format(name))
+        @lazy
+        def projects(self):
+            return self.data.history_projects(self.all_projects_history)
 
-    @may_handle(StageIV)
-    def stage_4(self, env: Env, msg):
-        self._handle(env, self._init)
+        @property
+        def current(self):
+            return self.data.current
 
-    @may_handle(Commit)
-    def commit(self, env: Env, msg):
-        self._handle(env, self._commit)
+        def _all_projects(self, f):
+            new_state = self.projects.fold_left(self.history)(f).state
+            return self._sub(new_state)
 
-    @may_handle(Save)
-    def save(self, env, msg):
-        return Commit()
+        def _repos(self, f):
+            g = lambda hist, pro: hist // __.at(pro, _ // f)
+            new_state = self.projects.fold_left(self.history)(g).state
+            return self._sub(new_state)
 
-    @may_handle(HistoryBufferPrev)
-    def history_buffer_prev(self, env, msg):
-        pass
+        def _repo(self, pro, f):
+            new_state = (self.history // __.at(pro, _ // f)).state
+            return self._sub(new_state)
 
-__all__ = ['Commit', 'Plugin']
+        def _current_repo(self, f):
+            return self.current.map(lambda a: self._repo(a, f))
+
+        @may_handle(StageIV)
+        def stage_4(self):
+            return self._repos(lambda a: Just(a.state))
+
+        # TODO handle broken repo
+        # TODO only save if changes exist
+        @may_handle(Commit)
+        def commit(self):
+            return self._repos(__.add_commit_all(self._timestamp))
+
+        @handle(HistoryPrev)
+        def prev(self):
+            return self._current_repo(__.prev())
+
+        # FIXME save first?
+        @handle(HistoryNext)
+        def next(self):
+            return self._current_repo(__.next())
+
+        @may_handle(HistoryBufferPrev)
+        def history_buffer_prev(self):
+            pass
+
+        @may_handle(Save)
+        def save(self):
+            return Commit()
+
+        @property
+        def _timestamp(self):
+            return datetime.now().isoformat()
+
+__all__ = ('Commit', 'Plugin', 'HistoryPrev', 'HistoryNext',
+           'HistoryBufferPrev', 'HistoryBufferNext')

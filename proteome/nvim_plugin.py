@@ -8,7 +8,8 @@ from trypnv import command, NvimStatePlugin, msg_command, json_msg_command
 
 from proteome.plugins.core import (AddByParams, Show, Create, SetProject, Next,
                                    Prev, StageI, Save, RemoveByIdent, BufEnter,
-                                   StageII, StageIII, StageIV)
+                                   StageII, StageIII, StageIV, Clone)
+from proteome.plugins.history import HistoryPrev, HistoryNext
 from proteome.main import Proteome
 from proteome.nvim import NvimFacade
 from proteome.logging import Logging
@@ -63,9 +64,12 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     @command()
     def proteome_post_startup(self):
         self._post_initialized = True
-        self.pro.send(StageII().at(1))
-        self.pro.send(StageIII().at(1))
-        self.pro.send(StageIV().at(1))
+        if self.pro is not None:
+            self.pro.send(StageII().at(1))
+            self.pro.send(StageIII().at(1))
+            self.pro.send(StageIV().at(1))
+        else:
+            self.log.error('proteome startup failed')
 
     @command()
     def pro_plug(self, plug_name, cmd_name, *args):
@@ -112,6 +116,18 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     def buf_enter(self):
         if self._post_initialized:
             self.pro.send(BufEnter(self.vim.current_buffer.proxy))
+
+    @json_msg_command(Clone)
+    def pro_clone(self):
+        pass
+
+    @msg_command(HistoryPrev)
+    def pro_history_prev(self):
+        pass
+
+    @msg_command(HistoryNext)
+    def pro_history_next(self):
+        pass
 
 
 __all__ = ['ProteomeNvimPlugin']

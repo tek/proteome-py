@@ -14,6 +14,7 @@ from integration._support.spec import Spec
 
 from proteome.project import Project
 from proteome.nvim import NvimFacade
+from proteome.logging import Logging
 
 
 class IntegrationSpec(Spec):
@@ -24,7 +25,6 @@ class IntegrationSpec(Spec):
         self.config = fixture_path('conf')
         self.type1_base = temp_dir('projects', 'type1')
         self.type_bases = Map({self.type1_base: List('type1')})
-        self.history_base = temp_dir('history')
 
     def mk_project(self, tpe, name):
         root = temp_dir(str(self.base / tpe / name))
@@ -34,15 +34,15 @@ class IntegrationSpec(Spec):
         return List(*pros).smap(self.mk_project)
 
 
-class VimIntegrationSpec(Spec):
+class VimIntegrationSpec(Spec, Logging):
 
     def setup(self):
         self.cwd = Path.cwd()
         super().setup()
+        self._debug = False
         self.base = temp_dir('projects', 'base')
         self.type1_base = temp_dir('projects', 'type1')
         self.type_bases = Map({self.type1_base: List('type1')})
-        self.history_base = temp_dir('history')
         self.logfile = temp_dir('log') / self.__class__.__name__
         os.environ['PROTEOME_LOG_FILE'] = str(self.logfile)
         self.vimlog = temp_dir('log') / 'vim'
@@ -139,6 +139,18 @@ class VimIntegrationSpec(Spec):
             },
             {
                 'sync': 0,
+                'name': 'ProHistoryPrev',
+                'type': 'command',
+                'opts': {'nargs': 0}
+            },
+            {
+                'sync': 0,
+                'name': 'ProHistoryNext',
+                'type': 'command',
+                'opts': {'nargs': 0}
+            },
+            {
+                'sync': 0,
                 'name': 'BufEnter',
                 'type': 'autocmd',
                 'opts': {'pattern': '*'}
@@ -151,9 +163,13 @@ class VimIntegrationSpec(Spec):
             handlers,
         )
 
+    # FIXME quitting neovim blocks sometimes
+    # without quitting, specs with subprocesses block in the end
     def teardown(self):
-        self.neovim.quit()
+        # self.neovim.quit()
         os.chdir(str(self.cwd))
+        if self._debug:
+            self._log_out.foreach(self.log.info)
 
     @property
     def _plugins(self):

@@ -120,9 +120,7 @@ class ProteomePlugin_(IntegrationSpec):
     @main_looped
     def history(self):
         def check_commit(pro: Project):
-            objdir = self.history_base / pro.fqn / 'objects'
-            files = list((objdir).iterdir())
-            len(files)\
+            len(self.object_files(pro))\
                 .should.be.greater_than(2)
         self.vim.set_pvar('all_projects_history', 1)
         self.proteome.proteome_start()

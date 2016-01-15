@@ -1,14 +1,18 @@
 from typing import Callable, Any
 from contextlib import contextmanager
+from pathlib import Path
 
 from flexmock import flexmock  # type: ignore
 
+from tek.test import temp_dir
+
 import tryp
 import tryp.test
-from tryp import may, Maybe
+from tryp import may, Maybe, Just
 from tryp.logging import tryp_stdout_logging
 
 from proteome.nvim import NvimFacade
+from proteome.project import Project
 
 from trypnv.nvim import Buffer
 
@@ -51,6 +55,16 @@ class Spec(tryp.test.Spec):
         tryp.development = True
         tryp_stdout_logging()
         super(Spec, self).setup(*a, **kw)
+        self.temp_projects = Path(temp_dir('projects'))
+        self.history_base = Path(temp_dir('history'))
+
+    def mk_project(self, name, tpe):
+        root = temp_dir(str(self.temp_projects / tpe / name))
+        return Project.of(name, Path(root), tpe=Just(tpe))
+
+    def object_files(self, pro: Project):
+        objdir = self.history_base / pro.fqn / 'objects'
+        return list((objdir).iterdir())
 
 
 class MockNvimSpec(Spec):
