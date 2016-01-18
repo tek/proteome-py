@@ -1,28 +1,62 @@
 from pathlib import Path
 from itertools import takewhile
-from typing import Callable, Any, TypeVar, Generic
-import abc
+from typing import Callable
+from datetime import datetime
 
-import pygit2
-from pygit2 import Commit, GitError
+try:
+    import pygit2
+    from pygit2 import Commit, GitError
+except ImportError:
+    pygit_working = False
+else:
+    pygit_working = True
 
-from fn import _  # type: ignore
+from fn import _, F  # type: ignore
 
 from proteome.project import Project
-from proteome.nvim import NvimFacade
 
 from pyrsistent import PRecord
 
 from tryp import may, List, Maybe, Map, Empty, Just, __
 from tryp.logging import Logging
 from tryp.transformer import Transformer
+from tryp.lazy import lazy
 
-from trypnv import ProcessExecutor, Job  # type: ignore
-from trypnv.data import field
+from trypnv.data import field, bool_field
+
+
+def format_since(stamp):
+    elapsed = datetime.now() - datetime.fromtimestamp(stamp)
+    if elapsed.days:
+        t = '{} days'.format(elapsed.days)
+    else:
+        sec = elapsed.seconds
+        s = '{}s'.format(sec % 60)
+        if sec >= 60:
+            m = '{}m'.format(sec % 3600 // 60)
+            if sec >= 3600:
+                h = '{}h'.format(sec // 3600)
+                t = '{} {}'.format(h, m)
+            else:
+                t = '{} {}'.format(m, s)
+        else:
+            t = s
+    return '{} ago'.format(t)
 
 
 class RepoState(PRecord):
     current = field(Maybe, initial=Empty())
+
+
+class CommitInfo(PRecord):
+    num = field(int)
+    hex = field(str)
+    timestamp = field(int)
+    current = bool_field()
+
+    @property
+    def since(self):
+        return format_since(self.timestamp)
 
 
 class Repo(Logging):
@@ -31,9 +65,17 @@ class Repo(Logging):
         self.repo = repo
         self.state = state
 
-    @property
+    def __str__(self):
+        return '{}({}, {})'.format(
+            self.__class__.__name__, self.repo.path, self.state)
+
+    @lazy
     def current(self):
         return self.state.current.or_else(self._head_id)
+
+    @lazy
+    def current_commit(self):
+        return self.history.find(F(_.id) >> self.current.contains)
 
     def ref(self, name):
         return Maybe.from_call(lambda: self.repo.lookup_reference(name),
@@ -67,7 +109,7 @@ class Repo(Logging):
     def _head_id(self):
         return self._head.map(_.target)
 
-    @property
+    @lazy
     def history(self):
         return List(*(self._master_id.map(self.history_at) | []))
 
@@ -100,9 +142,10 @@ class Repo(Logging):
             pass
 
     def prev(self):
-        return self.current\
+        value = self.current\
             .flat_map(self.parent)\
             .map(self._switch)
+        return value
 
     def next(self):
         return self.current\
@@ -117,15 +160,23 @@ class Repo(Logging):
         return self.state.set(current=Just(commit.id))
 
     def _checkout_commit(self, commit: Commit):
-        self.repo.checkout_tree(commit.tree)
-        self.repo.set_head(commit.oid)
+        strat = pygit2.GIT_CHECKOUT_FORCE
+        try:
+            self.repo.checkout_tree(commit.tree, strategy=strat)
+            self.repo.set_head(commit.oid)
+            if commit.id == self._master_id:
+                self.repo.checkout(self._master_ref)
+        except GitError as e:
+            self.log.error('failed to check out commit: {}'.format(e))
+
+    def _checkout_master(self):
+        return self._master_commit.map(self._switch)
 
     def add_commit_all(self, msg):
         self.repo.index.add_all()
         tree = self.repo.index.write_tree()
         return self._create_master_commit(tree, msg)
 
-    @may
     def _create_master_commit(self, tree, msg):
         u = 'proteome'
         m = 'proteome@nvim.local'
@@ -134,10 +185,35 @@ class Repo(Logging):
         parents = self._master_commit\
             .or_else(self._head_commit)\
             .map(lambda a: [a.hex]) | []
-        oid = self.repo.create_commit(self._master_ref, author, committer,
-                                      msg, tree, parents)
-        self.repo.checkout()
-        return self.state.set(current=Just(oid))
+        self.repo.create_commit(self._master_ref, author, committer,
+                                msg, tree, parents)
+        return self._checkout_master()
+
+    @property
+    def status(self):
+        return self.repo.status()
+
+    def commit_info(self, index):
+        def create(commit):
+            return CommitInfo(num=index, hex=commit.hex,
+                              timestamp=commit.commit_time,
+                              current=self.current.contains(commit.id))
+        return self.history.lift(index).map(create)
+
+    @property
+    def current_commit_info(self):
+        return self.current_commit\
+            .flat_map(self.history.index_of)\
+            .flat_map(self.commit_info)
+
+    @property
+    def log_formatted(self):
+        def format(commit):
+            prefix = '*' if commit.current else ' '
+            return '{} {} {}'.format(prefix, commit.hex[:8], commit.since)
+        return List.wrap(range(len(self.history)))\
+            .flat_map(self.commit_info)\
+            .map(format)
 
 
 class RepoT(Transformer[Repo]):
@@ -146,9 +222,9 @@ class RepoT(Transformer[Repo]):
     def repo(self):
         return self.val
 
-    def flat_map(self, f: Callable[[Repo], Maybe[RepoState]]) -> 'RepoT':
-        new_state = f(self.repo) | self.repo.state
-        return RepoT(Repo(self.repo.repo, new_state))
+    def pure(self, s: Maybe[RepoState]):
+        new_state = s | self.repo.state
+        return Repo(self.repo.repo, new_state)
 
     @property
     def state(self):
@@ -220,10 +296,9 @@ class History(object):
 
 class HistoryT(Transformer[History]):
 
-    def flat_map(self, f: Callable[[History], Maybe[HistoryState]]
-                 ) -> 'HistoryT':
-        new_state = f(self.val) | self.state
-        return HistoryT(History(self.val.base, new_state))
+    def pure(self, h: Maybe[HistoryState]) -> 'HistoryT':
+        new_state = h | self.state
+        return History(self.val.base, new_state)
 
     @property
     def state(self):

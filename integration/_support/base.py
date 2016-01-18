@@ -151,6 +151,12 @@ class VimIntegrationSpec(Spec, Logging):
             },
             {
                 'sync': 0,
+                'name': 'ProHistoryLog',
+                'type': 'command',
+                'opts': {'nargs': 0}
+            },
+            {
+                'sync': 0,
                 'name': 'BufEnter',
                 'type': 'autocmd',
                 'opts': {'pattern': '*'}

@@ -9,7 +9,8 @@ from trypnv import command, NvimStatePlugin, msg_command, json_msg_command
 from proteome.plugins.core import (AddByParams, Show, Create, SetProject, Next,
                                    Prev, StageI, Save, RemoveByIdent, BufEnter,
                                    StageII, StageIII, StageIV, Clone)
-from proteome.plugins.history import HistoryPrev, HistoryNext
+from proteome.plugins.history import (HistoryPrev, HistoryNext, HistoryStatus,
+                                      HistoryLog, HistoryBrowse)
 from proteome.main import Proteome
 from proteome.nvim import NvimFacade
 from proteome.logging import Logging
@@ -129,5 +130,16 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     def pro_history_next(self):
         pass
 
+    @msg_command(HistoryStatus)
+    def pro_history_status(self):
+        pass
+
+    @msg_command(HistoryLog)
+    def pro_history_log(self):
+        pass
+
+    @msg_command(HistoryBrowse)
+    def pro_history_browse(self):
+        pass
 
 __all__ = ['ProteomeNvimPlugin']

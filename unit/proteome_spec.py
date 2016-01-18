@@ -97,15 +97,24 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
         p1 = self.mk_project('pro1', 'c')
         p2 = self.mk_project('pro2', 'go')
         test_file = p1.root / 'test_file'
+        first = 'first'
+        second = 'second'
+        third = 'third'
         with self._prot(List(plug_name)) as prot:
             pros = List(p1, p2)
             prot.data = prot.data.set(projects=Projects(pros))
             prot.plug_command('history', 'StageIV', List())
             (history_base / p1.fqn / 'HEAD').exists().should.be.ok
             (history_base / p2.fqn / 'HEAD').exists().should.be.ok
-            test_file.touch()
+            test_file.write_text(first)
             prot.plug_command('history', 'Commit', List())
+            test_file.write_text(second)
+            prot.plug_command('history', 'Commit', List())
+            test_file.write_text(third)
+            prot.plug_command('history', 'Commit', List())
+            prot.plug_command('history', 'HistoryLog', List())
             prot.plug_command('history', 'HistoryPrev', List())
+            test_file.read_text().should.equal(second)
             prot.plug_command('history', 'HistoryNext', List())
 
     def current_project(self):

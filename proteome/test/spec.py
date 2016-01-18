@@ -8,7 +8,7 @@ from tek.test import temp_dir
 
 import tryp
 import tryp.test
-from tryp import may, Maybe, Just
+from tryp import may, Maybe, Just, List
 from tryp.logging import tryp_stdout_logging
 
 from proteome.nvim import NvimFacade
@@ -35,6 +35,10 @@ class MockNvimFacade(NvimFacade):
     def current_buffer(self):
         return Buffer(self, self, self.prefix)
 
+    @property
+    def windows(self):
+        return List()
+
     def switch_root(self, root):
         pass
 
@@ -52,9 +56,7 @@ class MockNvimFacade(NvimFacade):
 class Spec(tryp.test.Spec):
 
     def setup(self, *a, **kw):
-        tryp.development = True
-        tryp_stdout_logging()
-        super(Spec, self).setup(*a, **kw)
+        super().setup(*a, **kw)
         self.temp_projects = Path(temp_dir('projects'))
         self.history_base = Path(temp_dir('history'))
 
