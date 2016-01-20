@@ -3,7 +3,7 @@ from flexmock import flexmock  # NOQA
 
 from tek.test import later
 
-from tryp import List, Just
+from tryp import List, Just, __
 
 from proteome.project import Project
 
@@ -16,15 +16,12 @@ class _HistorySpec(VimIntegrationSpec):
         super()._pre_start()
         self.vim.set_pvar('all_projects_history', True)
         self.test_file_1 = self.main_project / 'test_file_1'
-        self.test_content_1 = 'content_1'
-        self.test_content_2 = 'content_2'
-        self.test_content_3 = 'content_3'
         self.test_content = List(
-            self.test_content_1,
-            self.test_content_2,
-            self.test_content_3,
+            'content_1',
+            'content_2',
+            'content_3',
         )
-        self.test_file_1.write_text(self.test_content_1)
+        self.test_file_1.write_text(self.test_content[0])
         self.pro = Project.of(self.name1, self.main_project, Just(self.tpe1))
 
     @property
@@ -76,7 +73,7 @@ class HistorySwitchSpec(_HistorySpec):
         self._save()
         self.vim.cmd('ProHistoryPrev')
         self._await_commit(1)
-        self._log_out[-1][:2].should.equal('#1')
+        self._log_line(-1, __.startswith('#1'))
 
 
 class HistoryLogSpec(_HistorySpec):
@@ -88,10 +85,10 @@ class HistoryLogSpec(_HistorySpec):
         self._write_file(2)
         self._save()
         self.vim.cmd('ProHistoryLog')
-        later(lambda: self._log_out[-3][0].should.equal('*'))
+        self._log_line(-3, __.startswith('*'))
         self.vim.cmd('ProHistoryPrev')
         self._await_commit(1)
         self.vim.cmd('ProHistoryLog')
-        later(lambda: self._log_out[-2][0].should.equal('*'))
+        self._log_line(-2, __.startswith('*'))
 
 __all__ = ('HistorySwitchSpec', 'HistoryLogSpec')

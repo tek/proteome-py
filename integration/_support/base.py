@@ -6,21 +6,22 @@ from functools import wraps
 
 import neovim  # type: ignore
 
-from tek.test import fixture_path, temp_dir  # type: ignore
+from tek.test import fixture_path, temp_dir, later  # type: ignore
 
 from tryp import List, Map, Just
-
-from integration._support.spec import Spec
+from trypnv.test import IntegrationSpec as TrypnvIntegrationSpec
+from trypnv.test import VimIntegrationSpec as TrypnvVimIntegrationSpec
 
 from proteome.project import Project
 from proteome.nvim import NvimFacade
 from proteome.logging import Logging
+from proteome.test import Spec
 
 
-class IntegrationSpec(Spec):
+class IntegrationSpec(TrypnvIntegrationSpec):
 
-    def setup(self, *a, **kw):
-        super(IntegrationSpec, self).setup(*a, **kw)
+    def setup(self):
+        super().setup()
         self.base = temp_dir('projects', 'base')
         self.config = fixture_path('conf')
         self.type1_base = temp_dir('projects', 'type1')
@@ -34,23 +35,24 @@ class IntegrationSpec(Spec):
         return List(*pros).smap(self.mk_project)
 
 
-class VimIntegrationSpec(Spec, Logging):
+class VimIntegrationSpec(TrypnvVimIntegrationSpec, Spec, Logging):
 
     def setup(self):
-        self.cwd = Path.cwd()
         super().setup()
-        self._debug = False
+        self._pre_start()
+        self.vim.cmd('ProteomeStart')
+        self._wait_for(lambda: self.vim.pvar('projects').is_just)
+        self.vim.cmd('ProteomePostStartup')
+        self._pvar_becomes('root_name', self.name1)
+
+    def _pre_start_neovim(self):
         self.base = temp_dir('projects', 'base')
         self.type1_base = temp_dir('projects', 'type1')
         self.type_bases = Map({self.type1_base: List('type1')})
-        self.logfile = temp_dir('log') / self.__class__.__name__
-        os.environ['PROTEOME_LOG_FILE'] = str(self.logfile)
-        self.vimlog = temp_dir('log') / 'vim'
-        self._start_neovim()
+        self._setup_plugin()
+
+    def _post_start_neovim(self):
         self._set_vars()
-        rtp = fixture_path('config', 'rtp')
-        self.vim.amend_optionl('runtimepath', rtp)
-        self._setup_handlers()
         self.tpe1 = 'tpe'
         self.tpe2 = 'tpe2'
         self.name1 = 'pro'
@@ -62,11 +64,6 @@ class VimIntegrationSpec(Spec, Logging):
         self.main_project.mkdir(parents=True)
         dep.mkdir(parents=True)
         self.vim.cd(str(self.main_project))
-        self._pre_start()
-        self.vim.cmd('ProteomeStart')
-        self._wait_for(lambda: self.vim.pvar('projects').is_just)
-        self.vim.cmd('ProteomePostStartup')
-        self._pvar_becomes('root_name', self.name1)
 
     def _start_neovim(self):
         ''' start an embedded vim session that loads no init.vim.
@@ -85,10 +82,10 @@ class VimIntegrationSpec(Spec, Logging):
         self.vim.set_pvar('history_base', str(self.history_base))
         self.vim.set_pvar('plugins', self._plugins)
 
-    def _setup_handlers(self):
-        plug_path = fixture_path(
+    def _setup_plugin(self):
+        self._rplugin_path = fixture_path(
             'nvim_plugin', 'rplugin', 'python3', 'proteome_nvim.py')
-        handlers = [
+        self._handlers = [
             {
                 'sync': 1,
                 'name': 'ProteomeStart',
@@ -157,17 +154,17 @@ class VimIntegrationSpec(Spec, Logging):
             },
             {
                 'sync': 0,
+                'name': 'ProHistoryBrowse',
+                'type': 'command',
+                'opts': {'nargs': 0}
+            },
+            {
+                'sync': 0,
                 'name': 'BufEnter',
                 'type': 'autocmd',
                 'opts': {'pattern': '*'}
             },
         ]
-        self.vim.call(
-            'remote#host#RegisterPlugin',
-            'python3',
-            str(plug_path),
-            handlers,
-        )
 
     # FIXME quitting neovim blocks sometimes
     # without quitting, specs with subprocesses block in the end
@@ -194,6 +191,12 @@ class VimIntegrationSpec(Spec, Logging):
     @property
     def _log_out(self):
         return List.wrap(self.logfile.read_text().splitlines())
+
+    def _log_line(self, index, checker):
+        def check():
+            len(self._log_out).should.be.greater_than(abs(index))
+            return checker(self._log_out[index]).should.be.ok
+        later(check)
 
 
 def main_looped(fun):

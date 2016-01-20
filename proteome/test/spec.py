@@ -32,7 +32,7 @@ class MockNvimFacade(NvimFacade):
         return v
 
     @property
-    def current_buffer(self):
+    def buffer(self):
         return Buffer(self, self, self.prefix)
 
     @property
@@ -55,8 +55,8 @@ class MockNvimFacade(NvimFacade):
 
 class Spec(tryp.test.Spec):
 
-    def setup(self, *a, **kw):
-        super().setup(*a, **kw)
+    def setup(self):
+        super().setup()
         self.temp_projects = Path(temp_dir('projects'))
         self.history_base = Path(temp_dir('history'))
 
@@ -76,4 +76,4 @@ class MockNvimSpec(Spec):
         self.vim = MockNvimFacade()
         self.vim_mock = flexmock(self.vim)
 
-__all__ = ['Spec']
+__all__ = ('Spec', 'MockNvimSpec', 'MockNvimFacade')

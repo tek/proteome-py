@@ -12,7 +12,7 @@ import neovim  # type: ignore
 from tryp import List, Map, Just
 import tryp.logging
 
-from tek.test import temp_dir, fixture_path
+from tek.test import temp_dir
 
 from proteome.nvim_plugin import ProteomeNvimPlugin
 from proteome.project import Project
@@ -40,7 +40,7 @@ class ProteomePlugin_(IntegrationSpec):
 
     def setup(self):
         self.cwd = Path.cwd()
-        super(ProteomePlugin_, self).setup()
+        super().setup()
         self.logfile = temp_dir('log') / 'proteome_spec'
         self.vimlog = temp_dir('log') / 'vim'
         self.logfile.touch()

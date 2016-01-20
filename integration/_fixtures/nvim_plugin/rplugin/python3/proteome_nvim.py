@@ -11,7 +11,7 @@ tryp.development = True
 
 import tryp.logging
 
-logfile = Path(os.environ['PROTEOME_LOG_FILE'])
+logfile = Path(os.environ['TRYPNV_LOG_FILE'])
 tryp.logging.tryp_file_logging(level=logging.DEBUG,
                                handler_level=logging.DEBUG,
                                logfile=logfile)
