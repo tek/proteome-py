@@ -116,7 +116,7 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     @neovim.autocmd('BufEnter')
     def buf_enter(self):
         if self._post_initialized:
-            self.pro.send(BufEnter(self.vim.current_buffer.proxy))
+            self.pro.send(BufEnter(self.vim.buffer.proxy))
 
     @json_msg_command(Clone)
     def pro_clone(self):

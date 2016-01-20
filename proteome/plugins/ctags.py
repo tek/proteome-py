@@ -64,8 +64,8 @@ class Plugin(ProteomeComponent):
         return CurrentBuffer()
 
     @may_handle(CurrentBuffer)
-    def current_buffer(self, env: Env, msg):
-        self.set_buffer_tags(env, List(self.vim.current_buffer))
+    def buffer(self, env: Env, msg):
+        self.set_buffer_tags(env, List(self.vim.buffer))
 
     def set_buffer_tags(self, env: Env, bufs: List[Buffer]):
         files = env.all_projects.map(_.root / self._tags_file_name)

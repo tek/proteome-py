@@ -47,7 +47,7 @@ class Plugin(ProteomeComponent):
 
     @may_handle(StageIV)
     def stage_4(self, env, msg):
-        return BufEnter(self.vim.current_buffer).pub, Initialized().pub
+        return BufEnter(self.vim.buffer).pub, Initialized().pub
 
     @may_handle(Initialized)
     def initialized(self, env, msg):

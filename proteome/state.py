@@ -18,9 +18,8 @@ class ProteomeComponent(ModularMachine, HasNvim, Logging):
 class ProteomeState(PluginStateMachine, HasNvim, Logging):
 
     def __init__(self, vim: NvimFacade, plugins: List[str]) -> None:
-        self.vim = vim
-        PluginStateMachine.__init__(self, 'proteome', plugins)
         HasNvim.__init__(self, vim)
+        PluginStateMachine.__init__(self, 'proteome', plugins)
 
 
 class ProteomeTransitions(Transitions, HasNvim):
