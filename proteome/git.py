@@ -1,6 +1,6 @@
 from pathlib import Path
 from itertools import takewhile
-from typing import Callable
+from typing import Callable, Any
 from datetime import datetime
 
 try:
@@ -15,6 +15,7 @@ from fn import _, F  # type: ignore
 
 from proteome.project import Project
 
+import pyrsistent
 from pyrsistent import PRecord
 
 from tryp import may, List, Maybe, Map, Empty, Just, __
@@ -22,7 +23,7 @@ from tryp.logging import Logging
 from tryp.transformer import Transformer
 from tryp.lazy import lazy
 
-from trypnv.data import field, bool_field
+from trypnv.data import field, bool_field, dfield, maybe_field
 
 
 def format_since(stamp):
@@ -48,15 +49,55 @@ class RepoState(PRecord):
     current = field(Maybe, initial=Empty())
 
 
-class CommitInfo(PRecord):
+class Diff(Logging):
+
+    def __init__(self, target, parent):
+        self.target = target
+        self.parent = parent
+
+    @lazy
+    def show(self):
+        patch = self.parent\
+            .diff_to_tree(self.target)\
+            .patch
+        return (Maybe(patch) | 'no diff').splitlines()
+
+
+class CommitInfo(PRecord, Logging):
     num = field(int)
     hex = field(str)
     timestamp = field(int)
     current = bool_field()
+    repo = pyrsistent.field(
+        mandatory=True,
+        invariant=lambda a: (isinstance(a, Repo), 'repo is not a Repo')
+    )
+    diff = maybe_field(Diff)
+
+    @staticmethod
+    def create(index, commit, repo):
+        d = List.wrap(commit.parents)\
+            .head\
+            .map(lambda a: Diff(commit.tree, a.tree))
+        return CommitInfo(num=index, hex=commit.hex,
+                          timestamp=commit.commit_time,
+                          current=repo.current.contains(commit.id),
+                          repo=repo, diff=d)
 
     @property
     def since(self):
         return format_since(self.timestamp)
+
+    @property
+    def log_format(self):
+        prefix = '*' if self.current else ' '
+        return '{} {} {}'.format(prefix, self.hex[:8], self.since)
+
+    def browse_format(self, show_diff: bool):
+        prefix = '*' if self.current else ' '
+        info = '{}  {}    {}'.format(prefix, self.hex[:8], self.since)
+        diff = self.diff.map(_.show) if show_diff else Empty()
+        return List(info) + (diff | List())
 
 
 class Repo(Logging):
@@ -117,6 +158,11 @@ class Repo(Logging):
     def history_ids(self):
         return self.history.map(_.id)
 
+    @property
+    def history_info(self):
+        return List(*enumerate(self.history))\
+            .map(lambda a: CommitInfo.create(a[0], a[1], self))
+
     def history_at(self, id):
         return self.repo.walk(id, pygit2.GIT_SORT_TIME)
 
@@ -150,6 +196,10 @@ class Repo(Logging):
     def next(self):
         return self.current\
             .flat_map(self.child)\
+            .map(self._switch)
+
+    def index(self, num):
+        return self.history.lift(num)\
             .map(self._switch)
 
     def to_master(self):
@@ -194,11 +244,8 @@ class Repo(Logging):
         return self.repo.status()
 
     def commit_info(self, index):
-        def create(commit):
-            return CommitInfo(num=index, hex=commit.hex,
-                              timestamp=commit.commit_time,
-                              current=self.current.contains(commit.id))
-        return self.history.lift(index).map(create)
+        return self.history.lift(index)\
+            .map(lambda a: CommitInfo.create(index, a, self))
 
     @property
     def current_commit_info(self):
@@ -208,12 +255,9 @@ class Repo(Logging):
 
     @property
     def log_formatted(self):
-        def format(commit):
-            prefix = '*' if commit.current else ' '
-            return '{} {} {}'.format(prefix, commit.hex[:8], commit.since)
         return List.wrap(range(len(self.history)))\
             .flat_map(self.commit_info)\
-            .map(format)
+            .map(_.log_format)
 
 
 class RepoT(Transformer[Repo]):
@@ -267,14 +311,21 @@ class RepoAdapter(object):
         inst.workdir = str(self.work_tree)
         return inst
 
-HistoryState = Map[Project, RepoState]
+
+class HistoryState(PRecord):
+    repos = dfield(Map())
+    browse = dfield(Map())
 
 
 class History(object):
 
-    def __init__(self, base: Path, state: HistoryState=Map()):
+    def __init__(self, base: Path, state: HistoryState=HistoryState()):
         self.base = base
         self.state = state
+
+    @property
+    def repos(self):
+        return self.state.repos
 
     def adapter(self, project: Project):
         git_dir = self.base / project.fqn
@@ -282,13 +333,17 @@ class History(object):
         return RepoAdapter(work_tree, Just(git_dir))
 
     def state_for(self, project: Project):
-        return self.state.get(project) | (lambda: RepoState())
+        return self.repos.get(project) | (lambda: RepoState())
 
     def at(self, project: Project, f: Callable[[RepoT], RepoT]):
         return self.adapter(project)\
             .t(self.state_for(project))\
             .map(f)\
-            .map(lambda r: self.state + (project, r.state))
+            .map(lambda r: self.repos + (project, r.state))\
+            .map(lambda r: self.state.set(repos=r))
+
+    def repo(self, project: Project):
+        return self.adapter(project).repo(self.state_for(project))
 
     def add_commit_all(self, project: Project, message: str):
         return self.with_repo(project, __.add_commit_all(message))

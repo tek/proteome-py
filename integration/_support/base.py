@@ -160,6 +160,18 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, Spec, Logging):
             },
             {
                 'sync': 0,
+                'name': 'ProHistoryBrowseInput',
+                'type': 'command',
+                'opts': {'nargs': 1}
+            },
+            {
+                'sync': 0,
+                'name': 'ProHistorySwitch',
+                'type': 'command',
+                'opts': {'nargs': 1}
+            },
+            {
+                'sync': 0,
                 'name': 'BufEnter',
                 'type': 'autocmd',
                 'opts': {'pattern': '*'}

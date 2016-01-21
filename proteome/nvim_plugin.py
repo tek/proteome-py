@@ -10,7 +10,8 @@ from proteome.plugins.core import (AddByParams, Show, Create, SetProject, Next,
                                    Prev, StageI, Save, RemoveByIdent, BufEnter,
                                    StageII, StageIII, StageIV, Clone)
 from proteome.plugins.history import (HistoryPrev, HistoryNext, HistoryStatus,
-                                      HistoryLog, HistoryBrowse)
+                                      HistoryLog, HistoryBrowse,
+                                      HistoryBrowseInput, HistorySwitch)
 from proteome.main import Proteome
 from proteome.nvim import NvimFacade
 from proteome.logging import Logging
@@ -140,6 +141,14 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
 
     @msg_command(HistoryBrowse)
     def pro_history_browse(self):
+        pass
+
+    @msg_command(HistoryBrowseInput)
+    def pro_history_browse_input(self):
+        pass
+
+    @msg_command(HistorySwitch)
+    def pro_history_switch(self):
         pass
 
 __all__ = ['ProteomeNvimPlugin']

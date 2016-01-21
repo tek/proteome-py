@@ -4,6 +4,7 @@ from flexmock import flexmock  # NOQA
 from tek.test import later
 
 from tryp import List, Just, __
+from tryp.util.random import Random
 
 from proteome.project import Project
 
@@ -90,5 +91,44 @@ class HistoryLogSpec(_HistorySpec):
         self._await_commit(1)
         self.vim.cmd('ProHistoryLog')
         self._log_line(-2, __.startswith('*'))
+
+
+class HistoryBrowseSpec(_HistorySpec):
+
+    def browse(self):
+        def check(index, start):
+            def checker():
+                buf = self.vim.buffer.target
+                len(buf).should.be.greater_than(max(3, index + 1))
+                buf[index].decode().startswith(start).should.be.ok
+            later(checker)
+        self._debug = True
+        marker_text = Random.string()
+        self.vim.buffer.set_content([marker_text])
+        self._save()
+        self._write_file(1)
+        self._save()
+        self._write_file(2)
+        self._save()
+        self.vim.cmd('ProHistoryBrowse')
+        check(0, '*')
+        check(1, 'diff')
+        self.vim.vim.feedkeys('j')
+        check(1, ' ')
+        check(2, 'diff')
+        self.vim.vim.feedkeys('k')
+        self.vim.vim.feedkeys('k')
+        check(1, 'diff')
+        self.vim.vim.feedkeys('j')
+        self.vim.vim.feedkeys('j')
+        self.vim.vim.feedkeys('s')
+        self._await_commit(0)
+        self.vim.buffer.content.should.equal(List(marker_text))
+        self.vim.cmd('ProHistoryBrowse')
+        check(-1, '*')
+        self.vim.vim.feedkeys('j')
+        self.vim.vim.feedkeys('s')
+        self._await_commit(1)
+        self.vim.buffer.content.should.equal(List(marker_text))
 
 __all__ = ('HistorySwitchSpec', 'HistoryLogSpec')
