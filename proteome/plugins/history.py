@@ -264,7 +264,7 @@ class Plugin(ProteomeComponent):
                     msg = 'history repo clean'
                 self.log.info(msg)
                 return Empty()
-            self._with_current_repo(log_status)
+            self._with_current_repo(_ / log_status)
 
         @may_handle(HistoryLog)
         def history_log(self):
