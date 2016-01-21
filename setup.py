@@ -3,7 +3,7 @@ from setuptools import setup, find_packages  # type: ignore
 setup(
     name='proteome',
     description='project management for neovim',
-    version='4.0.0',
+    version='4.0.1',
     author='Torsten Schmits',
     author_email='torstenschmits@gmail.com',
     license='MIT',
@@ -11,7 +11,7 @@ setup(
     packages=find_packages(
         exclude=['unit', 'unit.*', 'integration', 'integration.*']),
     install_requires=[
-        'tryp-nvim>=3.2.1',
+        'tryp-nvim>=4.0.0',
         'pygit2',
     ]
 )
