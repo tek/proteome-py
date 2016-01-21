@@ -89,33 +89,47 @@ class Proteome_(MockNvimSpec, _LoaderSpec):
             p1.tag_file.exists().should.be.ok
             p2.tag_file.exists().should.be.ok
 
-    def history(self):
-        history_base = temp_dir('proteome', 'history')
-        self.vim.set_pvar('all_projects_history', 1)
-        self.vim.vars['proteome_history_base'] = str(history_base)
-        plug_name = 'proteome.plugins.history'
-        p1 = self.mk_project('pro1', 'c')
-        p2 = self.mk_project('pro2', 'go')
-        test_file = p1.root / 'test_file'
-        first = 'first'
-        second = 'second'
-        third = 'third'
-        with self._prot(List(plug_name)) as prot:
-            pros = List(p1, p2)
+    class history_(object):
+
+        def setup(self):
+            self.vim.set_pvar('all_projects_history', 1)
+            self.vim.vars['proteome_history_base'] = str(self.history_base)
+            self.plug_name = 'proteome.plugins.history'
+            self.main_project = self.mk_project('pro1', 'c')
+            self.test_file_1 = self.main_project.root / 'test_file_1'
+            self.test_content = List(
+                'content_1',
+                'content_2',
+                'content_3',
+            )
+
+        def _three_commits(self, prot):
+            pros = List(self.main_project)
             prot.data = prot.data.set(projects=Projects(pros))
-            prot.plug_command('history', 'StageIV', List())
-            (history_base / p1.fqn / 'HEAD').exists().should.be.ok
-            (history_base / p2.fqn / 'HEAD').exists().should.be.ok
-            test_file.write_text(first)
-            prot.plug_command('history', 'Commit', List())
-            test_file.write_text(second)
-            prot.plug_command('history', 'Commit', List())
-            test_file.write_text(third)
-            prot.plug_command('history', 'Commit', List())
-            prot.plug_command('history', 'HistoryLog', List())
-            prot.plug_command('history', 'HistoryPrev', List())
-            test_file.read_text().should.equal(second)
-            prot.plug_command('history', 'HistoryNext', List())
+            for cont in self.test_content:
+                self.test_file_1.write_text(cont)
+                prot.plug_command('history', 'Commit', List())
+
+        def history(self):
+            p1 = self.main_project
+            p2 = self.mk_project('pro2', 'go')
+            with self._prot(List(self.plug_name)) as prot:
+                pros = List(p1, p2)
+                prot.data = prot.data.set(projects=Projects(pros))
+                prot.plug_command('history', 'StageIV', List())
+                (self.history_base / p1.fqn / 'HEAD').exists().should.be.ok
+                (self.history_base / p2.fqn / 'HEAD').exists().should.be.ok
+                self._three_commits(prot)
+                prot.plug_command('history', 'HistoryLog', List())
+                prot.plug_command('history', 'HistoryPrev', List())
+                self.test_file_1.read_text().should.equal(self.test_content[1])
+                prot.plug_command('history', 'HistoryNext', List())
+                self.test_file_1.read_text().should.equal(self.test_content[2])
+
+        def browse(self):
+            with self._prot(List(self.plug_name)) as prot:
+                self._three_commits(prot)
+                prot.plug_command('history', 'HistoryBrowse')
 
     def current_project(self):
         p = self.pypro1_root

@@ -4,15 +4,14 @@ from pathlib import Path
 
 from flexmock import flexmock  # type: ignore
 
-from tek.test import temp_dir
+from tek.test import temp_dir  # type: ignore
 
 import tryp
 import tryp.test
 from tryp import may, Maybe, Just, List
-from tryp.logging import tryp_stdout_logging
 
-from proteome.nvim import NvimFacade
-from proteome.project import Project
+from proteome.nvim import NvimFacade  # type: ignore
+from proteome.project import Project  # type: ignore
 
 from trypnv.nvim import Buffer
 
@@ -47,9 +46,12 @@ class MockNvimFacade(NvimFacade):
 
     @contextmanager
     def main_event_loop(self):
-        yield
+        yield None
 
     def cmd(self, *a, **kw):
+        pass
+
+    def reload_windows(self):
         pass
 
 
@@ -71,8 +73,8 @@ class Spec(tryp.test.Spec):
 
 class MockNvimSpec(Spec):
 
-    def setup(self, *a, **kw):
-        super(MockNvimSpec, self).setup(*a, **kw)
+    def setup(self):
+        super().setup()
         self.vim = MockNvimFacade()
         self.vim_mock = flexmock(self.vim)
 
