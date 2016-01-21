@@ -7,18 +7,23 @@ import json
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
 
+from fn import _  # type: ignore
+
 import neovim  # type: ignore
 
 from tryp import List, Map, Just
 import tryp.logging
 
-from tek.test import temp_dir
+from tek.test import temp_dir, later
+
+import trypnv
+from trypnv.test.integration import main_looped
 
 from proteome.nvim_plugin import ProteomeNvimPlugin
 from proteome.project import Project
 from proteome.nvim import NvimFacade
 
-from integration._support.base import IntegrationSpec, main_looped
+from integration._support.base import IntegrationSpec
 
 
 @contextmanager
@@ -40,6 +45,7 @@ class ProteomePlugin_(IntegrationSpec):
 
     def setup(self):
         self.cwd = Path.cwd()
+        trypnv.in_vim = False
         super().setup()
         self.logfile = temp_dir('log') / 'proteome_spec'
         self.vimlog = temp_dir('log') / 'vim'
@@ -115,7 +121,7 @@ class ProteomePlugin_(IntegrationSpec):
         self._await()
         self.proteome.pro_save()
         self._await()
-        self.pros.foreach(lambda a: a.tag_file.should.exist)
+        later(lambda: self.pros.foreach(lambda a: a.tag_file.should.exist))
 
     @main_looped
     def history(self):
