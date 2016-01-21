@@ -185,30 +185,4 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, Spec, Logging):
     def _config_path(self):
         return Path('/dev/null')
 
-    def _pvar_becomes(self, name, value):
-        return self._wait_for(lambda: self.vim.pvar(name).contains(value))
-
-    @property
-    def _log_out(self):
-        return List.wrap(self.logfile.read_text().splitlines())
-
-    def _log_line(self, index, checker):
-        def check():
-            len(self._log_out).should.be.greater_than(abs(index))
-            return checker(self._log_out[index]).should.be.ok
-        later(check)
-
-
-def main_looped(fun):
-    @wraps(fun)
-    def wrapper(self):
-        def runner():
-            fun(self)
-            loop.call_soon_threadsafe(lambda: done.set_result(True))
-        loop = asyncio.get_event_loop()
-        done = asyncio.Future()
-        Thread(target=runner).start()
-        loop.run_until_complete(done)
-    return wrapper
-
 __all__ = ['IntegrationSpec']
