@@ -3,7 +3,7 @@ from setuptools import setup, find_packages  # type: ignore
 setup(
     name='proteome',
     description='project management for neovim',
-    version='3.1.4',
+    version='4.0.0',
     author='Torsten Schmits',
     author_email='torstenschmits@gmail.com',
     license='MIT',
