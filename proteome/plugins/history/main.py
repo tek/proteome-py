@@ -21,19 +21,10 @@ from proteome.git import History, HistoryT, HistoryState, Repo
 from proteome.plugins.core import Save, StageIV
 from proteome.logging import Logging
 from proteome.project import Project
-
-Commit = message('Commit')
-HistorySwitch = message('HistorySwitch', 'index')
-HistoryPrev = message('HistoryPrev')
-HistoryNext = message('HistoryNext')
-HistoryBufferPrev = message('HistoryBufferPrev')
-HistoryBufferNext = message('HistoryBufferNext')
-HistoryStatus = message('HistoryStatus')
-HistoryLog = message('HistoryLog')
-HistoryBrowse = message('HistoryBrowse')
-HistoryBrowseInput = message('HistoryBrowseInput', 'keyseq')
-Redraw = message('Redraw')
-QuitBrowse = message('QuitBrowse', 'buffer')
+from proteome.plugins.history.messages import (
+    HistoryPrev, HistoryNext, HistoryStatus, HistoryLog, HistoryBrowse,
+    HistoryBrowseInput, HistorySwitch, Redraw, QuitBrowse, Commit,
+    HistoryBufferNext, HistoryBufferPrev)
 
 
 class BrowseState(PRecord):

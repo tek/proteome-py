@@ -9,9 +9,11 @@ from trypnv import command, NvimStatePlugin, msg_command, json_msg_command
 from proteome.plugins.core import (AddByParams, Show, Create, SetProject, Next,
                                    Prev, StageI, Save, RemoveByIdent, BufEnter,
                                    StageII, StageIII, StageIV, Clone)
-from proteome.plugins.history import (HistoryPrev, HistoryNext, HistoryStatus,
-                                      HistoryLog, HistoryBrowse,
-                                      HistoryBrowseInput, HistorySwitch)
+from proteome.plugins.history.messages import (HistoryPrev, HistoryNext,
+                                               HistoryStatus, HistoryLog,
+                                               HistoryBrowse,
+                                               HistoryBrowseInput,
+                                               HistorySwitch)
 from proteome.main import Proteome
 from proteome.nvim import NvimFacade
 from proteome.logging import Logging
