@@ -1,7 +1,7 @@
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
 
-from tek.test import later
+from tryp.test import later
 
 from tryp import List
 
@@ -38,8 +38,8 @@ class CtagsAddBufferSpec(_CtagsSpec):
         later(lambda: tags().should.contain(str(self.tag_file)))
         self.vim.cmd('ProAdd tpe2/dep')
         later(lambda: tags().should.have.length_of(2))
-        self.vim.cmd('edit filename')
-        # later(lambda: tags().should.have.length_of(2))
+        self.vim.cmd('new')
+        later(lambda: tags().should.have.length_of(2))
 
 
-__all__ = ('CtagsSpec')
+__all__ = ('CtagsAddBufferSpec', 'CtagsGenSpec')

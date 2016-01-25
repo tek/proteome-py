@@ -14,7 +14,11 @@ class Ctags(ProcessExecutor):  # type: ignore
             str(tag_file),
             str(project.root)
         ]
-        job = Job(project, 'ctags', args, self.loop)
+        job = Job(
+            owner=project,
+            exe='ctags',
+            args=args,
+            loop=self.loop)
         return self.run(job)
 
-__all__ = ['Ctags']
+__all__ = ('Ctags',)

@@ -3,6 +3,7 @@ import os
 import logging
 from contextlib import contextmanager
 import json
+import asyncio
 
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
@@ -14,7 +15,7 @@ import neovim  # type: ignore
 from tryp import List, Map, Just
 import tryp.logging
 
-from tek.test import temp_dir, later
+from tryp.test import temp_dir, later
 
 import trypnv
 from trypnv.test.integration import main_looped
@@ -116,6 +117,7 @@ class ProteomePlugin_(IntegrationSpec):
 
     @main_looped
     def ctags(self):
+        asyncio.get_child_watcher()
         self.proteome.proteome_start()
         self.pros.foreach(lambda a: self.proteome.pro_add([a.ident]))
         self._await()

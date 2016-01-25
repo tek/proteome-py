@@ -1,18 +1,18 @@
 from fn import _  # type: ignore
 
-from trypnv.machine import may_handle, message
+from trypnv.machine import may_handle, message, handle  # type: ignore
 from trypnv.nvim import Buffer
 
-from tryp import List
+from tryp import List, Empty
 from tryp.lazy import lazy
 
 from proteome.state import ProteomeComponent
 from proteome.env import Env
 from proteome.ctags import Ctags
-from proteome.project import Project
 from proteome.plugins.core import Save, Added, BufEnter, StageIV
 
-Gen = message('Gen')
+Gen = message('Gen', 'project')
+GenAll = message('GenAll')
 Kill = message('Kill')
 CurrentBuffer = message('CurrentBuffer')
 
@@ -31,24 +31,25 @@ class Plugin(ProteomeComponent):
     def _tags_file_name(self):
         return '.tags'
 
-    def _gen(self, pro: Project):
-        self.ctags.gen(pro)
+    @handle(Gen)
+    async def gen(self, env, msg):
+        await self.ctags.gen(msg.project)
+        return Empty()
 
     @may_handle(StageIV)
     def stage_4(self, env: Env, msg):
-        return Gen(), CurrentBuffer()
+        return GenAll(), CurrentBuffer()
 
     @may_handle(Save)
     def save(self, env: Env, msg):
-        return Gen()
+        return GenAll()
 
-    @may_handle(Gen)
-    def gen(self, env: Env, msg):
+    @may_handle(GenAll)
+    def gen_all(self, env: Env, msg):
         if self.ctags.ready:
-            env.projects.projects\
+            return env.projects.projects\
                 .filter(_.want_ctags)\
-                .map(self._gen)
-            self.ctags.exec()
+                .map(Gen)
 
     # TODO kill dangling procs
     @may_handle(Kill)
@@ -71,4 +72,4 @@ class Plugin(ProteomeComponent):
         files = env.all_projects.map(_.root / self._tags_file_name)
         bufs.foreach(lambda a: a.amend_optionl('tags', files))
 
-__all__ = ['Gen', 'Plugin']
+__all__ = ['GenAll', 'Plugin']

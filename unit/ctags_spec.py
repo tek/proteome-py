@@ -7,17 +7,17 @@ from tryp import List, Just
 from proteome.project import Project
 from proteome.ctags import Ctags
 
-from unit.project_spec import _LoaderSpec
 from unit._support.async import test_loop
+from unit._support.loader import LoaderSpec
 
-from tek.test import temp_path
+from tryp.test import temp_path
 
 
-class Ctags_(_LoaderSpec):
+class Ctags_(LoaderSpec):
 
     def run(self):
         with test_loop() as loop:
-            ctags = Ctags(None, loop)
+            ctags = Ctags(None)
             p = Project.of(self.pypro1_name, self.pypro1_root,
                         tpe=Just(self.pypro1_type),
                         langs=List(self.pypro1_type))
@@ -29,7 +29,7 @@ class Ctags_(_LoaderSpec):
 
     def fail(self):
         with test_loop() as loop:
-            ctags = Ctags(None, loop)
+            ctags = Ctags(None)
             p = Project.of('invalid', Path(temp_path('invalid')), tpe=Just('c'),
                         langs=List('c'))
             result = loop.run_until_complete(ctags.gen(p))

@@ -39,4 +39,4 @@ class Plugin(ProteomeComponent):
     def stage_3(self, env: Env, msg):
         env.current.foreach(self._runtime_after)
 
-__all__ = ('Plugin')
+__all__ = ('Plugin',)
