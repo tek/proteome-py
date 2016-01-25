@@ -1,33 +1,36 @@
 from pathlib import Path
 from datetime import datetime
-import asyncio
 
-from fn import _  # type: ignore
-
-from pyrsistent import PRecord
+from fn import _, F  # type: ignore
 
 from tryp.lazy import lazy
 from tryp import Map, __, Just, Empty, may, List, Maybe
-from tryp.either import Left
 from tryp.util.numeric import try_convert_int
 
-from trypnv.machine import may_handle, message, handle, IO
-from trypnv.data import field, list_field, dfield
-from trypnv.nvim import Buffer, ScratchBuilder, ScratchBuffer
-from trypnv import StateMachine, Machine
+from trypnv.machine import (may_handle, message, handle, IO)  # type: ignore
+from trypnv.machine import Error  # type: ignore
+from trypnv.record import field, list_field, dfield, Record
+from trypnv.nvim import ScratchBuilder, ScratchBuffer
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
-from proteome.git import History, HistoryT, HistoryState, Repo
+from proteome.git import (History, HistoryT, HistoryState, Repo, CommitInfo,
+                          HistoryGit)
 from proteome.plugins.core import Save, StageIV
 from proteome.logging import Logging
 from proteome.project import Project
-from proteome.plugins.history.messages import (
-    HistoryPrev, HistoryNext, HistoryStatus, HistoryLog, HistoryBrowse,
-    HistoryBrowseInput, HistorySwitch, Redraw, QuitBrowse, Commit,
-    HistoryBufferNext, HistoryBufferPrev)
+from proteome.plugins.history.messages import (HistoryPrev, HistoryNext,
+                                               HistoryStatus, HistoryLog,
+                                               HistoryBrowse,
+                                               HistoryBrowseInput,
+                                               HistorySwitch, Redraw,
+                                               QuitBrowse, Commit,
+                                               HistoryBufferNext,
+                                               HistoryBufferPrev, HistoryPick,
+                                               HistoryRevert)
+from proteome.plugins.history.patch import Patch
 
 
-class BrowseState(PRecord):
+class BrowseState(Record):
     repo = field(Repo)
     current = field(int)
     commits = list_field()
@@ -53,7 +56,7 @@ class BrowseMachine(ProteomeComponent):
                 .flat_smap(lambda i, a: a.browse_format(i == sel))
 
         def _create_mappings(self):
-            List('j', 'k', 's').foreach(self._create_mapping)
+            List('j', 'k', 's', 'p', 'r').foreach(self._create_mapping)
             self._create_mapping('<cr>', to='%CR%')
 
         def _create_mapping(self, keyseq, mode='n', to=None):
@@ -95,6 +98,8 @@ class BrowseMachine(ProteomeComponent):
                 'k': self._up,
                 '%CR%': self._switch,
                 's': self._switch,
+                'p': self._pick,
+                'r': self._revert,
             })
             return handlers.get(self.msg.keyseq).flat_map(lambda f: f())
 
@@ -123,10 +128,21 @@ class BrowseMachine(ProteomeComponent):
         def _close_tab(self):
             self.buffer.tab.close()
 
+        def _pick(self):
+            return self._pick_commit(HistoryPick)
+
+        def _revert(self):
+            return self._pick_commit(HistoryRevert)
+
+        @may
+        def _pick_commit(self, tpe):
+            q = QuitBrowse(self.buffer)
+            return (tpe(self.data.selected).pub, q, q.pub)
+
 
 class Browse(Logging):
 
-    def __init__(self, state: BrowseState, vim):
+    def __init__(self, state: BrowseState, vim) -> None:
         self.state = state
         self.machine = BrowseMachine('history_browse', vim)
 
@@ -142,11 +158,13 @@ class Browse(Logging):
         return self.send(Init())
 
     def send(self, msg):
-        self.state, msgs = self.machine.process(self.state, msg)
-        return msgs
+        result = self.machine.loop_process(self.state, msg)
+        self.state = result.data
+        return result.pub
 
 
 class Plugin(ProteomeComponent):
+    failed_pick_err = 'couldn\'t revert commit'
 
     @lazy
     def base(self):
@@ -157,8 +175,9 @@ class Plugin(ProteomeComponent):
         def _with_sub(self, state):
             return self.data.with_sub_state(self.name, state)
 
-        def _with_browse(self, browse):
-            return self._with_sub(self.state.set(browse=browse))
+        @property
+        def _with_browse(self):
+            return F(self._with_sub) << self.state.setter('browse')
 
         @property
         def state(self):
@@ -222,7 +241,7 @@ class Plugin(ProteomeComponent):
             def notify(repo):
                 self.vim.reload_windows()
                 repo.current_commit_info\
-                    .map(lambda a: '#{} {}'.format(a.num, a.since))\
+                    .map(_.num_since)\
                     .foreach(self.log.info)
                 return repo
             return self._with_current_repo(_ / f % notify)
@@ -276,7 +295,7 @@ class Plugin(ProteomeComponent):
                 .map(self._add_browse)
 
         def _io_error(self, exc):
-            self.log.exception(exc)
+            self.log.caught_exception('nvim io', exc)
 
         @may_handle(Save)
         def save(self):
@@ -314,5 +333,53 @@ class Plugin(ProteomeComponent):
         def _remove_browse(self, target: Browse):
             return self._with_browse(self.state.browse - target.repo)
 
+        @handle(HistoryPick)
+        def pick(self):
+            return self._pick_commit\
+                .flat_map(lambda a: self._pick_patch(a[0], a[1]))
+
+        @handle(HistoryRevert)
+        def revert(self):
+            return self._pick_commit\
+                .map(lambda a: self._pick_revert(a[0], a[1]))
+
+        @property
+        def _pick_commit(self):
+            index = try_convert_int(self.msg.index)
+            lifter = self._current_repo_ro / _.history_info / _.lift
+            return index.ap(lifter).flatten.product(self.current)
+
+        def _pick_patch(self, commit: CommitInfo, project: Project):
+            patch = (
+                commit.diff /
+                _.revert //
+                _.patch
+            )
+            apply = lambda pat: self._apply_patch(project, pat, commit)
+            return patch.map(apply)
+
+        async def _apply_patch(self, project, patch, commit):
+            executor = Patch(self.vim)
+            result = await executor.patch(project, patch)
+            return self._check_pick_status(commit, executor, result)
+
+        async def _pick_revert(self, commit: CommitInfo, project: Project):
+            executor = HistoryGit(self.machine.base, self.vim)
+            result = await executor.revert(project, commit)
+            self.log.verbose(result)
+            ret = self._check_pick_status(commit, executor, result)
+            if not result.success:
+                await executor.revert_abort(project)
+            return ret
+
+        @may
+        def _check_pick_status(self, commit, executor, result):
+            if result.success:
+                self.vim.reload_windows()
+                self.log.info('picked {}'.format(commit.num_since))
+            else:
+                return Error(Plugin.failed_pick_err).pub
+
 __all__ = ('Commit', 'Plugin', 'HistoryPrev', 'HistoryNext',
-           'HistoryBufferPrev', 'HistoryBufferNext')
+           'HistoryBufferPrev', 'HistoryBufferNext', 'HistorySwitch',
+           'HistoryPick', 'HistoryRevert')

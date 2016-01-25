@@ -6,7 +6,7 @@ from functools import wraps
 
 import neovim  # type: ignore
 
-from tek.test import fixture_path, temp_dir, later  # type: ignore
+from tryp.test import fixture_path, temp_dir, later  # type: ignore
 
 from tryp import List, Map, Just
 from trypnv.test import IntegrationSpec as TrypnvIntegrationSpec
@@ -167,6 +167,12 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, Spec, Logging):
             {
                 'sync': 0,
                 'name': 'ProHistorySwitch',
+                'type': 'command',
+                'opts': {'nargs': 1}
+            },
+            {
+                'sync': 0,
+                'name': 'ProHistoryPick',
                 'type': 'command',
                 'opts': {'nargs': 1}
             },

@@ -13,7 +13,8 @@ from proteome.plugins.history.messages import (HistoryPrev, HistoryNext,
                                                HistoryStatus, HistoryLog,
                                                HistoryBrowse,
                                                HistoryBrowseInput,
-                                               HistorySwitch)
+                                               HistorySwitch, HistoryPick,
+                                               HistoryRevert)
 from proteome.main import Proteome
 from proteome.nvim import NvimFacade
 from proteome.logging import Logging
@@ -152,6 +153,14 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
 
     @msg_command(HistorySwitch)
     def pro_history_switch(self):
+        pass
+
+    @msg_command(HistoryPick)
+    def pro_history_pick(self):
+        pass
+
+    @msg_command(HistoryRevert)
+    def pro_history_revert(self):
         pass
 
 __all__ = ('ProteomeNvimPlugin',)

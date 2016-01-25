@@ -1,9 +1,11 @@
 from pathlib import Path
 
+import asyncio
+
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
 
-from tryp import List, Just, _, Map
+from tryp import List, Just, _, Map, Empty
 
 import trypnv
 from trypnv.machine import Nop
@@ -111,32 +113,36 @@ class Proteome_(LoaderSpec):
             )
 
         def _three_commits(self, prot):
-            pros = List(self.main_project)
-            prot.data = prot.data.set(projects=Projects(pros))
             for cont in self.test_content:
                 self.test_file_1.write_text(cont)
-                prot.plug_command('history', 'Commit', List())
+                prot.plug_command_sync('history', 'Commit', List())
 
-        def history(self):
+        def init(self):
+            def check_head(p):
+                (self.history_base / p.fqn / 'HEAD').exists().should.be.ok
             p1 = self.main_project
             p2 = self.mk_project('pro2', 'go')
-            with self._prot(List(self.plug_name)) as prot:
-                pros = List(p1, p2)
-                prot.data = prot.data.set(projects=Projects(pros))
+            pros = List(p1, p2)
+            with self._prot(List(self.plug_name), pros=pros) as prot:
                 prot.plug_command('history', 'StageIV', List())
-                (self.history_base / p1.fqn / 'HEAD').exists().should.be.ok
-                (self.history_base / p2.fqn / 'HEAD').exists().should.be.ok
+                later(lambda: check_head(p1))
+                check_head(p2)
+
+        def prev_next(self):
+            p1 = self.main_project
+            p2 = self.mk_project('pro2', 'go')
+            pros = List(p1, p2)
+            with self._prot(List(self.plug_name), pros=pros) as prot:
+                prot.plug_command('history', 'StageIV', List())
                 self._three_commits(prot)
                 prot.plug_command('history', 'HistoryLog', List())
                 prot.plug_command('history', 'HistoryPrev', List())
-                self.test_file_1.read_text().should.equal(self.test_content[1])
+                prot.plug_command('history', 'HistoryLog', List())
+                later(lambda: self.test_file_1.read_text()
+                      .should.equal(self.test_content[1]))
                 prot.plug_command('history', 'HistoryNext', List())
-                self.test_file_1.read_text().should.equal(self.test_content[2])
-
-        def browse(self):
-            with self._prot(List(self.plug_name)) as prot:
-                self._three_commits(prot)
-                prot.plug_command('history', 'HistoryBrowse')
+                later(lambda: self.test_file_1.read_text()
+                      .should.equal(self.test_content[2]))
 
     def current_project(self):
         p = self.pypro1_root

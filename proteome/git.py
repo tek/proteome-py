@@ -1,6 +1,6 @@
 from pathlib import Path
 from itertools import takewhile
-from typing import Callable, Any
+from typing import Callable
 from datetime import datetime
 
 try:
@@ -15,15 +15,15 @@ from fn import _, F  # type: ignore
 
 from proteome.project import Project
 
-import pyrsistent
-from pyrsistent import PRecord
+import pyrsistent  # type: ignore
 
 from tryp import may, List, Maybe, Map, Empty, Just, __
 from tryp.logging import Logging
 from tryp.transformer import Transformer
 from tryp.lazy import lazy
 
-from trypnv.data import field, bool_field, dfield, maybe_field
+from trypnv.record import field, bool_field, dfield, maybe_field, Record
+from trypnv import ProcessExecutor, Job
 
 
 def format_since(stamp):
@@ -45,7 +45,7 @@ def format_since(stamp):
     return '{} ago'.format(t)
 
 
-class RepoState(PRecord):
+class RepoState(Record):
     current = field(Maybe, initial=Empty())
 
 
@@ -57,13 +57,26 @@ class Diff(Logging):
 
     @lazy
     def show(self):
-        patch = self.parent\
-            .diff_to_tree(self.target)\
+        return self.patch_lines | ['no diff']
+
+    @property
+    def patch_lines(self):
+        return self.patch.map(__.splitlines())
+
+    @property
+    def patch(self):
+        return Maybe(
+            self.parent
+            .diff_to_tree(self.target)
             .patch
-        return (Maybe(patch) | 'no diff').splitlines()
+        ).map(__.replace('\n\ No newline at end of file', ''))
+
+    @property
+    def revert(self):
+        return Diff(self.parent, self.target)
 
 
-class CommitInfo(PRecord, Logging):
+class CommitInfo(Record):
     num = field(int)
     hex = field(str)
     timestamp = field(int)
@@ -89,6 +102,10 @@ class CommitInfo(PRecord, Logging):
         return format_since(self.timestamp)
 
     @property
+    def num_since(self):
+        return '#{} {}'.format(self.num, self.since)
+
+    @property
     def log_format(self):
         prefix = '*' if self.current else ' '
         return '{} {} {}'.format(prefix, self.hex[:8], self.since)
@@ -102,7 +119,7 @@ class CommitInfo(PRecord, Logging):
 
 class Repo(Logging):
 
-    def __init__(self, repo: pygit2.Repository, state: RepoState):
+    def __init__(self, repo: pygit2.Repository, state: RepoState) -> None:
         self.repo = repo
         self.state = state
 
@@ -294,6 +311,8 @@ class RepoAdapter(object):
         except KeyError:
             pass
 
+    # TODO remove dangling lock file
+    # and set the excludesfile
     def _initialize(self):
         pygit2.init_repository(str(self.git_dir), bare=True)
 
@@ -312,14 +331,14 @@ class RepoAdapter(object):
         return inst
 
 
-class HistoryState(PRecord):
+class HistoryState(Record):
     repos = dfield(Map())
     browse = dfield(Map())
 
 
 class History(object):
 
-    def __init__(self, base: Path, state: HistoryState=HistoryState()):
+    def __init__(self, base: Path, state: HistoryState=HistoryState()) -> None:
         self.base = base
         self.state = state
 
@@ -345,18 +364,58 @@ class History(object):
     def repo(self, project: Project):
         return self.adapter(project).repo(self.state_for(project))
 
-    def add_commit_all(self, project: Project, message: str):
-        return self.with_repo(project, __.add_commit_all(message))
-
 
 class HistoryT(Transformer[History]):
 
-    def pure(self, h: Maybe[HistoryState]) -> 'HistoryT':
+    def pure(self, h: Maybe[HistoryState]) -> History:  # type: ignore
         new_state = h | self.state
         return History(self.val.base, new_state)
 
     @property
     def state(self):
         return self.val.state
+
+
+class Git(ProcessExecutor):
+
+    def pre_args(self, project: Project):
+        return []
+
+    def command(self, project: Project, name: str, *cmd_args):
+        args = self.pre_args(project) + [name] + list(cmd_args)
+        self.log.debug('running git {}'.format(' '.join(args)))
+        job = Job(
+            owner=project,
+            exe='git',
+            args=args,
+            loop=self.loop,
+        )
+        return self.run(job)
+
+    def revert(self, project: Project, commit: CommitInfo):
+        return self.command(project, 'revert', '-n', commit.hex)
+
+    def revert_abort(self, project: Project):
+        return self.command(project, 'revert', '--abort')
+
+
+class HistoryGit(Git):
+
+    def __init__(self, base: Path, vim) -> None:
+        self.base = base
+        super(HistoryGit, self).__init__(vim)
+
+    def pre_args(self, project: Project):
+        d = str(project.root)
+        h = str(self._history_dir(project))
+        return [
+            '--git-dir',
+            h,
+            '--work-tree',
+            d,
+        ]
+
+    def _history_dir(self, project: Project):
+        return self.base / project.fqn
 
 __all__ = ('History', 'RepoAdapter', 'RepoT', 'Repo', 'RepoState', 'HistoryT')
