@@ -4,8 +4,9 @@ from fn import _  # type: ignore
 
 from proteome.project import (Projects, Resolver, ProjectLoader, Project,
                               ProjectAnalyzer)
-from proteome.nvim import NvimFacade
-from trypnv.data import Data, field  # type: ignore
+from trypnv.data import Data  # type: ignore
+from trypnv.record import field  # type: ignore
+from trypnv import NvimFacade
 
 from tryp import List, Map, Just
 

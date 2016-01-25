@@ -1,2 +1,2 @@
-import tek.test
-tek.test.setup(__file__)
+import tryp.test
+tryp.test.setup(__file__)

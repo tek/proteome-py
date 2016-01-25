@@ -4,8 +4,8 @@ from typing import Callable, Any
 from datetime import datetime
 
 try:
-    import pygit2
-    from pygit2 import Commit, GitError
+    import pygit2  # type: ignore
+    from pygit2 import Commit, GitError  # type: ignore
 except ImportError:
     pygit_working = False
 else:

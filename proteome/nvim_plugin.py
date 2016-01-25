@@ -153,4 +153,4 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     def pro_history_switch(self):
         pass
 
-__all__ = ['ProteomeNvimPlugin']
+__all__ = ('ProteomeNvimPlugin',)

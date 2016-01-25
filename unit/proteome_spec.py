@@ -13,12 +13,11 @@ from proteome.project import Project, Projects, ProjectAnalyzer
 from proteome.plugins.core import (Next, Prev, StageI, AddByParams,
                                    RemoveByIdent)
 from proteome.main import Proteome
-from proteome.test.spec import MockNvimSpec
 
-from unit._support.loader import _LoaderSpec
+from unit._support.loader import LoaderSpec
 from unit._support.async import test_loop
 
-from tek.test import temp_dir
+from tryp.test import temp_dir, later
 
 null = Path('/dev/null')
 
@@ -30,7 +29,7 @@ class DictProteome(Proteome):
         return dict()
 
 
-class Proteome_(MockNvimSpec, _LoaderSpec):
+class Proteome_(LoaderSpec):
 
     def _prot(self, p=List(), b=List(), t=Map()):
         trypnv.in_vim = False

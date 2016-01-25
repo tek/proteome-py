@@ -1,4 +1,4 @@
-from trypnv.machine import message
+from trypnv.machine import message  # type: ignore
 
 Commit = message('Commit')
 HistorySwitch = message('HistorySwitch', 'index')

@@ -1,7 +1,7 @@
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
 
-from tek.test import later
+from tryp.test import later
 
 from tryp import List, Just, __
 from tryp.util.random import Random

@@ -6,18 +6,17 @@ from pathlib import Path
 
 from fn import _  # type: ignore
 
-from tek.test import temp_dir
+from tryp.test import temp_dir
 
 from tryp import Just, List, Empty, Map
 
 from proteome.project import Project, Projects, ProjectAnalyzer
 from proteome.logging import Logging
-from proteome.test.spec import MockNvimSpec
 
-from unit._support.loader import _LoaderSpec
+from unit._support.loader import LoaderSpec
 
 
-class Projects_(_LoaderSpec):
+class Projects_(LoaderSpec):
 
     def setup(self, *a, **kw):
         super(Projects_, self).setup(*a, **kw)
@@ -40,7 +39,7 @@ class Projects_(_LoaderSpec):
         (p2 - pro._get).projects.should.be.empty
 
 
-class ProjectLoader_(_LoaderSpec):
+class ProjectLoader_(LoaderSpec):
 
     def setup(self, *a, **kw):
         super(ProjectLoader_, self).setup(*a, **kw)
@@ -116,7 +115,7 @@ class ProjectLoader_(_LoaderSpec):
         pro.should.contain(Project.of(name, root, Empty()))
 
 
-class ProjectResolver_(_LoaderSpec, MockNvimSpec, Logging):
+class ProjectResolver_(LoaderSpec, Logging):
 
     def setup(self, *a, **kw):
         super(ProjectResolver_, self).setup(*a, **kw)
@@ -130,7 +129,7 @@ class ProjectResolver_(_LoaderSpec, MockNvimSpec, Logging):
             Just(('type1', self.type1pro_name)))
 
 
-class ProjectAnalyzer_(_LoaderSpec, MockNvimSpec, Logging):
+class ProjectAnalyzer_(LoaderSpec, Logging):
 
     def root_to_json(self):
         root = self.project_base / 'pa_tpe_1' / 'pa_1'

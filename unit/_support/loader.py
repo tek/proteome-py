@@ -1,18 +1,18 @@
 from pathlib import Path
 
-from tek.test import fixture_path, temp_dir  # type: ignore
+from tryp.test import fixture_path, temp_dir  # type: ignore
 
 from tryp import List, Map
 
 from proteome.project import Resolver, ProjectLoader
 
-from unit._support.spec import Spec
+from unit._support.spec import UnitSpec
 
 
-class _LoaderSpec(Spec):
+class LoaderSpec(UnitSpec):
 
-    def setup(self, *a, **kw):
-        super(_LoaderSpec, self).setup(*a, **kw)
+    def setup(self):
+        super().setup()
         self.pypro1_name = 'pypro1'
         self.config = Path(fixture_path('conf'))
         self.project_base = Path(temp_dir('projects'))
@@ -27,4 +27,4 @@ class _LoaderSpec(Spec):
                                  self.type_bases)
         self.loader = ProjectLoader(self.config, self.resolver)
 
-__all__ = ['_LoaderSpec']
+__all__ = ['LoaderSpec']

@@ -7,13 +7,13 @@ from fn import _
 
 from proteome.git import History, RepoAdapter
 
-from unit.project_spec import _LoaderSpec
+from unit.project_spec import LoaderSpec
 from unit._support.async import test_loop
 
 from tryp import Just, __
 
 
-class Git_(_LoaderSpec):
+class Git_(LoaderSpec):
 
     def with_repo(f):
         @wraps(f)
@@ -120,7 +120,7 @@ class Git_(_LoaderSpec):
         )
 
 
-class RepoSpec(_LoaderSpec):
+class RepoSpec(LoaderSpec):
 
     def setup(self):
         super().setup()

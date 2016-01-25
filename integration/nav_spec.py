@@ -20,4 +20,4 @@ class NavSpec(VimIntegrationSpec):
         self.vim.cmd('ProPrev')
         self._pvar_becomes('root_name', self.name2)
 
-__all__ = ('NavSpec')
+__all__ = ('NavSpec',)

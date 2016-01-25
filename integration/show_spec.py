@@ -20,4 +20,4 @@ class ShowSpec(VimIntegrationSpec):
         lines[0].should.start_with(self.ident1)
         lines[1].should.start_with(self.ident2)
 
-__all__ = ('ShowSpec')
+__all__ = ('ShowSpec',)

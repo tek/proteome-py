@@ -3,7 +3,7 @@ from flexmock import flexmock  # NOQA
 
 from tryp import List
 
-from tek.test import fixture_path
+from tryp.test import fixture_path
 
 from integration._support.base import VimIntegrationSpec
 
