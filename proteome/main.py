@@ -2,7 +2,7 @@ from pathlib import Path  # type: ignore
 
 from toolz.itertoolz import cons  # type: ignore
 
-from tryp import List, Map
+from tryp import List, Map, Maybe, Empty
 
 from proteome.nvim import NvimFacade
 from proteome.env import Env
@@ -19,10 +19,12 @@ class Proteome(ProteomeState):
             plugins: List[str],
             bases: List[Path],
             type_bases: Map[Path, List[str]],
+            initial_projects: Maybe[Projects]=Empty()
     ) -> None:
         self._config_path = config_path
         self._bases = bases
         self._type_bases = type_bases
+        self._initial_projects = initial_projects
         core = 'proteome.plugins.core'
         ProteomeState.__init__(self, vim, List.wrap(cons(core, plugins)))
 
@@ -31,7 +33,7 @@ class Proteome(ProteomeState):
             config_path=self._config_path,
             bases=self._bases,
             type_bases=self._type_bases,
-            projects=Projects()
+            projects=self._initial_projects | Projects()
         )
 
     @property

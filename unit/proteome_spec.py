@@ -31,9 +31,13 @@ class DictProteome(Proteome):
 
 class Proteome_(LoaderSpec):
 
-    def _prot(self, p=List(), b=List(), t=Map()):
-        trypnv.in_vim = False
-        return Proteome(self.vim, self.config, p, b, t).transient()
+    def setup(self):
+        super().setup()
+        asyncio.get_child_watcher()
+
+    def _prot(self, p=List(), b=List(), t=Map(), pros=List()):
+        initial = Just(Projects(projects=pros))
+        return Proteome(self.vim, self.config, p, b, t, initial).transient()
 
     def create(self):
         name = 'proj'
@@ -47,9 +51,8 @@ class Proteome_(LoaderSpec):
         self.vim_mock.should_receive('switch_root').and_return(None)
         name = 'proj'
         name2 = 'proj2'
-        with self._prot() as prot:
-            pros = List(Project.of(name, null), Project.of(name2, null))
-            prot.data = prot.data.set(projects=Projects(pros))
+        pros = List(Project.of(name, null), Project.of(name2, null))
+        with self._prot(pros=pros) as prot:
             prot.data.current.should.equal(Just(pros[0]))
             prot.send_wait(Next())\
                 .current.should.equal(Just(pros[1]))
@@ -59,34 +62,39 @@ class Proteome_(LoaderSpec):
     def command(self):
         plug = 'unit._support.test_plug'
         prot = DictProteome(self.vim, null, List(plug), List(), Map())
+        prot.start_wait()
         data = 'message_data'
         prot.plug_command('test_plug', 'do', [data])
-        prot.data.should.have.key(data).being.equal(data)
+        later(lambda: prot.data.should.have.key(data).being.equal(data))
+        prot.stop()
 
     def invalid_command(self):
         plug = 'unit._support.test_plug'
         prot = DictProteome(self.vim, null, List(plug), List(), Map())
+        prot.start_wait()
         data = 'message_data'
         prot.plug_command('test_plug', 'do', [data])
         prot.plug_command('test_plug', 'dont', [data])
-        prot.data.should.have.key(data).being.equal(data)
+        later(lambda: prot.data.should.have.key(data).being.equal(data))
+        prot.stop()
 
     def ctags(self):
         plug_name = 'proteome.plugins.ctags'
         p1 = self.mk_project('pro1', 'c')
         p2 = self.mk_project('pro2', 'go')
-        with self._prot(List(plug_name)) as prot:
-            plug = prot.plugin('ctags')._get
-            pros = List(p1, p2)
-            prot.data = prot.data.set(projects=Projects(pros))
-            p1.tag_file.exists().should_not.be.ok
-            p2.tag_file.exists().should_not.be.ok
-            prot.plug_command('ctags', 'gen', List())
+        pros = List(p1, p2)
+        with self._prot(List(plug_name), pros=pros) as prot:
             with test_loop() as loop:
-                plug.ctags.await_threadsafe(loop)
-            plug.ctags.current.keys.should.be.empty
-            p1.tag_file.exists().should.be.ok
-            p2.tag_file.exists().should.be.ok
+                plug = prot.plugin('ctags')._get
+                p1.tag_file.exists().should_not.be.ok
+                p2.tag_file.exists().should_not.be.ok
+                prot.plug_command('ctags', 'gen_all', List())
+                def check(p):
+                    plug.ctags.await_threadsafe(loop)
+                    p.tag_file.exists().should.be.ok
+                later(lambda: check(p1))
+                later(lambda: check(p2))
+                plug.ctags.ready.should.be.ok
 
     class history_(object):
 
