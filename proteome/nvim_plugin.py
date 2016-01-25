@@ -58,6 +58,7 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
         self.pro = Proteome(self.vim.proxy, Path(config_path), plugins, bases,
                             type_bases)
         self.pro.start()
+        self.pro.wait_for_running()
         self.pro.send(StageI())
 
     @neovim.autocmd('VimEnter')
