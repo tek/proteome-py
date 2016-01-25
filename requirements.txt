@@ -1,3 +1,2 @@
 tryp-nvim
-pyrsistent
 pygit2
