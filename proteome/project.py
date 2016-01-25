@@ -2,20 +2,20 @@ from pathlib import Path
 from typing import Tuple
 import json
 
+from pyrsistent import PRecord  # type: ignore
+
 from tryp import Maybe, Empty, Just, List, Map, may, Boolean, flat_may
 
 from fn import _  # type: ignore
 
 from trypnv.nvim import NvimFacade, HasNvim
-from trypnv.data import field, list_field
-
-from pyrsistent import PRecord
+from trypnv.record import field, list_field
 
 from proteome.logging import Logging
 
 
 def mkpath(path: str):
-    return Path(path).expanduser()
+    return Path(path).expanduser()  # type: ignore
 
 
 def format_path(path: Path):
@@ -63,7 +63,7 @@ class Project(PRecord):
 
     @property
     def ctags_langs(self):
-        return (self.langs + self.tpe.toList).distinct
+        return (self.langs + self.tpe.to_list).distinct
 
     @property
     def want_ctags(self):
@@ -93,7 +93,7 @@ class Project(PRecord):
 
     @property
     def all_types(self):
-        return self.tpe.toList + self.types
+        return self.tpe.to_list + self.types
 
 
 class Projects(object):
@@ -282,8 +282,7 @@ class ProjectLoader(Logging):
             .map(mkpath)\
             .or_else(
                 json.get_all('type', 'name')
-                .flat_smap(self.resolver.type_name)
-            )
+                .flat_smap(self.resolver.type_name))
         valid_fields = root\
             .map(lambda a: json ** Map(root=a, tpe=json.get('type')))\
             .map(lambda a: a.at(*Project._precord_fields))
@@ -293,7 +292,7 @@ class ProjectLoader(Logging):
     # use Either
     @may
     def create(self, name: str, root: Path, **kw):
-        if root.expanduser().is_dir():
+        if root.expanduser().is_dir():  # type: ignore
             return Project.of(name, root, **kw)
 
     def from_params(self, ident: str, root: Path, params: Map):
@@ -324,8 +323,7 @@ class ProjectAnalyzer(HasNvim, Logging):
         return self.loader.json_by_root(wd)\
             .or_else(
                 self.vim.pvar('project_detector')
-                .flat_map(lambda a: self.vim.call(a, str(wd)))
-            )\
+                .flat_map(lambda a: self.vim.call(a, str(wd))))\
             .or_else(self._default_detect_data(wd))
 
     @property
