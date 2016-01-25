@@ -22,7 +22,7 @@ Prev = message('Prev')
 SetProject = message('SetProject', 'ident')
 SetProjectIdent = message('SetProjectIdent', 'ident')
 SetProjectIndex = message('SetProjectIndex', 'index')
-SwitchRoot = message('SwitchRoot')
+SwitchRoot = message('SwitchRoot', opt_fields=(('notify', True),))
 Save = message('Save')
 Added = message('Added', 'project')
 Removed = message('Removed', 'project')
@@ -51,7 +51,7 @@ class Plugin(ProteomeComponent):
 
     @may_handle(Initialized)
     def initialized(self, env, msg):
-        return env.set(initialized=True), SwitchRoot()
+        return env.set(initialized=True), SwitchRoot(False)
 
     @may_handle(MainAdded)
     def main_added(self, env, msg):
@@ -70,8 +70,7 @@ class Plugin(ProteomeComponent):
             .map(lambda a: env.loader.from_params(msg.ident, a, params))\
             .get_or_else(
                 env.loader.by_ident(msg.ident)
-                .or_else(env.loader.resolve_ident(msg.ident, params))
-            )\
+                .or_else(env.loader.resolve_ident(msg.ident, params)))\
             .map(Add)\
             .error(lambda: self._no_such_ident(msg.ident, params))
 
@@ -99,7 +98,7 @@ class Plugin(ProteomeComponent):
         return env + Project.of(msg.name, Path(msg.root))
 
     @may_handle(Show)
-    def show(self, env: Env, msg: Show):
+    def show(self, env: Env, msg):
         lines = env.projects.show(List.wrap(msg.names))
         header = List('Projects:')  # type: List[str]
         self.log.info('\n'.join(header + lines))
@@ -131,8 +130,9 @@ class Plugin(ProteomeComponent):
             pro = env.current
             pro.map(_.root)\
                 .foreach(self.vim.switch_root)  # type: ignore
-            info = 'switched root to {}'
-            pro.foreach(lambda a: self.log.info(info.format(a.ident)))
+            if msg.notify:
+                info = 'switched root to {}'
+                pro.foreach(lambda a: self.log.info(info.format(a.ident)))
             return pro.map(ProjectChanged)
         else:
             return Empty()
@@ -162,7 +162,7 @@ class Plugin(ProteomeComponent):
     def _clone_github(self, path: str):
         self._clone_uri('https://github.com/{}'.format(path))
 
-__all__ = ['Create', 'AddByParams', 'Plugin', 'Show', 'StageI', 'StageII',
+__all__ = ('Create', 'AddByParams', 'Plugin', 'Show', 'StageI', 'StageII',
            'StageIII', 'AddByParams', 'RemoveByIdent', 'Next', 'Prev',
            'SetProjectIndex', 'Save', 'Added', 'Removed', 'ProjectChanged',
-           'BufEnter', 'Initialized', 'MainAdded', 'StageIV']
+           'BufEnter', 'Initialized', 'MainAdded', 'StageIV')
