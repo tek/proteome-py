@@ -119,7 +119,7 @@ class CommitInfo(Record):
 
 class Repo(Logging):
 
-    def __init__(self, repo: pygit2.Repository, state: RepoState) -> None:
+    def __init__(self, repo, state: RepoState) -> None:
         self.repo = repo
         self.state = state
 
