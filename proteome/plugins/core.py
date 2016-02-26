@@ -1,7 +1,5 @@
 from pathlib import Path  # type: ignore
 
-from fn import _  # type: ignore
-
 from tryp import List, Map, Empty
 
 from trypnv.machine import handle, may_handle, message, Error  # type: ignore
@@ -126,16 +124,20 @@ class Plugin(ProteomeComponent):
 
     @handle(SwitchRoot)
     def switch_root(self, env: Env, msg):
-        if env.initialized:
-            pro = env.current
-            pro.map(_.root)\
-                .foreach(self.vim.switch_root)  # type: ignore
+        def go(pro: Project):
+            self.vim.switch_root(pro.root)  # type: ignore
             if msg.notify:
                 info = 'switched root to {}'
-                pro.foreach(lambda a: self.log.info(info.format(a.ident)))
-            return pro.map(ProjectChanged)
+                self.log.info(info.format(pro.ident))
+            return ProjectChanged(pro)
+        if env.initialized:
+            return env.current.map(go)
         else:
             return Empty()
+
+    @may_handle(ProjectChanged)
+    def project_changed(self, env, msg):
+        self.vim.set_pvar('active', msg.project.json)
 
     @may_handle(Next)
     def next(self, env: Env, msg):

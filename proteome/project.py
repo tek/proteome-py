@@ -89,6 +89,7 @@ class Project(PRecord):
             root=str(self.root),
             tpe=self.tpe | None,
             types=self.types,
+            langs=self.langs,
         )
 
     @property

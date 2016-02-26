@@ -19,8 +19,7 @@ class NvimFacade(Logging, trypnv.nvim.NvimFacade):
         p = str(path)
         self.cd(p)
         self.pautocmd('SwitchedRoot')
-        self.set_pvar('root', p)
-        self.set_pvar('root_name', str(path.name))
+        self.set_pvar('root_dir', p)
 
 
 __all__ = ['NvimFacade']
