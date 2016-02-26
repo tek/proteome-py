@@ -1,3 +1,5 @@
+import time
+
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
 
@@ -57,6 +59,7 @@ class _HistorySpec(VimIntegrationSpec):
         oc_pre = self._object_count
         self.vim.cmd('ProSave')
         self._wait_for_oc(oc_pre)
+        time.sleep(0.1)
 
 
 class HistorySwitchSpec(_HistorySpec):
@@ -112,7 +115,6 @@ class _BrowseHelpers(object):
 class HistoryBrowseSpec(_HistorySpec, _BrowseHelpers):
 
     def browse(self):
-        self._debug = True
         check = self._check
         marker_text = Random.string()
         self.vim.buffer.set_content([marker_text])
