@@ -3,13 +3,13 @@ from itertools import takewhile
 from typing import Callable
 from datetime import datetime
 
+pygit_working = True
+
 try:
     import pygit2  # type: ignore
-    from pygit2 import Commit, GitError  # type: ignore
+    from pygit2 import Commit, GitError  # type: ignore  # NOQA
 except ImportError:
     pygit_working = False
-else:
-    pygit_working = True
 
 from fn import _, F  # type: ignore
 
@@ -189,11 +189,11 @@ class Repo(Logging):
         return self._master_id.map(search) | iter([])
 
     @may
-    def parent(self, id, n=0) -> Maybe[Commit]:
+    def parent(self, id, n=0) -> Maybe['Commit']:
         return self._skip(self.history_at(id), n)
 
     @may
-    def child(self, id, n=0) -> Maybe[Commit]:
+    def child(self, id, n=0) -> Maybe['Commit']:
         return self._skip(self.future_at(id), n - 1)
 
     def _skip(self, hist, n):
@@ -222,11 +222,11 @@ class Repo(Logging):
     def to_master(self):
         return self._head_commit.map(self._switch)
 
-    def _switch(self, commit: Commit):
+    def _switch(self, commit: 'Commit'):
         self._checkout_commit(commit)
         return self.state.set(current=Just(commit.id))
 
-    def _checkout_commit(self, commit: Commit):
+    def _checkout_commit(self, commit: 'Commit'):
         strat = pygit2.GIT_CHECKOUT_FORCE
         try:
             self.repo.checkout_tree(commit.tree, strategy=strat)
@@ -294,7 +294,7 @@ class RepoT(Transformer[Repo]):
 
 class RepoAdapter(object):
 
-    def __init__(self, work_tree: Path, git_dir: Maybe[Path]=Empty()):
+    def __init__(self, work_tree: Path, git_dir: Maybe[Path]=Empty()) -> None:
         self.work_tree = work_tree
         self.git_dir = git_dir | (work_tree / '.git')
 
@@ -418,4 +418,5 @@ class HistoryGit(Git):
     def _history_dir(self, project: Project):
         return self.base / project.fqn
 
-__all__ = ('History', 'RepoAdapter', 'RepoT', 'Repo', 'RepoState', 'HistoryT')
+__all__ = ('History', 'RepoAdapter', 'RepoT', 'Repo', 'RepoState', 'HistoryT',
+           'pygit_working')
