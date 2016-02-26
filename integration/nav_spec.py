@@ -14,10 +14,10 @@ class NavSpec(VimIntegrationSpec):
 
     def navigate(self):
         self.vim.cmd('ProNext')
-        self._pvar_becomes('root_name', self.name2)
+        self._project_becomes(self.name2)
         self.vim.cmd('ProTo 0')
-        self._pvar_becomes('root_name', self.name1)
+        self._project_becomes(self.name1)
         self.vim.cmd('ProPrev')
-        self._pvar_becomes('root_name', self.name2)
+        self._project_becomes(self.name2)
 
 __all__ = ('NavSpec',)

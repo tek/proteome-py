@@ -6,6 +6,8 @@ from functools import wraps
 
 import neovim  # type: ignore
 
+from fn import _  # type: ignore
+
 from tryp.test import fixture_path, temp_dir, later  # type: ignore
 
 from tryp import List, Map, Just
@@ -43,7 +45,7 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, Spec, Logging):
         self.vim.cmd('ProteomeStart')
         self._wait_for(lambda: self.vim.pvar('projects').is_just)
         self.vim.cmd('ProteomePostStartup')
-        self._pvar_becomes('root_name', self.name1)
+        self._pvar_becomes('root_dir', str(self.main_project))
 
     def _pre_start_neovim(self):
         self.base = temp_dir('projects', 'base')
@@ -202,5 +204,8 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, Spec, Logging):
     @property
     def _config_path(self):
         return Path('/dev/null')
+
+    def _project_becomes(self, name):
+        self._pvar_becomes_map('active', name, _['name'])
 
 __all__ = ['IntegrationSpec']

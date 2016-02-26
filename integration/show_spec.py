@@ -13,7 +13,7 @@ class ShowSpec(VimIntegrationSpec):
         return List('proteome.plugins.config')
 
     def show(self):
-        self._pvar_becomes('root_name', self.name1)
+        self._project_becomes(self.name1)
         self.vim.cmd('ProShow')
         self._wait_for(lambda: self._log_out.lift(-3).contains('Projects:'))
         lines = self._log_out[-2:]

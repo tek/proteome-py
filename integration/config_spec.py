@@ -18,9 +18,9 @@ class _ConfigSpec(VimIntegrationSpec):
 class ChangeProjectSpec(_ConfigSpec):
 
     def change_project(self):
-        self._pvar_becomes('root_name', self.name1)
+        self._project_becomes(self.name1)
         self.vim.cmd('ProTo dep')
-        self._pvar_becomes('root_name', self.name2)
+        self._project_becomes(self.name2)
 
 
 class AdditionalLangsSpec(_ConfigSpec):
@@ -30,7 +30,6 @@ class AdditionalLangsSpec(_ConfigSpec):
         return fixture_path('additional_langs', 'conf.json')
 
     def additional_langs(self):
-        self._pvar_becomes('root_name', self.name1)
         self._pvar_becomes('main_types', List('tpe', 'tpe1', 'tpe2'))
 
 __all__ = ('AdditionalLangsSpec', 'ChangeProjectSpec')
