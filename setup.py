@@ -11,7 +11,7 @@ setup(
     packages=find_packages(
         exclude=['unit', 'unit.*', 'integration', 'integration.*']),
     install_requires=[
-        'tryp-nvim>=5.1.2',
+        'tryp-nvim>=5.2.0',
         'pygit2',
     ]
 )
