@@ -1,14 +1,9 @@
 import os
 from pathlib import Path
-from threading import Thread
-import asyncio
-from functools import wraps
-
-import neovim  # type: ignore
 
 from fn import _  # type: ignore
 
-from tryp.test import fixture_path, temp_dir, later  # type: ignore
+from tryp.test import fixture_path, temp_dir  # type: ignore
 
 from tryp import List, Map, Just
 from trypnv.test import IntegrationSpec as TrypnvIntegrationSpec
@@ -47,6 +42,9 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, Spec, Logging):
         self.vim.cmd('ProteomePostStartup')
         self._pvar_becomes('root_dir', str(self.main_project))
 
+    def _nvim_facade(self, vim):
+        return NvimFacade(vim)
+
     def _pre_start_neovim(self):
         self.base = temp_dir('projects', 'base')
         self.type1_base = temp_dir('projects', 'type1')
@@ -66,16 +64,6 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, Spec, Logging):
         self.main_project.mkdir(parents=True)
         dep.mkdir(parents=True)
         self.vim.cd(str(self.main_project))
-
-    def _start_neovim(self):
-        ''' start an embedded vim session that loads no init.vim.
-        **self.vimlog** is set as log file. aside from being convenient,
-        this is crucially necessary, as the first use of the session
-        will block if stdout is used for output.
-        '''
-        argv = ['nvim', '--embed', '-V{}'.format(self.vimlog), '-u', 'NONE']
-        self.neovim = neovim.attach('child', argv=argv)
-        self.vim = NvimFacade(self.neovim)
 
     def _set_vars(self):
         self.vim.set_pvar('config_path', str(self._config_path))
