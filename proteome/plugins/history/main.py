@@ -371,7 +371,6 @@ class Plugin(ProteomeComponent):
         async def _pick_revert(self, commit: CommitInfo, project: Project):
             executor = HistoryGit(self.machine.base, self.vim)
             result = await executor.revert(project, commit)
-            self.log.verbose(result)
             ret = self._check_pick_status(commit, executor, result)
             if not result.success:
                 await executor.revert_abort(project)

@@ -94,4 +94,12 @@ class Env(Data):
                   else want_history)
         return self.all_projects.filter(filter)
 
+    @property
+    def main_type(self):
+        return self.main.flat_map(_.tpe)
+
+    @property
+    def addable(self):
+        return self.loader.all_ident(self.main_type)
+
 __all__ = ['Env']

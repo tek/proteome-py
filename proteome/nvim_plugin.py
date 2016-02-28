@@ -2,7 +2,7 @@ from pathlib import Path
 
 import neovim  # type: ignore
 
-from tryp import List, Map
+from tryp import List, Map, __
 
 from trypnv import command, NvimStatePlugin, msg_command, json_msg_command
 
@@ -84,11 +84,24 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     def pro_create(self):
         pass
 
-    @json_msg_command(AddByParams)
+    addable = dict(complete='customlist,ProCompleteAddableProjects')
+    projects = dict(complete='customlist,ProCompleteProjects')
+
+    @json_msg_command(AddByParams, **addable)
     def pro_add(self):
         pass
 
-    @msg_command(RemoveByIdent)
+    @neovim.function('ProCompleteProjects', sync=True)
+    def pro_complete_projects(self, args):
+        lead, line, pos = args
+        return self.pro.data.projects.idents.filter(__.startswith(lead))
+
+    @neovim.function('ProCompleteAddableProjects', sync=True)
+    def pro_complete_addable_projects(self, args):
+        lead, line, pos = args
+        return self.pro.data.addable.filter(__.startswith(lead))
+
+    @msg_command(RemoveByIdent, **projects)
     def pro_remove(self):
         pass
 
@@ -96,7 +109,7 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     def pro_show(self):
         pass
 
-    @msg_command(SetProject)
+    @msg_command(SetProject, **projects)
     def pro_to(self):
         pass
 

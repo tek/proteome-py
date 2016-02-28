@@ -4,7 +4,7 @@ import json
 
 from pyrsistent import PRecord  # type: ignore
 
-from tryp import Maybe, Empty, Just, List, Map, may, Boolean, flat_may
+from tryp import Maybe, Empty, Just, List, Map, may, Boolean, flat_may, __
 
 from fn import _  # type: ignore
 
@@ -161,6 +161,10 @@ class Projects(object):
         return self.projects.index_where(_.ident == ident)\
             .or_else(self.projects.index_where(_.name == ident))
 
+    @property
+    def idents(self):
+        return self.projects.map(_.ident)
+
 
 def sub_path(base: Path, path: Path):
     check = lambda: path.relative_to(base)
@@ -208,6 +212,22 @@ class Resolver(object):
         return self.types\
             .flat_map(trans)\
             .head
+
+
+def subdirs(path: Path, n: int):
+    sub = List.wrap(path.iterdir()).filter(__.is_dir())
+    if n <= 1:
+        return sub
+    else:
+        return sub.flat_map(lambda a: subdirs(a, n - 1))
+
+
+def extract_ident(path: Path):
+    return (
+        Just(path.parts)
+        .filter(lambda a: len(a) >= 2)
+        .map(lambda a: '/'.join(a[-2:]))
+    )
 
 
 class ProjectLoader(Logging):
@@ -302,6 +322,12 @@ class ProjectLoader(Logging):
         tpe = parts.lift(1).or_else(params.get('type'))
         kw = params.at('types', 'langs', 'history')
         return self.create(name, root, tpe=tpe, **kw)
+
+    def all_ident(self, main: Maybe[str]):
+        all = self.resolver.bases // (lambda a: subdirs(a, 2)) // extract_ident
+        m_ids = main / (lambda a: all.filter(__.startswith(a + '/'))) | List()
+        m_names = m_ids / __.split('/') / _[-1]
+        return all + m_names
 
 
 class ProjectAnalyzer(HasNvim, Logging):
