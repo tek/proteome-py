@@ -40,4 +40,4 @@ class Proteome(ProteomeState):
     def projects(self):
         return self.env.projects
 
-__all__ = ['Proteome']
+__all__ = ('Proteome',)

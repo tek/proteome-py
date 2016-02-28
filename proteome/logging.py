@@ -1,5 +1,3 @@
-import logging  # type: ignore
-
 import tryp.logging
 from trypnv.logging import trypnv_logger
 
@@ -19,4 +17,4 @@ class Logging(tryp.logging.Logging):
     def _log(self) -> tryp.logging.Logger:  # type: ignore
         return proteome_logger(self.__class__.__name__)
 
-__all__ = ['proteome_logger', 'Logging']
+__all__ = ('proteome_logger', 'Logging')

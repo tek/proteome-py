@@ -28,4 +28,4 @@ class ProteomeTransitions(Transitions, HasNvim):
         Transitions.__init__(self, machine, *a, **kw)
         HasNvim.__init__(self, machine.vim)
 
-__all__ = ['ProteomeComponent', 'ProteomeState']
+__all__ = ('ProteomeComponent', 'ProteomeState', 'ProteomeTransitions')
