@@ -114,6 +114,12 @@ class ProjectLoader_(LoaderSpec):
         pro = self.loader.from_params(name, root, Map())
         pro.should.contain(Project.of(name, root, Empty()))
 
+    def resolve_ident_main_type(self):
+        name = self.pypro1_name
+        main = Just(self.pypro1_type)
+        pro = self.loader.resolve_ident(name, main=main)
+        pro.should.contain(Project.of(name, self.pypro1_root, main))
+
 
 class ProjectResolver_(LoaderSpec, Logging):
 

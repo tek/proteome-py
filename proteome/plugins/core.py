@@ -68,7 +68,8 @@ class Plugin(ProteomeComponent):
             .map(lambda a: env.loader.from_params(msg.ident, a, params))\
             .get_or_else(
                 env.loader.by_ident(msg.ident)
-                .or_else(env.loader.resolve_ident(msg.ident, params)))\
+                .or_else(env.loader.resolve_ident(
+                    msg.ident, params, env.main_type)))\
             .map(Add)\
             .error(lambda: self._no_such_ident(msg.ident, params))
 

@@ -257,10 +257,12 @@ class ProjectLoader(Logging):
         return self.resolver.type_name(tpe, name)\
             .map(lambda a: Project.of(name, a, Just(tpe)))
 
-    @flat_may
-    def resolve_ident(self, ident: str, params: Map=Map()):
+    def resolve_ident(self, ident: str, params: Map=Map(),
+                      main: Maybe[str]=Empty()):
         if '/' in ident:
             return self.resolve(*ident.split('/', 1))
+        else:
+            return main.flat_map(lambda a: self.resolve(a, ident))
 
     def json_by_name(self, name: str):
         return self.config\
