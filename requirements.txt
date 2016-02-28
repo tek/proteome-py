@@ -1,2 +1,5 @@
 tryp-nvim
 pygit2
+spec
+sure
+flexmock
