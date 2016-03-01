@@ -5,7 +5,7 @@ from fn import _  # type: ignore
 
 from tryp.test import fixture_path, temp_dir  # type: ignore
 
-from tryp import List, Map, Just
+from tryp import List, Map, Just, Maybe
 from trypnv.test import IntegrationSpec as TrypnvIntegrationSpec
 from trypnv.test import VimIntegrationSpec as TrypnvVimIntegrationSpec
 
@@ -15,7 +15,24 @@ from proteome.logging import Logging
 from proteome.test import Spec
 
 
-class IntegrationSpec(TrypnvIntegrationSpec):
+class IntegrationCommon(Spec):
+
+    def setup(self):
+        self.cwd = Maybe.from_call(Path.cwd, exc=IOError)
+        super().setup()
+
+    def _cd_back(self):
+        try:
+            self.cwd.map(str).foreach(os.chdir)
+        except Exception as e:
+            self.log.error('error changing back to project root: {}'.format(e))
+
+    def teardown(self):
+        super().teardown()
+        self._cd_back()
+
+
+class IntegrationSpec(TrypnvIntegrationSpec, IntegrationCommon):
 
     def setup(self):
         super().setup()
@@ -32,11 +49,10 @@ class IntegrationSpec(TrypnvIntegrationSpec):
         return List(*pros).smap(self.mk_project)
 
 
-class VimIntegrationSpec(TrypnvVimIntegrationSpec, Spec, Logging):
+class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
 
     def setup(self):
         super().setup()
-        self._pre_start()
         self.vim.cmd('ProteomeStart')
         self._wait_for(lambda: self.vim.pvar('projects').is_just)
         self.vim.cmd('ProteomePostStartup')
@@ -178,7 +194,7 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, Spec, Logging):
     # without quitting, specs with subprocesses block in the end
     def teardown(self):
         # self.neovim.quit()
-        os.chdir(str(self.cwd))
+        super().teardown()
         if self._debug:
             self._log_out.foreach(self.log.info)
 

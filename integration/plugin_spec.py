@@ -45,7 +45,6 @@ def _mock_proxy(self):
 class ProteomePlugin_(IntegrationSpec):
 
     def setup(self):
-        self.cwd = Path.cwd()
         trypnv.in_vim = False
         super().setup()
         self.logfile = temp_dir('log') / 'proteome_spec'
@@ -76,10 +75,9 @@ class ProteomePlugin_(IntegrationSpec):
         self.proteome.proteome_post_startup()
 
     def teardown(self):
-        super(ProteomePlugin_, self).teardown()
+        super().teardown()
         self.proteome.proteome_quit()
         self.neovim.quit()
-        os.chdir(str(self.cwd))
         self.logfile.read_text().splitlines().should.be.empty
 
     @property
