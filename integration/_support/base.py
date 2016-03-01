@@ -53,7 +53,7 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
 
     def setup(self):
         super().setup()
-        self.vim.cmd('ProteomeStart')
+        self.vim.cmd_sync('ProteomeStart')
         self._wait_for(lambda: self.vim.pvar('projects').is_just)
         self.vim.cmd('ProteomePostStartup')
         self._pvar_becomes('root_dir', str(self.main_project))
