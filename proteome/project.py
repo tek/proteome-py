@@ -2,14 +2,14 @@ from pathlib import Path
 from typing import Tuple
 import json
 
-from pyrsistent import PRecord  # type: ignore
-
 from tryp import Maybe, Empty, Just, List, Map, may, Boolean, flat_may, __
+from tryp.lazy import lazy
 
 from fn import _  # type: ignore
 
 from trypnv.nvim import NvimFacade, HasNvim
-from trypnv.record import field, list_field
+from trypnv.record import field, list_field, Record
+from trypnv.process import JobClient  # type: ignore
 
 from proteome.logging import Logging
 
@@ -24,7 +24,7 @@ def format_path(path: Path):
 
 
 # TODO subprojects, e.g. sbt projects
-class Project(PRecord):
+class Project(Record):
     name = field(str)
     root = field(Path)
     tpe = field(Maybe, initial=Empty())
@@ -95,6 +95,10 @@ class Project(PRecord):
     @property
     def all_types(self):
         return self.tpe.to_list + self.types
+
+    @lazy
+    def job_client(self):
+        return JobClient(cwd=self.root, name=self.ident)
 
 
 class Projects(object):
@@ -308,7 +312,7 @@ class ProjectLoader(Logging):
                 .flat_smap(self.resolver.type_name))
         valid_fields = root\
             .map(lambda a: json ** Map(root=a, tpe=json.get('type')))\
-            .map(lambda a: a.at(*Project._precord_fields))
+            .map(lambda a: a.at(*Project._pclass_fields))
         return Maybe.from_call(lambda: valid_fields.ssmap(Project)) | Empty()
 
     # TODO log error if not a dir

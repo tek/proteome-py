@@ -9,7 +9,7 @@ class Patch(ProcessExecutor):  # type: ignore
     def patch(self, project: Project, diff: str):
         args = ['-p1', '-r-']
         job = Job(
-            owner=project,
+            client=project.job_client,
             exe='patch',
             args=args,
             loop=self.loop,

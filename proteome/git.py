@@ -381,22 +381,26 @@ class Git(ProcessExecutor):
     def pre_args(self, project: Project):
         return []
 
-    def command(self, project: Project, name: str, *cmd_args):
-        args = self.pre_args(project) + [name] + list(cmd_args)
+    def command(self, client, git_args, name, *cmd_args):
+        args = list(map(str, git_args + [name] + list(cmd_args)))
         self.log.debug('running git {}'.format(' '.join(args)))
         job = Job(
-            owner=project,
+            client=client,
             exe='git',
             args=args,
             loop=self.loop,
         )
         return self.run(job)
 
+    def project_command(self, project: Project, name: str, *cmd_args):
+        return self.command(project.job_client, self.pre_args(project), name,
+                            *cmd_args)
+
     def revert(self, project: Project, commit: CommitInfo):
-        return self.command(project, 'revert', '-n', commit.hex)
+        return self.project_command(project, 'revert', '-n', commit.hex)
 
     def revert_abort(self, project: Project):
-        return self.command(project, 'revert', '--abort')
+        return self.project_command(project, 'revert', '--abort')
 
 
 class HistoryGit(Git):

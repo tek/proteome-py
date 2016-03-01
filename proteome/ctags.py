@@ -15,7 +15,7 @@ class Ctags(ProcessExecutor):  # type: ignore
             str(project.root)
         ]
         job = Job(
-            owner=project,
+            client=project.job_client,
             exe='ctags',
             args=args,
             loop=self.loop)
