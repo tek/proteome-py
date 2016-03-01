@@ -360,18 +360,21 @@ class ProjectAnalyzer(HasNvim, Logging):
             .or_else(self._default_detect_data(wd))
 
     @property
-    def main_dir(self):
-        return Path.cwd()
+    def main_dir(self) -> Maybe[Path]:
+        return Maybe.from_call(Path.cwd, exc=IOError)
+
+    @property
+    def main_dir_or_home(self) -> Path:
+        return self.main_dir | Path.home()  # type: ignore
 
     @property
     def _detect_main_data(self) -> Maybe[Map]:
-        return self._detect_data(self.main_dir)
+        return self.main_dir // self._detect_data
 
     @property
     def _main_data(self) -> Maybe[Map]:
         return self.pflags.get('detect_main_project', True)\
-            .maybe(self._detect_main_data)\
-            .get_or_else(Empty())
+            .maybe(self._detect_main_data) | Empty()
 
     @property
     def _auto_main(self):
@@ -381,7 +384,7 @@ class ProjectAnalyzer(HasNvim, Logging):
     @property
     def _fallback_main(self):
         tpe = self.vim.pvar('main_project_type')
-        return Project.of('main', self.main_dir, tpe)
+        return Project.of('main', self.main_dir_or_home, tpe)
 
     @property
     def main(self):
