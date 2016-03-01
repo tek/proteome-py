@@ -1,4 +1,5 @@
 from pathlib import Path
+import tempfile
 
 from fn import _  # type: ignore
 
@@ -88,8 +89,7 @@ class Env(Data):
 
     def history_projects(self, all_projects: bool):
         want_history = _.history
-        has_type = _.tpe.is_just
-        filter = ((lambda a: want_history(a) or has_type(a))
+        filter = ((lambda a: want_history(a) or a.has_type)
                   if all_projects
                   else want_history)
         return self.all_projects.filter(filter)
@@ -101,5 +101,12 @@ class Env(Data):
     @property
     def addable(self):
         return self.loader.all_ident(self.main_type)
+
+    @property
+    def main_clone_dir(self):
+        temp = lambda: tempfile.mkdtemp(prefix='proteome_clone')
+        return self.resolver.bases.head\
+            .map2(self.main_type, _ / _)\
+            .or_else(temp)
 
 __all__ = ['Env']

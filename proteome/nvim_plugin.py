@@ -8,7 +8,7 @@ from trypnv import command, NvimStatePlugin, msg_command, json_msg_command
 
 from proteome.plugins.core import (AddByParams, Show, Create, SetProject, Next,
                                    Prev, StageI, Save, RemoveByIdent, BufEnter,
-                                   StageII, StageIII, StageIV, Clone)
+                                   StageII, StageIII, StageIV, CloneRepo)
 from proteome.plugins.history.messages import (HistoryPrev, HistoryNext,
                                                HistoryStatus, HistoryLog,
                                                HistoryBrowse,
@@ -135,7 +135,7 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
         if self._post_initialized:
             self.pro.send(BufEnter(self.vim.buffer.proxy))
 
-    @json_msg_command(Clone)
+    @json_msg_command(CloneRepo)
     def pro_clone(self):
         pass
 

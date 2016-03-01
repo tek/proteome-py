@@ -1,12 +1,18 @@
+import re
 from pathlib import Path  # type: ignore
 
+from fn import F, _  # type: ignore
+
 from tryp import List, Map, Empty
+from tryp.lazy import lazy
 
 from trypnv.machine import handle, may_handle, message, Error  # type: ignore
+from trypnv.process import JobClient
 
 from proteome.state import ProteomeComponent
 from proteome.project import Project, mkpath
 from proteome.env import Env
+from proteome.git import Git
 
 StageI = message('StageI')
 StageII = message('StageII')
@@ -30,7 +36,7 @@ Initialized = message('Initialized')
 MainAdded = message('MainAdded')
 Show = message('Show', varargs='names')
 AddByParams = message('AddByParams', 'ident', 'params')
-Clone = message('Clone', 'url', 'params')
+CloneRepo = message('CloneRepo', 'uri', 'params')
 
 
 class Plugin(ProteomeComponent):
@@ -152,18 +158,33 @@ class Plugin(ProteomeComponent):
     def error(self, env, msg):
         self.log.error(msg.message)
 
-    @may_handle(Clone)
-    def clone(self, uri):
-        if uri.startswith('http'):
-            self._clone_url(uri)
-        else:
-            self._clone_github(uri)
+    @handle(CloneRepo)
+    def clone_repo(self, env, msg):
+        def extract_repo_name():
+            head = List.wrap(msg.uri.split('/')).lift(-1)
+            return head.map(lambda a: re.sub('\.git$', '', a))
+        handler = (self._clone_url if msg.uri.startswith('http') else
+                   self._clone_github)
+        name = msg.params.get('name').or_else(extract_repo_name)
+        return env.main_clone_dir.map2(name, _ / _) / F(handler, msg.uri)
 
-    def _clone_url(self, url: str):
-        pass
+    @property
+    def cloner(self) -> Git:
+        return self._cloner  # type: ignore
 
-    def _clone_github(self, path: str):
-        self._clone_uri('https://github.com/{}'.format(path))
+    @lazy
+    def _cloner(self):
+        return Git(self.vim)
+
+    # TODO process errors
+    async def _clone_url(self, url: str, target):
+        client = JobClient(cwd=Path.home(), name=self.name)
+        res = await self.cloner.clone(client, url, target)
+        self.log.verbose(res)
+        return Empty()
+
+    def _clone_github(self, path: str, target):
+        return self._clone_url('https://github.com/{}'.format(path), target)
 
 __all__ = ('Create', 'AddByParams', 'Plugin', 'Show', 'StageI', 'StageII',
            'StageIII', 'AddByParams', 'RemoveByIdent', 'Next', 'Prev',

@@ -96,6 +96,10 @@ class Project(Record):
     def all_types(self):
         return self.tpe.to_list + self.types
 
+    @property
+    def has_type(self):
+        return self.tpe.is_just
+
     @lazy
     def job_client(self):
         return JobClient(cwd=self.root, name=self.ident)

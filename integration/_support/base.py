@@ -75,7 +75,8 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
         self.name2 = 'dep'
         self.ident1 = '{}/{}'.format(self.tpe1, self.name1)
         self.ident2 = '{}/{}'.format(self.tpe2, self.name2)
-        self.main_project = self.base / self.tpe1 / self.name1
+        self.main_tpe = self.base / self.tpe1
+        self.main_project = self.main_tpe / self.name1
         dep = self.base / self.tpe2 / self.name2
         self.main_project.mkdir(parents=True)
         dep.mkdir(parents=True)
@@ -181,6 +182,12 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
                 'name': 'ProHistoryPick',
                 'type': 'command',
                 'opts': {'nargs': 1}
+            },
+            {
+                'sync': 0,
+                'name': 'ProClone',
+                'type': 'command',
+                'opts': {'nargs': '+'}
             },
             {
                 'sync': 0,

@@ -402,6 +402,9 @@ class Git(ProcessExecutor):
     def revert_abort(self, project: Project):
         return self.project_command(project, 'revert', '--abort')
 
+    def clone(self, client, url, location):
+        return self.command(client, [], 'clone', url, location)
+
 
 class HistoryGit(Git):
 
