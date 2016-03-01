@@ -180,7 +180,6 @@ class Plugin(ProteomeComponent):
     async def _clone_url(self, url: str, target):
         client = JobClient(cwd=Path.home(), name=self.name)
         res = await self.cloner.clone(client, url, target)
-        self.log.verbose(res)
         return Empty()
 
     def _clone_github(self, path: str, target):
