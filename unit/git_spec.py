@@ -53,7 +53,7 @@ class Git_(LoaderSpec):
         return (
             repo /
             __.add_commit_all(first) @
-            (lambda: file2.touch()) /
+            (lambda: file2.write_text(first)) /
             __.add_commit_all(second) @
             (lambda: file1.write_text(second)) /
             __.add_commit_all('third') %

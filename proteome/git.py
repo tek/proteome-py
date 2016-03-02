@@ -156,6 +156,10 @@ class Repo(Logging):
         return self.master.map(lambda a: a.get_object())
 
     @property
+    def _master_tree(self):
+        return self._master_commit / _.tree
+
+    @property
     def _head(self):
         return Maybe.from_call(lambda: self.repo.head, exc=GitError)
 
@@ -239,10 +243,28 @@ class Repo(Logging):
     def _checkout_master(self):
         return self._master_commit.map(self._switch)
 
+    @property
+    def workdir_diff(self):
+        return (self._master_commit /
+                (F(_.tree) >> __.diff_to_workdir()))
+
+    @property
+    def index_diff(self):
+        return self._master_tree / self.repo.index.diff_to_tree
+
+    @property
+    def index_dirty(self):
+        def check(diff):
+            return diff.patch is not None or diff.stats.files_changed
+        return self.index_diff / check | True
+
     def add_commit_all(self, msg):
         self.repo.index.add_all()
-        tree = self.repo.index.write_tree()
-        return self._create_master_commit(tree, msg)
+        if self.index_dirty:
+            tree = self.repo.index.write_tree()
+            return self._create_master_commit(tree, msg)
+        else:
+            return Empty()
 
     def _create_master_commit(self, tree, msg):
         u = 'proteome'

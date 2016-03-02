@@ -84,6 +84,17 @@ class HistorySwitchSpec(_HistorySpec):
         self._log_line(-1, __.startswith('#1'))
 
 
+class HistorySaveSpec(_HistorySpec):
+
+    def clean_workdir(self):
+        self._save()
+        self._write_file(1)
+        self._save()
+        self.vim.cmd('ProSave')
+        self.vim.cmd('ProHistoryLog')
+        later(lambda: self._log_out.should.have.length_of(2))
+
+
 class HistoryLogSpec(_HistorySpec):
 
     def logg(self):
