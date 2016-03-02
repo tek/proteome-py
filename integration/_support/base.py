@@ -38,8 +38,9 @@ class IntegrationSpec(TrypnvIntegrationSpec, IntegrationCommon):
         super().setup()
         self.base = temp_dir('projects', 'base')
         self.config = fixture_path('conf')
-        self.type1_base = temp_dir('projects', 'type1')
-        self.type_bases = Map({self.type1_base: List('type1')})
+        self.type1 = 'type1'
+        self.type1_base = temp_dir('projects', self.type1)
+        self.type_bases = Map({self.type1_base: List(self.type1)})
 
     def mk_project(self, tpe, name):
         root = temp_dir(str(self.base / tpe / name))

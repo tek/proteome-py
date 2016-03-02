@@ -109,13 +109,17 @@ class ProteomePlugin_(IntegrationSpec):
 
     @main_looped
     def complete_addable(self):
+        def check(pre, ident):
+            idents = self.proteome.pro_complete_addable_projects([pre, '', ''])
+            set(idents).should.equal(set(ident))
+        pro4n = 'pro4'
+        pro4 = '{}/{}'.format(self.type1, pro4n)
+        temp_dir(self.type1_base / pro4n)
         self.proteome.proteome_start()
         self._await()
-        idents = self.proteome.pro_complete_addable_projects(['', '', ''])
-        set(idents).should.equal(
-            set(['python/pro1', 'python/pro2', 'vim/pro3']))
-        idents = self.proteome.pro_complete_addable_projects(['py', '', ''])
-        set(idents).should.equal(set(['python/pro1', 'python/pro2']))
+        check('', ['python/pro1', 'python/pro2', 'vim/pro3', pro4])
+        check('py', ['python/pro1', 'python/pro2'])
+        check('type1', [pro4])
 
     @main_looped
     def add_from_params(self):

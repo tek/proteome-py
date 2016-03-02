@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Tuple
 import json
 
-from tryp import Maybe, Empty, Just, List, Map, may, Boolean, flat_may, __
+from tryp import Maybe, Empty, Just, List, Map, may, Boolean, flat_may, __, F
 from tryp.lazy import lazy
 
 from fn import _  # type: ignore
@@ -222,8 +222,12 @@ class Resolver(object):
             .head
 
 
+def content(path: Path):
+    return List.wrap(path.iterdir()) if path.is_dir() else List()
+
+
 def subdirs(path: Path, n: int):
-    sub = List.wrap(path.iterdir()).filter(__.is_dir())
+    sub = content(path).filter(__.is_dir())
     if n <= 1:
         return sub
     else:
@@ -334,7 +338,12 @@ class ProjectLoader(Logging):
         return self.create(name, root, tpe=tpe, **kw)
 
     def all_ident(self, main: Maybe[str]):
-        all = self.resolver.bases // (lambda a: subdirs(a, 2)) // extract_ident
+        def typed_ident(base, types):
+            names = subdirs(base, n=1) / _.name
+            return (types // (lambda t: names / F('{}/{}'.format, t)))
+        bases = self.resolver.bases // F(subdirs, n=2) // extract_ident
+        typed = self.resolver.types.to_list.flat_smap(typed_ident)
+        all = bases + typed
         m_ids = main / (lambda a: all.filter(__.startswith(a + '/'))) | List()
         m_names = m_ids / __.split('/') / _[-1]
         return all + m_names
