@@ -160,13 +160,28 @@ class Plugin(ProteomeComponent):
 
     @handle(CloneRepo)
     def clone_repo(self, env, msg):
-        def extract_repo_name():
-            head = List.wrap(msg.uri.split('/')).lift(-1)
-            return head.map(lambda a: re.sub('\.git$', '', a))
-        handler = (self._clone_url if msg.uri.startswith('http') else
-                   self._clone_github)
-        name = msg.params.get('name').or_else(extract_repo_name)
-        return env.main_clone_dir.map2(name, _ / _) / F(handler, msg.uri)
+        uri = msg.uri
+        name = msg.params.get('name')\
+            .or_else(self._clone_repo_name(uri))
+        url = self._clone_url(uri)
+        return (
+            env.main_clone_dir.map2(name, _ / _)
+            .to_either('invalid parameter: {}'.format(uri)) /
+            F(self._clone_repo, url)
+        )
+
+    def _clone_url(self, uri):
+        return uri if uri.startswith('http') else self._github_url(uri)
+
+    def _github_url(self, uri):
+        return 'https://github.com/{}'.format(uri)
+
+    def _clone_repo_name(self, uri):
+        return (
+            List.wrap(uri.split('/'))
+            .lift(-1) /
+            F(re.sub, '\.git$', '')
+        )
 
     @property
     def cloner(self) -> Git:
@@ -176,14 +191,12 @@ class Plugin(ProteomeComponent):
     def _cloner(self):
         return Git(self.vim)
 
-    # TODO process errors
-    async def _clone_url(self, url: str, target):
+    async def _clone_repo(self, url: str, target):
+        ident = '/'.join(str(target).split('/')[-2:])
         client = JobClient(cwd=Path.home(), name=self.name)
         res = await self.cloner.clone(client, url, target)
-        return Empty()
-
-    def _clone_github(self, path: str, target):
-        return self._clone_url('https://github.com/{}'.format(path), target)
+        return res.either(AddByParams(ident, {}).pub,
+                          'failed to clone {} to {}'.format(url, target))
 
 __all__ = ('Create', 'AddByParams', 'Plugin', 'Show', 'StageI', 'StageII',
            'StageIII', 'AddByParams', 'RemoveByIdent', 'Next', 'Prev',
