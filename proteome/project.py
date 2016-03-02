@@ -228,10 +228,7 @@ def content(path: Path):
 
 def subdirs(path: Path, n: int):
     sub = content(path).filter(__.is_dir())
-    if n <= 1:
-        return sub
-    else:
-        return sub.flat_map(lambda a: subdirs(a, n - 1))
+    return sub if n <= 1 else sub // F(subdirs, n=n - 1)
 
 
 def extract_ident(path: Path):
@@ -406,4 +403,4 @@ class ProjectAnalyzer(HasNvim, Logging):
             .or_else(self._auto_main)\
             .get_or_else(self._fallback_main)
 
-__all__ = ['Projects', 'Project', 'ProjectLoader', 'Resolver']
+__all__ = ('Projects', 'Project', 'ProjectLoader', 'Resolver')
