@@ -197,14 +197,6 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
             },
         ]
 
-    # FIXME quitting neovim blocks sometimes
-    # without quitting, specs with subprocesses block in the end
-    def teardown(self):
-        # self.neovim.quit()
-        super().teardown()
-        if self._debug:
-            self._log_out.foreach(self.log.info)
-
     @property
     def _plugins(self):
         return List()
