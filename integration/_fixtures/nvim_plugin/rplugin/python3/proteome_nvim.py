@@ -1,4 +1,4 @@
-import neovim
+import neovim  # type: ignore
 import os
 import logging
 from pathlib import Path

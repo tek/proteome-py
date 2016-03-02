@@ -1,5 +1,3 @@
-import time
-
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
 
@@ -59,7 +57,7 @@ class _HistorySpec(VimIntegrationSpec):
         oc_pre = self._object_count
         self.vim.cmd('ProSave')
         self._wait_for_oc(oc_pre)
-        time.sleep(0.1)
+        self._wait(0.1)
 
 
 class HistorySwitchSpec(_HistorySpec):
@@ -181,7 +179,6 @@ class HistoryPickSpec(_HistorySpec, _BrowseHelpers):
         self._log_line(-1, __.startswith('picked #1'))
 
     def revert(self):
-        self._debug = True
         self._write(self.test_content[:1])
         self._write(self.test_content[:2])
         self._write(self.test_content)
@@ -193,8 +190,6 @@ class HistoryPickSpec(_HistorySpec, _BrowseHelpers):
         self._log_line(-1, __.startswith('picked #0'))
 
     def pick_save(self):
-        import time
-        self._debug = True
         self._write(self.test_content[:1])
         self._write(self.test_content[:2])
         self._write(self.test_content)
@@ -203,7 +198,7 @@ class HistoryPickSpec(_HistorySpec, _BrowseHelpers):
                           self._tail)
         self._await_content(text3)
         self.vim.cmd('ProSave')
-        time.sleep(2)
+        self._wait(1)
         self._write(self.test_content)
         self._await_content('\n'.join(self.test_content + self._tail))
         self.vim.cmd('ProHistoryPrev')
