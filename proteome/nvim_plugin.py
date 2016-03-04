@@ -18,6 +18,8 @@ from proteome.plugins.history.messages import (HistoryPrev, HistoryNext,
 from proteome.main import Proteome
 from proteome.nvim import NvimFacade
 from proteome.logging import Logging
+from proteome.plugins.unite import UniteSelectAdd, UniteSelectAddAll
+from proteome.plugins.unite import Plugin as Unite
 
 
 class ProteomeNvimPlugin(NvimStatePlugin, Logging):
@@ -174,5 +176,26 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     @msg_command(HistoryRevert)
     def pro_history_revert(self):
         pass
+
+    @msg_command(UniteSelectAdd)
+    def pro_select_add(self):
+        pass
+
+    @msg_command(UniteSelectAddAll)
+    def pro_select_add_all(self):
+        pass
+
+    @neovim.function(Unite.addable_candidates, sync=True)
+    def pro_unite_addable(self, args):
+        return self.pro.data.main_addable / (lambda a: {'word': a})
+
+    @neovim.function(Unite.all_addable_candidates, sync=True)
+    def pro_unite_all_addable(self, args):
+        return self.pro.data.addable / (lambda a: {'word': a})
+
+    @neovim.function(Unite.add_project)
+    def pro_unite_add_project(self, args):
+        ident = List.wrap(args).lift(0) / Map // __.get('word')
+        ident % (lambda a: self.pro.send(AddByParams(a, Map())))
 
 __all__ = ('ProteomeNvimPlugin',)

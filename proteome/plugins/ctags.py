@@ -72,4 +72,4 @@ class Plugin(ProteomeComponent):
         files = env.all_projects.map(_.root / self._tags_file_name)
         bufs.foreach(lambda a: a.amend_optionl('tags', files))
 
-__all__ = ['GenAll', 'Plugin']
+__all__ = ('GenAll', 'Plugin')

@@ -192,6 +192,30 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
             },
             {
                 'sync': 0,
+                'name': 'ProSelectAdd',
+                'type': 'command',
+                'opts': {'nargs': 0}
+            },
+            {
+                'sync': 1,
+                'name': '_proteome_unite_addable',
+                'type': 'function',
+                'opts': {}
+            },
+            {
+                'sync': 1,
+                'name': '_proteome_unite_all_addable',
+                'type': 'function',
+                'opts': {}
+            },
+            {
+                'sync': 0,
+                'name': '_proteome_unite_add_project',
+                'type': 'function',
+                'opts': {}
+            },
+            {
+                'sync': 0,
                 'name': 'BufEnter',
                 'type': 'autocmd',
                 'opts': {'pattern': '*'}

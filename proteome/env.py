@@ -103,6 +103,10 @@ class Env(Data):
         return self.loader.all_ident(self.main_type)
 
     @property
+    def main_addable(self):
+        return self.loader.main_ident(self.main_type)
+
+    @property
     def main_clone_dir(self):
         temp = lambda: tempfile.mkdtemp(prefix='proteome_clone')
         return self.resolver.bases.head\

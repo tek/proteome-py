@@ -334,16 +334,30 @@ class ProjectLoader(Logging):
         kw = params.at('types', 'langs', 'history')
         return self.create(name, root, tpe=tpe, **kw)
 
-    def all_ident(self, main: Maybe[str]):
+    @property
+    def _all_long_ident(self):
         def typed_ident(base, types):
             names = subdirs(base, n=1) / _.name
             return (types // (lambda t: names / F('{}/{}'.format, t)))
         bases = self.resolver.bases // F(subdirs, n=2) // extract_ident
         typed = self.resolver.types.to_list.flat_smap(typed_ident)
-        all = bases + typed
-        m_ids = main / (lambda a: all.filter(__.startswith(a + '/'))) | List()
-        m_names = m_ids / __.split('/') / _[-1]
-        return all + m_names
+        return bases + typed
+
+    def _short_ident(self, idents):
+        return idents / __.split('/') / _[-1]
+
+    def _main_ids(self, idents, main: Maybe[str]):
+        return main / (
+            lambda a: idents.filter(__.startswith(a + '/'))) | List()
+
+    def all_ident(self, main: Maybe[str]):
+        all = self._all_long_ident
+        m_ids = self._main_ids(all, main)
+        return all + self._short_ident(m_ids)
+
+    def main_ident(self, main: Maybe[str]):
+        m_ids = self._main_ids(self._all_long_ident, main)
+        return self._short_ident(m_ids)
 
 
 class ProjectAnalyzer(HasNvim, Logging):

@@ -67,6 +67,7 @@ class ProteomePlugin_(IntegrationSpec):
         self.vim.set_pvar('plugins', List('proteome.plugins.history',
                                           'proteome.plugins.ctags',
                                           'proteome.plugins.config',
+                                          'proteome.plugins.unite',
                                           ))
         self.pros = self.add_projects(
             ('python', 'pro1'), ('python', 'pro2'), ('vim', 'pro3'))
