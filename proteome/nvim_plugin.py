@@ -2,13 +2,14 @@ from pathlib import Path
 
 import neovim  # type: ignore
 
-from tryp import List, Map, __
+from tryp import List, Map, __, F, _
 
 from trypnv import command, NvimStatePlugin, msg_command, json_msg_command
 
-from proteome.plugins.core import (AddByParams, Show, Create, SetProject, Next,
-                                   Prev, StageI, Save, RemoveByIdent, BufEnter,
-                                   StageII, StageIII, StageIV, CloneRepo)
+from proteome.plugins.core import (  # type: ignore
+    AddByParams, Show, Create, SetProject, Next, Prev, StageI,
+    Save, RemoveByIdent, BufEnter, StageII, StageIII, StageIV, CloneRepo
+)
 from proteome.plugins.history.messages import (HistoryPrev, HistoryNext,
                                                HistoryStatus, HistoryLog,
                                                HistoryBrowse,
@@ -18,8 +19,33 @@ from proteome.plugins.history.messages import (HistoryPrev, HistoryNext,
 from proteome.main import Proteome
 from proteome.nvim import NvimFacade
 from proteome.logging import Logging
-from proteome.plugins.unite import UniteSelectAdd, UniteSelectAddAll
+from proteome.plugins.unite import (UniteSelectAdd, UniteSelectAddAll,
+                                    UniteProjects)
 from proteome.plugins.unite import Plugin as Unite
+
+
+def unite_candidates(name):
+    handler = getattr(Unite, '{}_candidates'.format(name))
+    def uc_wrap(f):
+        @neovim.function(handler, sync=True)
+        def f_wrap(*a, **kw):
+            return f(*a, **kw) / (lambda a: {'word': a})
+        return f_wrap
+    return uc_wrap
+
+
+def _unite_word(args):
+    return List.wrap(args).lift(0) / Map // __.get('word')
+
+
+def unite_action(name):
+    handler = getattr(Unite, name)
+    def uc_wrap(f):
+        @neovim.function(handler)
+        def f_wrap(self, args):
+            _unite_word(args) / F(f, self) % self.pro.send
+        return f_wrap
+    return uc_wrap
 
 
 class ProteomeNvimPlugin(NvimStatePlugin, Logging):
@@ -185,17 +211,32 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     def pro_select_add_all(self):
         pass
 
-    @neovim.function(Unite.addable_candidates, sync=True)
-    def pro_unite_addable(self, args):
-        return self.pro.data.main_addable / (lambda a: {'word': a})
+    @msg_command(UniteProjects)
+    def projects(self):
+        pass
 
-    @neovim.function(Unite.all_addable_candidates, sync=True)
+    @unite_candidates('addable')
+    def pro_unite_addable(self, args):
+        return self.pro.data.main_addable
+
+    @unite_candidates('all_addable')
     def pro_unite_all_addable(self, args):
         return self.pro.data.addable / (lambda a: {'word': a})
 
-    @neovim.function(Unite.add_project)
-    def pro_unite_add_project(self, args):
-        ident = List.wrap(args).lift(0) / Map // __.get('word')
-        ident % (lambda a: self.pro.send(AddByParams(a, Map())))
+    @unite_candidates('projects')
+    def pro_unite_projects(self, args):
+        return self.pro.data.all_projects / _.name
+
+    @unite_action('add_project')
+    def pro_unite_add_project(self, ident):
+        return AddByParams(ident, params=Map())
+
+    @unite_action('activate_project')
+    def pro_unite_activate_project(self, ident):
+        return SetProject(ident)
+
+    @unite_action('remove_project')
+    def pro_unite_remove_project(self, ident):
+        return RemoveByIdent(ident)
 
 __all__ = ('ProteomeNvimPlugin',)

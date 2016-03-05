@@ -197,6 +197,12 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
                 'opts': {'nargs': 0}
             },
             {
+                'sync': 0,
+                'name': 'Projects',
+                'type': 'command',
+                'opts': {'nargs': 0}
+            },
+            {
                 'sync': 1,
                 'name': '_proteome_unite_addable',
                 'type': 'function',
@@ -209,8 +215,26 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
                 'opts': {}
             },
             {
+                'sync': 1,
+                'name': '_proteome_unite_projects',
+                'type': 'function',
+                'opts': {}
+            },
+            {
                 'sync': 0,
                 'name': '_proteome_unite_add_project',
+                'type': 'function',
+                'opts': {}
+            },
+            {
+                'sync': 0,
+                'name': '_proteome_unite_activate_project',
+                'type': 'function',
+                'opts': {}
+            },
+            {
+                'sync': 0,
+                'name': '_proteome_unite_remove_project',
                 'type': 'function',
                 'opts': {}
             },

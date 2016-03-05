@@ -98,6 +98,11 @@ class Plugin(ProteomeComponent):
         return env.project(msg.ident)\
             .map(lambda a: (env - a, Removed(a).pub))
 
+    @may_handle(Removed)
+    def removed(self, env: Env, msg):
+        self.vim.set_pvar('projects', env.projects.json)
+        self.vim.pautocmd('Removed')
+
     @may_handle(Create)
     def create(self, env: Env, msg):
         return env + Project.of(msg.name, Path(msg.root))
