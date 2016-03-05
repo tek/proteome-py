@@ -120,6 +120,13 @@ class ProjectLoader_(LoaderSpec):
         pro = self.loader.resolve_ident(name, main=main)
         pro.should.contain(Project.of(name, self.pypro1_root, main))
 
+    def all_ident(self):
+        self.loader.all_ident(Just(self.pypro1_type)).should.have.length_of(6)
+
+    def main_ident(self):
+        pros = set(List(self.pypro1_name, self.pypro2_name))
+        set(self.loader.main_ident(Just(self.pypro1_type))).should.equal(pros)
+
 
 class ProjectResolver_(LoaderSpec, Logging):
 
