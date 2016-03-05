@@ -221,7 +221,7 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
 
     @unite_candidates('all_addable')
     def pro_unite_all_addable(self, args):
-        return self.pro.data.addable / (lambda a: {'word': a})
+        return self.pro.data.addable
 
     @unite_candidates('projects')
     def pro_unite_projects(self, args):

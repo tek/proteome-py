@@ -64,8 +64,10 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
 
     def _pre_start_neovim(self):
         self.base = temp_dir('projects', 'base')
-        self.type1_base = temp_dir('projects', 'type1')
-        self.type_bases = Map({self.type1_base: List('type1')})
+        self.base2 = temp_dir('projects', 'base2')
+        self.typed1 = 'type1'
+        self.type1_base = temp_dir('projects', self.typed1)
+        self.type_bases = Map({self.type1_base: List(self.typed1)})
         self._setup_plugin()
 
     def _post_start_neovim(self):
@@ -85,7 +87,7 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
 
     def _set_vars(self):
         self.vim.set_pvar('config_path', str(self._config_path))
-        self.vim.set_pvar('base_dirs', List(str(self.base)))
+        self.vim.set_pvar('base_dirs', List(str(self.base), str(self.base2)))
         self.vim.set_pvar('type_base_dirs', self.type_bases.keymap(str))
         self.vim.set_pvar('history_base', str(self.history_base))
         self.vim.set_pvar('plugins', self._plugins)
@@ -193,6 +195,12 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
             {
                 'sync': 0,
                 'name': 'ProSelectAdd',
+                'type': 'command',
+                'opts': {'nargs': 0}
+            },
+            {
+                'sync': 0,
+                'name': 'ProSelectAddAll',
                 'type': 'command',
                 'opts': {'nargs': 0}
             },
