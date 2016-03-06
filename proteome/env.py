@@ -5,6 +5,7 @@ from fn import _  # type: ignore
 
 from proteome.project import (Projects, Resolver, ProjectLoader, Project,
                               ProjectAnalyzer)
+from proteome.logging import Logging
 from trypnv.data import Data  # type: ignore
 from trypnv.record import field  # type: ignore
 from trypnv import NvimFacade
@@ -12,7 +13,7 @@ from trypnv import NvimFacade
 from tryp import List, Map, Just
 
 
-class Env(Data):
+class Env(Data, Logging):
     config_path = field(Path)
     bases = field(List)
     type_bases = field(Map)

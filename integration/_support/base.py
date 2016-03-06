@@ -196,19 +196,19 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
                 'sync': 0,
                 'name': 'ProSelectAdd',
                 'type': 'command',
-                'opts': {'nargs': 0}
+                'opts': {'nargs': '*'}
             },
             {
                 'sync': 0,
                 'name': 'ProSelectAddAll',
                 'type': 'command',
-                'opts': {'nargs': 0}
+                'opts': {'nargs': '*'}
             },
             {
                 'sync': 0,
                 'name': 'Projects',
                 'type': 'command',
-                'opts': {'nargs': 0}
+                'opts': {'nargs': '*'}
             },
             {
                 'sync': 1,

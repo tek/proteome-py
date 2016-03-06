@@ -8,9 +8,12 @@ from tryp import F, List, Map, _
 from proteome.state import ProteomeComponent, ProteomeTransitions
 from proteome.logging import Logging
 
-UniteSelectAdd = message('UniteSelectAdd')
-UniteSelectAddAll = message('UniteSelectAddAll')
-UniteProjects = message('UniteProjects')
+def unite_msg(name):
+    return message(name, varargs='unite_args')
+
+UniteSelectAdd = unite_msg('UniteSelectAdd')
+UniteSelectAddAll = unite_msg('UniteSelectAddAll')
+UniteProjects = unite_msg('UniteProjects')
 
 
 class UniteEntity(Logging, metaclass=abc.ABCMeta):
@@ -168,22 +171,22 @@ class Plugin(ProteomeComponent):
         project.define(self.vim)
         self._unite_ready = True
 
-    # TODO pass args from user command
-    def unite_cmd(self, cmd):
-        self.vim.cmd('Unite {}'.format(cmd))
-
     class Transitions(ProteomeTransitions):
+
+        def unite_cmd(self, cmd):
+            args = ' '.join(self.msg.unite_args)
+            self.vim.cmd('Unite {} {}'.format(cmd, args))
 
         @may_handle(UniteSelectAdd)
         def select_add(self):
-            self.machine.unite_cmd(self.machine.addable)
+            self.unite_cmd(self.machine.addable)
 
         @may_handle(UniteSelectAddAll)
         def select_add_all(self):
-            self.machine.unite_cmd(self.machine.all_addable)
+            self.unite_cmd(self.machine.all_addable)
 
         @may_handle(UniteProjects)
         def projects(self):
-            self.machine.unite_cmd(self.machine.projects)
+            self.unite_cmd(self.machine.projects)
 
 __all__ = ('Plugin', 'UniteSelectAdd', 'UniteSelectAddAll', 'UniteProjects')

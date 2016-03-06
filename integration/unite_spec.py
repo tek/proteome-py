@@ -9,7 +9,6 @@ from integration._support.base import VimIntegrationSpec
 def _unite(f):
     @wraps(f)
     def wrapper(self):
-        self._debug = True
         def go(unite):
             self.vim.amend_optionl('rtp', [unite])
             self.vim.cmd('source {}/plugin/*.vim'.format(unite))
@@ -45,7 +44,7 @@ class UniteSpec(VimIntegrationSpec):
     @_unite
     def select_add_all(self, unite):
         self._mk_projects()
-        self.vim.cmd('ProSelectAddAll')
+        self.vim.cmd('ProSelectAddAll -auto-resize')
         lines = List(
             ' {}/{}'.format(self.tpe1, self.name1),
             ' {}/{}'.format(self.tpe2, self.name2),
@@ -69,10 +68,13 @@ class UniteSpec(VimIntegrationSpec):
 
     @_unite
     def remove(self, unite):
+        def count(num):
+            return (self.vim.pvar('projects') / len).should.contain(num)
         self.vim.cmd('ProAdd tpe2/dep')
+        later(F(count, 2))
         self.vim.cmd('Projects')
         self._wait(0.1)
-        self.vim.cmd('call feedkeys("\\<tab>\\<esc>")')
-        later(lambda: self.vim.pvar('projects').map(len).should.contain(1))
+        self.vim.cmd('call feedkeys("\\<tab>\\<esc>k\\<cr>")')
+        later(F(count, 1))
 
 __all__ = ('UniteSpec',)
