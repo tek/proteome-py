@@ -93,7 +93,7 @@ class ProteomePlugin_(IntegrationSpec):
         self.proteome.pro.await_state()
 
     @main_looped
-    def add_from_base(self):
+    def add_by_ident(self):
         self.proteome.proteome_start()
         self.proteome.pro_add(['python/pro2'])
         self._await()
@@ -123,7 +123,7 @@ class ProteomePlugin_(IntegrationSpec):
         check('type1', [pro4])
 
     @main_looped
-    def add_from_params(self):
+    def add_by_params(self):
         tpe = 'ptype'
         name = 'pname'
         ident = '{}/{}'.format(tpe, name)

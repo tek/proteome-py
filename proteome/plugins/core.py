@@ -204,6 +204,6 @@ class Plugin(ProteomeComponent):
                           'failed to clone {} to {}'.format(url, target))
 
 __all__ = ('Create', 'AddByParams', 'Plugin', 'Show', 'StageI', 'StageII',
-           'StageIII', 'AddByParams', 'RemoveByIdent', 'Next', 'Prev',
-           'SetProjectIndex', 'Save', 'Added', 'Removed', 'ProjectChanged',
-           'BufEnter', 'Initialized', 'MainAdded', 'StageIV')
+           'StageIII', 'RemoveByIdent', 'Next', 'Prev', 'SetProjectIndex',
+           'Save', 'Added', 'Removed', 'ProjectChanged', 'BufEnter',
+           'Initialized', 'MainAdded', 'StageIV')
