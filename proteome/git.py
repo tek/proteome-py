@@ -21,6 +21,7 @@ from tryp.logging import Logging
 from tryp.transformer import Transformer
 from tryp.lazy import lazy
 from tryp.task import Try
+from tryp.lazy_list import LazyList
 
 from trypnv.record import field, bool_field, dfield, maybe_field, Record
 from trypnv import ProcessExecutor, Job
@@ -240,7 +241,7 @@ class Repo(Logging):
 
     @lazy
     def history(self):
-        return List.wrap(self._master_id.map(self.history_at) | []) / _.commit
+        return LazyList(self._master_id.map(self.history_at) | []) / _.commit
 
     def history_at(self, sha):
         return self.repo.get_walker(include=[sha])

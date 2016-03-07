@@ -12,6 +12,7 @@ setup(
         exclude=['unit', 'unit.*', 'integration', 'integration.*']),
     install_requires=[
         'tryp-nvim>=6.1.0',
+        'tryp>=6.2.0',
         'dulwich',
     ]
 )
