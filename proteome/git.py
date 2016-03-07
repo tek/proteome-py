@@ -221,7 +221,7 @@ class Repo(Logging):
 
     @property
     def index_dirty(self):
-        return Map(self.status.staged).values.exists(bool)
+        return Try(lambda: Map(self.status.staged).values.exists(bool)) | True
 
     @property
     def committer(self):
