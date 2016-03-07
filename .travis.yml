@@ -2,7 +2,7 @@ sudo: required
 dist: trusty
 language: python
 env:
-  - LD_LIBRARY_PATH=/usr/local/lib TRAVIS=true PYTHONPATH=$PWD
+  - TRAVIS=true PYTHONPATH=$PWD
 python:
   - "3.5.1"
 script:
@@ -12,7 +12,6 @@ before_install:
   - sudo add-apt-repository -y ppa:neovim-ppa/unstable
   - sudo apt-get update
   - sudo apt-get install -qq -y libffi-dev libicu-dev llvm-dev exuberant-ctags neovim
-  - qa/libgit.bash
 notifications:
   email:
     on_success: change

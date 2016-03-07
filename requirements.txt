@@ -1,5 +1,5 @@
 tryp-nvim
-pygit2
+dulwich
 spec
 sure
 flexmock

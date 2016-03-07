@@ -1,3 +1,6 @@
+import io
+import os
+from pathlib import Path  # type: ignore
 from functools import wraps
 
 import sure  # NOQA
@@ -10,10 +13,10 @@ from proteome.git import History, RepoAdapter
 from unit.project_spec import LoaderSpec
 from unit._support.async import test_loop
 
-from tryp import Just, __
+from tryp import Just, __, List, F
 
 
-class Git_(LoaderSpec):
+class GitSpec(LoaderSpec):
 
     def with_repo(f):
         @wraps(f)
@@ -146,4 +149,4 @@ class NoCommitRepoSpec(RepoSpec):
         self.repo.master.should_not.be.empty
         self.repo.history.should_not.be.empty
 
-__all__ = ['Git_']
+__all__ = ('GitSpec', 'NoCommitRepoSpec')

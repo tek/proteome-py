@@ -14,7 +14,7 @@ from trypnv.nvim import ScratchBuilder, ScratchBuffer
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
 from proteome.git import (History, HistoryT, HistoryState, Repo, CommitInfo,
-                          HistoryGit, pygit_working)
+                          HistoryGit)
 from proteome.plugins.core import Save, StageIV
 from proteome.logging import Logging
 from proteome.project import Project
@@ -228,12 +228,7 @@ class Plugin(ProteomeComponent):
 
         @may_handle(StageIV)
         def stage_4(self):
-            if pygit_working:
-                return self._with_repos(lambda a: Just(a.state))
-            else:
-                msg = ('proteome/history failure: Install the libgit2 system'
-                       ' package and pygit2 in each virtualenv')
-                return Error(msg).pub
+            return self._with_repos(lambda a: Just(a.state))
 
         # TODO handle broken repo
         # TODO only save if changes exist
@@ -263,7 +258,7 @@ class Plugin(ProteomeComponent):
         @handle(HistorySwitch)
         def switch(self):
             return try_convert_int(self.msg.index)\
-                .map(__.index)\
+                .map(__.select)\
                 .flat_map(self._switch)
 
         @may_handle(HistoryBufferPrev)

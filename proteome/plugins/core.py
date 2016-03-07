@@ -163,6 +163,7 @@ class Plugin(ProteomeComponent):
     def error(self, env, msg):
         self.log.error(msg.message)
 
+    # TODO make configurable (destination dir)
     @handle(CloneRepo)
     def clone_repo(self, env, msg):
         uri = msg.uri
