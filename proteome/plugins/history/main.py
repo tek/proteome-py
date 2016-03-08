@@ -9,7 +9,7 @@ from tryp.util.numeric import try_convert_int
 
 from trypnv.machine import (may_handle, message, handle, IO)  # type: ignore
 from trypnv.machine import Error  # type: ignore
-from trypnv.record import field, list_field, dfield, Record, lazy_list_field
+from trypnv.record import field, dfield, Record, lazy_list_field
 from trypnv.nvim import ScratchBuilder, ScratchBuffer
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
