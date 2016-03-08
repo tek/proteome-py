@@ -16,12 +16,12 @@ from dulwich.repo import BASE_DIRECTORIES, OBJECTDIR  # type: ignore
 from dulwich.object_store import DiskObjectStore  # type: ignore
 from dulwich.objects import Commit  # type: ignore
 
-from tryp import may, List, Maybe, Map, Empty, Just, __, Left, Right
+from tryp import may, List, Maybe, Map, Empty, Just, __, Left
 from tryp.logging import Logging
 from tryp.transformer import Transformer
 from tryp.lazy import lazy
 from tryp.task import Try
-from tryp.lazy_list import LazyList
+from tryp.lazy_list import LazyList  # type: ignore
 
 from trypnv.record import field, bool_field, dfield, maybe_field, Record
 from trypnv import ProcessExecutor, Job
@@ -78,8 +78,8 @@ class Diff(Logging):
         else:
             p = f.getvalue()
             if p:
-                return Try(lambda:
-                    p.decode().replace('\n\ No newline at end of file', ''))
+                nl = '\n\ No newline at end of file'
+                return Try(p.decode) / __.replace(nl, '')
             else:
                 return Left('empty diff')
 
