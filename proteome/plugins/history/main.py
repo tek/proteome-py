@@ -9,7 +9,7 @@ from tryp.util.numeric import try_convert_int
 
 from trypnv.machine import (may_handle, message, handle, IO)  # type: ignore
 from trypnv.machine import Error  # type: ignore
-from trypnv.record import field, list_field, dfield, Record
+from trypnv.record import field, list_field, dfield, Record, lazy_list_field
 from trypnv.nvim import ScratchBuilder, ScratchBuffer
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
@@ -33,7 +33,7 @@ from proteome.plugins.history.patch import Patch
 class BrowseState(Record):
     repo = field(Repo)
     current = field(int)
-    commits = list_field()
+    commits = lazy_list_field()
     buffer = field(ScratchBuffer)
     selected = dfield(0)
 
@@ -49,7 +49,7 @@ class BrowseMachine(ProteomeComponent):
         def buffer(self):
             return self.data.buffer.proxy
 
-        @property
+        @lazy
         def content(self):
             sel = self.data.selected
             return List.wrap(enumerate(self.data.commits[:sel + 20]))\
