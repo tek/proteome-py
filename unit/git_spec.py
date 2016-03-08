@@ -129,7 +129,7 @@ class RepoSpec(LoaderSpec):
         super().setup()
         git_dir = self.history_base / self.pypro1_name
         self.repo_adapter = RepoAdapter(self.pypro1_root, Just(git_dir))
-        self.repo_adapter.repo.should.be.just
+        self.repo_adapter.repo().should.be.just
         self.repo = self.repo_adapter.repo() | None
 
 
