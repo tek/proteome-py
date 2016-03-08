@@ -87,6 +87,10 @@ class Diff(Logging):
     def revert(self):
         return Diff(self.repo, self.parent, self.target)
 
+    @property
+    def empty(self):
+        return self.patch.is_left
+
 
 class CommitInfo(Record):
     num = field(int)
@@ -125,6 +129,10 @@ class CommitInfo(Record):
         info = '{}  {}    {}'.format(prefix, self.hex[:8], self.since)
         diff = self.diff.map(_.show) if show_diff else Empty()
         return List(info) + (diff | List())
+
+    @property
+    def empty(self):
+        return self.diff.exists(_.empty)
 
 
 class DulwichRepo(repo.Repo):
@@ -283,7 +291,8 @@ class Repo(Logging):
     def history_info(self):
         return self.history\
             .with_index\
-            .smap(self.commit_info)
+            .smap(self.commit_info)\
+            .filter_not(_.empty)
 
     @property
     def current_b(self):
