@@ -56,7 +56,7 @@ class BrowseMachine(ProteomeComponent):
                 .flat_smap(lambda i, a: a.browse_format(i == sel))
 
         def _create_mappings(self):
-            List('j', 'k', 's', 'p', 'r').foreach(self._create_mapping)
+            List.wrap('jksprq').foreach(self._create_mapping)
             self._create_mapping('<cr>', to='%CR%')
 
         def _create_mapping(self, keyseq, mode='n', to=None):
@@ -100,6 +100,7 @@ class BrowseMachine(ProteomeComponent):
                 's': self._switch,
                 'p': self._pick,
                 'r': self._revert,
+                'q': self.quit,
             })
             return handlers.get(self.msg.keyseq).flat_map(lambda f: f())
 
@@ -112,7 +113,7 @@ class BrowseMachine(ProteomeComponent):
         @may
         def _select_diff(self, diff):
             index = self.data.selected + diff
-            if 0 <= index < len(self.data.commits):
+            if index >= 0 and self.data.commits.min_length(index + 1):
                 return self.data.set(selected=index), Redraw()
 
         @may
