@@ -68,7 +68,7 @@ class Diff(Logging):
     def patch_lines(self):
         return self.patch / __.splitlines() | ['no diff']
 
-    @property
+    @lazy
     def patch(self):
         f = io.BytesIO()
         try:
@@ -76,9 +76,12 @@ class Diff(Logging):
         except Exception as e:
             return Left(e)
         else:
-            p = f.getvalue().decode()\
-                .replace('\n\ No newline at end of file', '')
-            return Right(p) if p else Left('empty diff')
+            p = f.getvalue()
+            if p:
+                return Try(lambda:
+                    p.decode().replace('\n\ No newline at end of file', ''))
+            else:
+                return Left('empty diff')
 
     @property
     def revert(self):
