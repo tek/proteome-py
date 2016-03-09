@@ -100,7 +100,7 @@ class BrowseMachine(ProteomeComponent):
                 's': self._switch,
                 'p': self._pick,
                 'r': self._revert,
-                'q': self.quit,
+                'q': self._close_tab,
             })
             return handlers.get(self.msg.keyseq).flat_map(lambda f: f())
 
@@ -126,6 +126,7 @@ class BrowseMachine(ProteomeComponent):
             if self.msg.buffer == self.buffer:
                 self._close_tab()
 
+        @may
         def _close_tab(self):
             self.buffer.tab.close()
 

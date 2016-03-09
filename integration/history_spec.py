@@ -153,6 +153,21 @@ class HistoryBrowseSpec(_HistorySpec, _BrowseHelpers):
         self._await_commit(1)
         self.vim.buffer.content.should.equal(List(marker_text))
 
+    def quit(self):
+        self._debug = True
+        check = self._check
+        marker_text = Random.string()
+        self.vim.buffer.set_content([marker_text])
+        self._save()
+        self._write_file(1)
+        self._save()
+        self._write_file(2)
+        self._save()
+        self.vim.cmd('ProHistoryBrowse')
+        check(0, '*')
+        self.vim.feedkeys('q')
+        later(lambda: self.vim.buffer.content.should.equal(List(marker_text)))
+
 
 class HistoryPickSpec(_HistorySpec, _BrowseHelpers):
 
