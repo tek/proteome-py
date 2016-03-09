@@ -230,7 +230,8 @@ class Plugin(ProteomeComponent):
 
         @may_handle(StageIV)
         def stage_4(self):
-            return self._with_repos(lambda a: Just(a.state))
+            excludes = self.vim.ppath('history_excludes')
+            return self._with_repos(lambda a: a.init(excludes))
 
         # TODO handle broken repo
         # TODO only save if changes exist

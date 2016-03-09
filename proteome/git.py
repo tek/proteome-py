@@ -135,7 +135,7 @@ class CommitInfo(Record):
         return self.diff.exists(_.empty)
 
 
-class DulwichRepo(repo.Repo):
+class DulwichRepo(repo.Repo, Logging):
 
     def __init__(self, store, worktree=None) -> None:
         super().__init__(str(store))
@@ -151,6 +151,10 @@ class DulwichRepo(repo.Repo):
     def _set_worktree(self, path):
         self.path = path
 
+    @property
+    def excludesfile(self):
+        return str(Path('info', 'exclude'))
+
     def _init_history_files(self, worktree):
         desc = 'proteome history repo for {}'.format(worktree).encode()
         self._put_named_file('description', desc)
@@ -163,7 +167,11 @@ class DulwichRepo(repo.Repo):
         cf.set(b'core', b'worktree', str(worktree).encode())
         cf.write_to_file(f)
         self._put_named_file('config', f.getvalue())
-        self._put_named_file(os.path.join('info', 'exclude'), b'')
+        self._put_named_file(self.excludesfile, b'')
+
+    def set_excludes(self, f):
+        if f.is_file():
+            self._put_named_file(self.excludesfile, f.read_bytes())
 
     @staticmethod
     def create(worktree: Path, store: Path):
@@ -189,6 +197,10 @@ class Repo(Logging):
     def __init__(self, repo, state: RepoState) -> None:
         self.repo = repo
         self.state = state
+
+    def init(self, excludes: Maybe[Path]):
+        excludes / self.repo.set_excludes
+        return Just(self.state)
 
     def copy(self, new_state: RepoState):
         return self.__class__(self.repo, new_state)  # type: ignore
@@ -228,12 +240,48 @@ class Repo(Logging):
         else:
             return Left('no changes to add')
 
+    @property
+    def base(self):
+        return Path(self.repo.path)
+
+    @property
+    def gitignore(self):
+        return self.base / '.gitignore'
+
     def add_all(self):
-        return porcelain.add(self.repo)
+        if self.gitignore.is_file():
+            self.repo.stage(self.all_paths)
+        else:
+            porcelain.add(self.repo)
+
+    @property
+    def all_paths(self):
+        ex_pat = List.wrap(self.gitignore.read_text().splitlines())
+        paths = self._filter_excludes(ex_pat.cons('.git*'))
+        return paths / __.relative_to(self.base) / str
+
+    def _filter_excludes(self, patterns):
+        include_dir, include_file = self._pattern_matchers(patterns)
+        def rec(base):
+            for entry in base.iterdir():
+                if entry.is_file() and include_file(entry):
+                    yield entry
+                elif entry.is_dir() and include_dir(entry):
+                    yield from rec(entry)
+        return List.wrap(rec(self.base))
+
+    def _pattern_matchers(self, patterns):
+        is_dir = lambda pat: True
+        is_file = lambda pat: pat.endswith('*') or '/' not in pat
+        def pred(separator):
+            pats = patterns.filter(separator)
+            return lambda path: not pats.exists(path.match)
+        return pred(is_dir), pred(is_file)
 
     @property
     def index_dirty(self):
-        return Try(lambda: Map(self.status.staged).values.exists(bool)) | True
+        f = lambda: Map(self.status.staged).values.exists(bool)
+        return Try(f) | True
 
     @property
     def committer(self):
@@ -248,11 +296,19 @@ class Repo(Logging):
         ) // (lambda a: self.to_master())
 
     def to_master(self):
-        return self._head_commit.map(self._switch)
+        return self.master_commit.map(self._switch)
+
+    @property
+    def master_commit(self):
+        return self._master_id // F(Try, self.repo.get_object)
 
     @lazy
     def history(self):
-        return LazyList(self._master_id.map(self.history_at) | []) / _.commit
+        return self.history_raw / _.commit
+
+    @property
+    def history_raw(self):
+        return LazyList(self._master_id.map(self.history_at) | [])
 
     def history_at(self, sha):
         return self.repo.get_walker(include=[sha])
@@ -270,7 +326,7 @@ class Repo(Logging):
         return Try(self.repo.head)
 
     @property
-    def _head_commit(self):
+    def head_commit(self):
         return self._head_id // F(Try, self.repo.get_object)
 
     def _switch(self, commit):

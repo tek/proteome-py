@@ -122,6 +122,26 @@ class GitSpec(LoaderSpec):
             (lambda a: a.current_commit_info.map(_.num).should.contain(0))
         )
 
+    @with_repo
+    def ignore(self, repo):
+        patterns = [
+            'a/*',
+            'ig',
+        ]
+        (self.pro1.root / '.gitignore').write_text('\n'.join(patterns))
+        (self.pro1.root / 'a').mkdir()
+        (self.pro1.root / 'c').mkdir()
+        (self.pro1.root / 'a' / 'b').touch()
+        (self.pro1.root / 'c' / 'ig').touch()
+        (self.pro1.root / 'c' / 'not_ig').touch()
+        (self.pro1.root / 'd').touch()
+        def check(r):
+            name = lambda a: a / _.new / _.path / __.decode()
+            files = r.history_raw.head / __.changes() / List.wrap / name / set
+            files.should.contain(set(('c/not_ig', 'd')))
+        r = repo / __.add_commit_all('test') % check
+        return r
+
 
 class RepoSpec(LoaderSpec):
 
