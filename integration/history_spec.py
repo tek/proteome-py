@@ -154,7 +154,6 @@ class HistoryBrowseSpec(_HistorySpec, _BrowseHelpers):
         self.vim.buffer.content.should.equal(List(marker_text))
 
     def quit(self):
-        self._debug = True
         check = self._check
         marker_text = Random.string()
         self.vim.buffer.set_content([marker_text])
