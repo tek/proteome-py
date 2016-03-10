@@ -14,6 +14,7 @@ from unit.project_spec import LoaderSpec
 from unit._support.async import test_loop
 
 from tryp import Just, __, List, F
+from tryp.test import temp_file
 
 
 class GitSpec(LoaderSpec):
@@ -124,22 +125,24 @@ class GitSpec(LoaderSpec):
 
     @with_repo
     def ignore(self, repo):
-        patterns = [
-            'a/*',
-            'ig',
-        ]
-        (self.pro1.root / '.gitignore').write_text('\n'.join(patterns))
-        (self.pro1.root / 'a').mkdir()
-        (self.pro1.root / 'c').mkdir()
-        (self.pro1.root / 'a' / 'b').touch()
-        (self.pro1.root / 'c' / 'ig').touch()
-        (self.pro1.root / 'c' / 'not_ig').touch()
-        (self.pro1.root / 'd').touch()
+        r = self.pro1.root
+        pat1 = 'a/*'
+        pat2 = 'ig'
+        info = self.pro1.root / '.git' / 'info'
+        (self.pro1.root / '.gitignore').write_text(pat1)
+        exfile = temp_file('git', 'ex')
+        exfile.write_text(pat2)
+        (r / 'a').mkdir()
+        (r / 'c').mkdir()
+        (r / 'a' / 'b').touch()
+        (r / 'c' / 'ig').touch()
+        (r / 'c' / 'not_ig').touch()
+        (r / 'd').touch()
         def check(r):
             name = lambda a: a / _.new / _.path / __.decode()
             files = r.history_raw.head / __.changes() / List.wrap / name / set
             files.should.contain(set(('c/not_ig', 'd')))
-        r = repo / __.add_commit_all('test') % check
+        r = repo % __.init(Just(exfile)) / __.add_commit_all('test') % check
         return r
 
 

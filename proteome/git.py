@@ -139,6 +139,7 @@ class DulwichRepo(repo.Repo, Logging):
 
     def __init__(self, store, worktree=None) -> None:
         super().__init__(str(store))
+        self.store = store
         self.bare = False
         if worktree is not None:
             self._init_history_files(worktree)
@@ -152,8 +153,12 @@ class DulwichRepo(repo.Repo, Logging):
         self.path = path
 
     @property
+    def excludesfile_rel(self):
+        return str(Path('info') / 'exclude')
+
+    @property
     def excludesfile(self):
-        return str(Path('info', 'exclude'))
+        return Path(self.store) / self.excludesfile_rel
 
     def _init_history_files(self, worktree):
         desc = 'proteome history repo for {}'.format(worktree).encode()
@@ -167,11 +172,11 @@ class DulwichRepo(repo.Repo, Logging):
         cf.set(b'core', b'worktree', str(worktree).encode())
         cf.write_to_file(f)
         self._put_named_file('config', f.getvalue())
-        self._put_named_file(self.excludesfile, b'')
+        self._put_named_file(self.excludesfile_rel, b'')
 
     def set_excludes(self, f):
         if f.is_file():
-            self._put_named_file(self.excludesfile, f.read_bytes())
+            self._put_named_file(self.excludesfile_rel, f.read_bytes())
 
     @staticmethod
     def create(worktree: Path, store: Path):
@@ -250,31 +255,39 @@ class Repo(Logging):
 
     def add_all(self):
         if self.gitignore.is_file():
-            self.repo.stage(self.all_paths)
+            self.repo.stage(self.add_paths.drain)
         else:
             porcelain.add(self.repo)
 
-    @property
-    def all_paths(self):
-        ex_pat = List.wrap(self.gitignore.read_text().splitlines())
-        paths = self._filter_excludes(ex_pat.cons('.git*'))
-        return paths / __.relative_to(self.base) / str
+    @lazy
+    def exclude_patterns(self):
+        read = __.read_text().splitlines()
+        gitignore = List.wrap(read(self.gitignore))
+        x = self.repo.excludesfile
+        excludes = List.wrap(read(x)) if x.is_file() else List()
+        return (excludes + gitignore).cons('.git*')
 
-    def _filter_excludes(self, patterns):
-        include_dir, include_file = self._pattern_matchers(patterns)
+    @property
+    def add_paths(self):
+        return self._filter_excludes / __.relative_to(self.base) / str
+
+    @property
+    def _filter_excludes(self):
+        include_dir, include_file = self._pattern_matchers
         def rec(base):
             for entry in base.iterdir():
                 if entry.is_file() and include_file(entry):
                     yield entry
                 elif entry.is_dir() and include_dir(entry):
                     yield from rec(entry)
-        return List.wrap(rec(self.base))
+        return LazyList(rec(self.base))
 
-    def _pattern_matchers(self, patterns):
+    @property
+    def _pattern_matchers(self):
         is_dir = lambda pat: True
         is_file = lambda pat: pat.endswith('*') or '/' not in pat
         def pred(separator):
-            pats = patterns.filter(separator)
+            pats = self.exclude_patterns.filter(separator)
             return lambda path: not pats.exists(path.match)
         return pred(is_dir), pred(is_file)
 
