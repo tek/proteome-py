@@ -1,7 +1,7 @@
 import tryp.logging
 from trypnv.logging import trypnv_logger
 
-from tryp.lazy import lazy  # type: ignore
+from tryp.lazy import lazy
 
 
 log = proteome_root_logger = trypnv_logger('proteome')

@@ -1,6 +1,6 @@
-from fn import _  # type: ignore
+from fn import _
 
-from trypnv.machine import may_handle, message, handle  # type: ignore
+from trypnv.machine import may_handle, message, handle
 from trypnv.nvim import Buffer
 
 from tryp import List, Empty

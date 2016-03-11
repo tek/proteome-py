@@ -1,6 +1,6 @@
 import abc
 
-from trypnv.machine import may_handle, message  # type: ignore
+from trypnv.machine import may_handle, message
 from trypnv import NvimFacade
 
 from tryp import F, List, Map, _

@@ -1,4 +1,4 @@
-from fn import F, _  # type: ignore
+from fn import F, _
 
 from trypnv.machine import may_handle
 

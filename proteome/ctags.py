@@ -1,5 +1,5 @@
 from proteome.project import Project
-from trypnv import ProcessExecutor, Job  # type: ignore
+from trypnv import ProcessExecutor, Job
 
 
 class Ctags(ProcessExecutor):  # type: ignore

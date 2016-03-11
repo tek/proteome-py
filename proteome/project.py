@@ -5,11 +5,11 @@ import json
 from tryp import Maybe, Empty, Just, List, Map, may, Boolean, flat_may, __, F
 from tryp.lazy import lazy
 
-from fn import _  # type: ignore
+from fn import _
 
 from trypnv.nvim import NvimFacade, HasNvim
 from trypnv.record import field, list_field, Record
-from trypnv.process import JobClient  # type: ignore
+from trypnv.process import JobClient
 
 from proteome.logging import Logging
 

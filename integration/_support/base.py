@@ -1,9 +1,9 @@
 import os
 from pathlib import Path
 
-from fn import _  # type: ignore
+from fn import _
 
-from tryp.test import fixture_path, temp_dir  # type: ignore
+from tryp.test import fixture_path, temp_dir
 
 from tryp import List, Map, Just, Maybe
 from trypnv.test import IntegrationSpec as TrypnvIntegrationSpec

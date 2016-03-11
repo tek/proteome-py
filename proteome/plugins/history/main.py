@@ -2,14 +2,14 @@ from pathlib import Path
 from datetime import datetime
 import asyncio
 
-from fn import _, F  # type: ignore
+from fn import _, F
 
 from tryp.lazy import lazy
 from tryp import Map, __, Just, Empty, may, List, Maybe
 from tryp.util.numeric import try_convert_int
 
-from trypnv.machine import (may_handle, message, handle, IO)  # type: ignore
-from trypnv.machine import Error  # type: ignore
+from trypnv.machine import (may_handle, message, handle, IO)
+from trypnv.machine import Error
 from trypnv.record import field, dfield, Record, lazy_list_field
 from trypnv.nvim import ScratchBuilder, ScratchBuffer
 

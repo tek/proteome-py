@@ -1,6 +1,6 @@
-from pathlib import Path  # type: ignore
+from pathlib import Path
 
-from toolz.itertoolz import cons  # type: ignore
+from toolz.itertoolz import cons
 
 from tryp import List, Map, Maybe, Empty
 

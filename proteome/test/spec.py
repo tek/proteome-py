@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from tryp.test import temp_dir  # type: ignore
+from tryp.test import temp_dir
 
 import tryp.test
 from tryp import Just
 
-from proteome.project import Project  # type: ignore
+from proteome.project import Project
 
 
 class Spec(tryp.test.Spec):

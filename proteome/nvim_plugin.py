@@ -1,12 +1,12 @@
 from pathlib import Path
 
-import neovim  # type: ignore
+import neovim
 
 from tryp import List, Map, __, F, _
 
 from trypnv import command, NvimStatePlugin, msg_command, json_msg_command
 
-from proteome.plugins.core import (  # type: ignore
+from proteome.plugins.core import (
     AddByParams, Show, Create, SetProject, Next, Prev, StageI,
     Save, RemoveByIdent, BufEnter, StageII, StageIII, StageIV, CloneRepo
 )

@@ -1,12 +1,12 @@
 import re
-from pathlib import Path  # type: ignore
+from pathlib import Path
 
-from fn import F, _  # type: ignore
+from fn import F, _
 
 from tryp import List, Map, Empty
 from tryp.lazy import lazy
 
-from trypnv.machine import handle, may_handle, message, Error  # type: ignore
+from trypnv.machine import handle, may_handle, message, Error
 from trypnv.process import JobClient
 
 from proteome.state import ProteomeComponent

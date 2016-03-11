@@ -1,4 +1,4 @@
-from toolz import dicttoolz  # type: ignore
+from toolz import dicttoolz
 
 from trypnv.machine import may_handle, message
 

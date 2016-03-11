@@ -1,6 +1,6 @@
 import io
 import os
-from pathlib import Path  # type: ignore
+from pathlib import Path
 from functools import wraps
 
 import sure  # NOQA
@@ -17,7 +17,7 @@ from tryp import Just, __, List, F, curried
 from tryp.test import temp_file
 from tryp.lazy import lazy
 
-from dulwich.index import (  # type: ignore
+from dulwich.index import (
     _tree_to_fs_path, blob_from_path_and_stat)
 
 

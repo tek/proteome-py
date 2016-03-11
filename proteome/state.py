@@ -1,8 +1,8 @@
 from trypnv import Machine, PluginStateMachine
 from trypnv.nvim import HasNvim
-from trypnv.machine import ModularMachine, Transitions  # type: ignore
+from trypnv.machine import ModularMachine, Transitions
 
-from proteome.nvim import NvimFacade  # type: ignore
+from proteome.nvim import NvimFacade
 from proteome.logging import Logging
 
 from tryp import List

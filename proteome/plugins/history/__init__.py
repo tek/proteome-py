@@ -1,3 +1,3 @@
-from .main import Plugin  # type: ignore  # NOQA
+from .main import Plugin  # NOQA
 
 __all__ = ('Plugin')

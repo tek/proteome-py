@@ -4,7 +4,7 @@ import sure  # NOQA
 from flexmock import flexmock  # NOQA
 from pathlib import Path
 
-from fn import _  # type: ignore
+from fn import _
 
 from tryp.test import temp_dir
 

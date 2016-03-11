@@ -5,27 +5,27 @@ from typing import Callable
 from datetime import datetime
 from asyncio import coroutine
 
-from fn import _, F  # type: ignore
+from fn import _, F
 
 from proteome.project import Project
 
-import pyrsistent  # type: ignore
+import pyrsistent
 
-from dulwich import repo, config, porcelain  # type: ignore
-from dulwich.repo import BASE_DIRECTORIES, OBJECTDIR  # type: ignore
-from dulwich.object_store import DiskObjectStore  # type: ignore
-from dulwich.objects import Commit  # type: ignore
+from dulwich import repo, config, porcelain
+from dulwich.repo import BASE_DIRECTORIES, OBJECTDIR
+from dulwich.object_store import DiskObjectStore
+from dulwich.objects import Commit
 
 from tryp import may, List, Maybe, Map, Empty, Just, __, Left
 from tryp.logging import Logging
 from tryp.transformer import Transformer
 from tryp.lazy import lazy
 from tryp.task import Try
-from tryp.lazy_list import LazyList  # type: ignore
+from tryp.lazy_list import LazyList
 
 from trypnv.record import field, bool_field, dfield, maybe_field, Record
 from trypnv import ProcessExecutor, Job
-from trypnv.process import JobClient  # type: ignore
+from trypnv.process import JobClient
 
 
 _master_ref = 'refs/heads/master'

@@ -8,9 +8,9 @@ import asyncio
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
 
-from fn import _  # type: ignore
+from fn import _
 
-import neovim  # type: ignore
+import neovim
 
 from tryp import List, Map, Just
 import tryp.logging

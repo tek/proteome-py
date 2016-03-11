@@ -1,13 +1,13 @@
 from pathlib import Path
 import tempfile
 
-from fn import _  # type: ignore
+from fn import _
 
 from proteome.project import (Projects, Resolver, ProjectLoader, Project,
                               ProjectAnalyzer)
 from proteome.logging import Logging
-from trypnv.data import Data  # type: ignore
-from trypnv.record import field  # type: ignore
+from trypnv.data import Data
+from trypnv.record import field
 from trypnv import NvimFacade
 
 from tryp import List, Map, Just
