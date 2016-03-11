@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import datetime
+import asyncio
 
 from fn import _, F  # type: ignore
 
@@ -172,7 +173,15 @@ class Plugin(ProteomeComponent):
     def base(self):
         return self.vim.pdir('history_base').get_or_else(Path('/dev/null'))
 
+    @lazy
+    def executor(self):
+        return HistoryGit(self.base, self.vim)
+
     class Transitions(ProteomeTransitions):
+
+        @property
+        def executor(self):
+            return self.machine.executor
 
         def _with_sub(self, state):
             return self.data.with_sub_state(self.name, state)
@@ -211,8 +220,7 @@ class Plugin(ProteomeComponent):
 
         def _with_repos(self, f):
             g = lambda hist, pro: hist / __.at(pro, _ / f)
-            new_state = self.projects.fold_left(self.history_t)(g).state
-            return self._with_sub(new_state)
+            return self._all_projects(g)
 
         def _with_repo(self, pro, f):
             new_state = (self.history_t / __.at(pro, f)).state
@@ -228,17 +236,28 @@ class Plugin(ProteomeComponent):
         def _current_repo_ro(self):
             return self.current // self._repo_ro
 
+        @property
+        def _repos_ro(self):
+            return self.projects // self._repo_ro
+
         @may_handle(StageIV)
         def stage_4(self):
             excludes = self.vim.ppath('history_excludes')
             return self._with_repos(lambda a: a.init(excludes))
 
         # TODO handle broken repo
-        # TODO only save if changes exist
         # TODO allow specifying target
         @may_handle(Commit)
-        def commit(self):
-            return self._with_repos(__.add_commit_all(self._timestamp))
+        async def commit(self):
+            async def go(p, r):
+                return p, await r.add_commit_all(p, self.executor,
+                                                 self._timestamp)
+            def folder(z, n):
+                return z + n
+            exe = self.projects.zip(self._repos_ro).smap(go)
+            results = List.wrap(await asyncio.gather(*exe))
+            new_repos = results.fold_left(self.state.repos)(folder)
+            return Just(self._with_sub(self.state.set(repos=new_repos)))
 
         def _switch(self, f):
             def notify(repo):
@@ -364,18 +383,17 @@ class Plugin(ProteomeComponent):
         async def _apply_patch(self, project, patch, commit):
             executor = Patch(self.vim)
             result = await executor.patch(project, patch)
-            return self._check_pick_status(commit, executor, result)
+            return self._check_pick_status(commit, result)
 
         async def _pick_revert(self, commit: CommitInfo, project: Project):
-            executor = HistoryGit(self.machine.base, self.vim)
-            result = await executor.revert(project, commit)
-            ret = self._check_pick_status(commit, executor, result)
+            result = await self.executor.revert(project, commit)
+            ret = self._check_pick_status(commit, result)
             if not result.success:
-                await executor.revert_abort(project)
+                await self.executor.revert_abort(project)
             return ret
 
         @may
-        def _check_pick_status(self, commit, executor, result):
+        def _check_pick_status(self, commit, result):
             if result.success:
                 self.vim.reload_windows()
                 self.log.info('picked {}'.format(commit.num_since))

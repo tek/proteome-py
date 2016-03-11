@@ -5,16 +5,16 @@ import asyncio
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
 
-from tryp import List, Just, _, Map, Empty
+from tryp import List, Just, _, Map
 
-import trypnv
 from trypnv.machine import Nop
 
 from proteome.nvim_plugin import Create
 from proteome.project import Project, Projects, ProjectAnalyzer
-from proteome.plugins.core import (Next, Prev, StageI, AddByParams,
-                                   RemoveByIdent)
+from proteome.plugins.core import (Next, Prev, StageI, RemoveByIdent,
+                                   AddByParams)
 from proteome.main import Proteome
+from proteome.git import History
 
 from unit._support.loader import LoaderSpec
 from unit._support.async import test_loop
@@ -112,10 +112,13 @@ class Proteome_(LoaderSpec):
                 'content_3',
             )
 
-        def _three_commits(self, prot):
+        def _three_commits(self, prot, loop):
+            plug = prot.plugin('history').x
             for cont in self.test_content:
                 self.test_file_1.write_text(cont)
-                prot.plug_command_sync('history', 'Commit', List())
+                prot.plug_command('history', 'Commit', List())
+                self._wait(0.1)
+                plug.executor.await_threadsafe(loop)
 
         def init(self):
             def check_head(p):
@@ -128,21 +131,37 @@ class Proteome_(LoaderSpec):
                 later(lambda: check_head(p1))
                 check_head(p2)
 
+        def commit(self):
+            p1 = self.main_project
+            p2 = self.mk_project('pro2', 'go')
+            pros = List(p1, p2)
+            hist = History(self.history_base)
+            with self._prot(List(self.plug_name), pros=pros) as prot:
+                with test_loop() as loop:
+                    prot.plug_command('history', 'StageIV', List())
+                    plug = prot.plugin('history').x
+                    self.test_file_1.write_text('test')
+                    prot.plug_command('history', 'Commit', List())
+                    self._wait(0.1)
+                    plug.executor.await_threadsafe(loop)
+            (hist.repo(p1) / _.history // _.head / repr).should.just
+
         def prev_next(self):
             p1 = self.main_project
             p2 = self.mk_project('pro2', 'go')
             pros = List(p1, p2)
             with self._prot(List(self.plug_name), pros=pros) as prot:
-                prot.plug_command('history', 'StageIV', List())
-                self._three_commits(prot)
-                prot.plug_command('history', 'HistoryLog', List())
-                prot.plug_command('history', 'HistoryPrev', List())
-                prot.plug_command('history', 'HistoryLog', List())
-                later(lambda: self.test_file_1.read_text()
-                      .should.equal(self.test_content[1]))
-                prot.plug_command('history', 'HistoryNext', List())
-                later(lambda: self.test_file_1.read_text()
-                      .should.equal(self.test_content[2]))
+                with test_loop() as loop:
+                    prot.plug_command('history', 'StageIV', List())
+                    self._three_commits(prot, loop)
+                    prot.plug_command('history', 'HistoryLog', List())
+                    prot.plug_command('history', 'HistoryPrev', List())
+                    prot.plug_command('history', 'HistoryLog', List())
+                    later(lambda: self.test_file_1.read_text()
+                          .should.equal(self.test_content[1]))
+                    prot.plug_command('history', 'HistoryNext', List())
+                    later(lambda: self.test_file_1.read_text()
+                          .should.equal(self.test_content[2]))
 
     def current_project(self):
         p = self.pypro1_root

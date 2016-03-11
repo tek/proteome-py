@@ -8,21 +8,35 @@ from flexmock import flexmock  # NOQA
 
 from fn import _
 
-from proteome.git import History, RepoAdapter
+from proteome.git import History, RepoAdapter, DulwichRepo, HistoryGit
 
 from unit.project_spec import LoaderSpec
 from unit._support.async import test_loop
 
-from tryp import Just, __, List, F
+from tryp import Just, __, List, F, curried
 from tryp.test import temp_file
+from tryp.lazy import lazy
+
+from dulwich.index import (  # type: ignore
+    _tree_to_fs_path, blob_from_path_and_stat)
 
 
 class GitSpec(LoaderSpec):
 
+    @lazy
+    def executor(self):
+        return HistoryGit(self.history_base, self.vim)
+
     def with_repo(f):
         @wraps(f)
         def wrapper(self):
-            return self.hist.at(self.pro1, lambda r: f(self, r))
+            with test_loop() as loop:
+                @curried
+                def commit(msg, repo):
+                    coro = repo.add_commit_all(self.pro1, self.executor, msg)
+                    value = loop.run_until_complete(coro)
+                    return Just(value)
+                return self.hist.at(self.pro1, lambda r: f(self, r, commit))
         return wrapper
 
     def setup(self):
@@ -36,19 +50,19 @@ class GitSpec(LoaderSpec):
         return len(self.object_files(self.pro1))
 
     @with_repo
-    def commit_all(self, repo):
+    def commit_all(self, repo, commit):
         (self.pro1.root / 'test_file').touch()
-        r = repo / __.add_commit_all('test')
+        r = repo / commit('test')
         (self.rep / 'HEAD').exists().should.be.ok
         self._object_count.should.be.greater_than(2)
         return r
 
     @with_repo
-    def master_with_empty_repo(self, repo):
+    def master_with_empty_repo(self, repo, _):
         return repo / __.to_master()
 
     @with_repo
-    def prev_next(self, repo):
+    def prev_next(self, repo, commit):
         first = 'first'
         second = 'second'
         file1 = (self.pro1.root / 'test_file_2')
@@ -56,11 +70,11 @@ class GitSpec(LoaderSpec):
         file1.write_text(first)
         return (
             repo /
-            __.add_commit_all(first) @
+            commit(first) @
             (lambda: file2.write_text(first)) /
-            __.add_commit_all(second) @
+            commit(second) @
             (lambda: file1.write_text(second)) /
-            __.add_commit_all('third') %
+            commit('third') %
             (lambda a: a.history.should.have.length_of(3)) @
             (lambda: file1.read_text().should.equal(second)) /
             __.prev() @
@@ -69,29 +83,29 @@ class GitSpec(LoaderSpec):
             (lambda: file1.read_text().should.equal(second))
         )
 
-    def _two_commits(self, repo):
+    def _two_commits(self, repo, commit):
         first = 'first'
         second = 'second'
         file1 = (self.pro1.root / 'test_file_2')
         file1.write_text(first)
         return (
             repo /
-            __.add_commit_all(first) @
+            commit(first) @
             (lambda: file1.write_text(second)) /
-            __.add_commit_all(second)
+            commit(second)
         )
 
     @with_repo
-    def to_master(self, repo):
+    def to_master(self, repo, commit):
         first = 'first'
         second = 'second'
         file1 = (self.pro1.root / 'test_file_2')
         file1.write_text(first)
         return (
             repo /
-            __.add_commit_all(first) @
+            commit(first) @
             (lambda: file1.write_text(second)) /
-            __.add_commit_all(second) /
+            commit(second) /
             __.prev() @
             (lambda: file1.read_text().should.equal(first)) /
             __.next() @
@@ -99,7 +113,7 @@ class GitSpec(LoaderSpec):
         )
 
     @with_repo
-    def logg(self, repo):
+    def logg(self, repo, commit):
         def marked(lg, index):
             lg[index][0].should.equal('*')
         first = 'first'
@@ -108,68 +122,19 @@ class GitSpec(LoaderSpec):
         file1.write_text(first)
         return (
             repo /
-            __.add_commit_all(first) @
+            commit(first) @
             (lambda: file1.write_text(second)) /
-            __.add_commit_all(second) %
+            commit(second) %
             (lambda a: marked(a.log_formatted, 0)) /
             __.prev() %
             (lambda a: marked(a.log_formatted, 1))
         )
 
     @with_repo
-    def current(self, repo):
+    def current(self, repo, commit):
         return (
-            self._two_commits(repo) %
+            self._two_commits(repo, commit) %
             (lambda a: a.current_commit_info.map(_.num).should.contain(0))
         )
-
-    @with_repo
-    def ignore(self, repo):
-        r = self.pro1.root
-        pat1 = 'a/*'
-        pat2 = 'ig'
-        info = self.pro1.root / '.git' / 'info'
-        (self.pro1.root / '.gitignore').write_text(pat1)
-        exfile = temp_file('git', 'ex')
-        exfile.write_text(pat2)
-        (r / 'a').mkdir()
-        (r / 'c').mkdir()
-        (r / 'a' / 'b').touch()
-        (r / 'c' / 'ig').touch()
-        (r / 'c' / 'not_ig').touch()
-        (r / 'd').touch()
-        def check(r):
-            name = lambda a: a / _.new / _.path / __.decode()
-            files = r.history_raw.head / __.changes() / List.wrap / name / set
-            files.should.contain(set(('c/not_ig', 'd')))
-        r = repo % __.init(Just(exfile)) / __.add_commit_all('test') % check
-        return r
-
-
-class RepoSpec(LoaderSpec):
-
-    def setup(self):
-        super().setup()
-        git_dir = self.history_base / self.pypro1_name
-        self.repo_adapter = RepoAdapter(self.pypro1_root, Just(git_dir))
-        self.repo_adapter.repo().should.be.just
-        self.repo = self.repo_adapter.repo() | None
-
-
-class NoCommitRepoSpec(RepoSpec):
-
-    def setup(self):
-        super().setup()
-
-    def master(self):
-        self.repo.master.should.be.empty
-
-    def commit(self):
-        content = 'content'
-        test_file = self.pypro1_root / 'test_file'
-        test_file.write_text(content)
-        self.repo.add_commit_all('test')
-        self.repo.master.should_not.be.empty
-        self.repo.history.should_not.be.empty
 
 __all__ = ('GitSpec', 'NoCommitRepoSpec')

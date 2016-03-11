@@ -1,9 +1,9 @@
 import io
-import os
 from pathlib import Path
 from itertools import takewhile
 from typing import Callable
 from datetime import datetime
+from asyncio import coroutine
 
 from fn import _, F  # type: ignore
 
@@ -25,6 +25,7 @@ from tryp.lazy_list import LazyList  # type: ignore
 
 from trypnv.record import field, bool_field, dfield, maybe_field, Record
 from trypnv import ProcessExecutor, Job
+from trypnv.process import JobClient  # type: ignore
 
 
 _master_ref = 'refs/heads/master'
@@ -170,6 +171,8 @@ class DulwichRepo(repo.Repo, Logging):
         cf.set(b'core', b'bare', False)
         cf.set(b'core', b'logallrefupdates', True)
         cf.set(b'core', b'worktree', str(worktree).encode())
+        cf.set(b'user', b'name', b'proteome')
+        cf.set(b'user', b'email', b'proteome@nvim.local')
         cf.write_to_file(f)
         self._put_named_file('config', f.getvalue())
         self._put_named_file(self.excludesfile_rel, b'')
@@ -238,67 +241,26 @@ class Repo(Logging):
     def status(self):
         return porcelain.status(self.repo)
 
-    def add_commit_all(self, msg):
-        self.add_all()
-        if self.index_dirty:
-            return self.commit_master(msg)
+    @property
+    def job_client(self):
+        return JobClient(cwd=self.base, name=self.base.name)
+
+    @coroutine
+    def add_commit_all(self, project, executor, msg):
+        if ((yield from executor.add_all(project)).success and
+                (yield from executor.commit(project, msg)).success):
+            return self.state.set(current=self._master_id / __.decode())
         else:
-            return Left('no changes to add')
+            return self.state
 
     @property
     def base(self):
         return Path(self.repo.path)
 
     @property
-    def gitignore(self):
-        return self.base / '.gitignore'
-
-    def add_all(self):
-        if self.gitignore.is_file():
-            self.repo.stage(self.add_paths.drain)
-        else:
-            porcelain.add(self.repo)
-
-    @lazy
-    def exclude_patterns(self):
-        read = __.read_text().splitlines()
-        gitignore = List.wrap(read(self.gitignore))
-        x = self.repo.excludesfile
-        excludes = List.wrap(read(x)) if x.is_file() else List()
-        return (excludes + gitignore).cons('.git*')
-
-    @property
-    def add_paths(self):
-        return self._filter_excludes / __.relative_to(self.base) / str
-
-    @property
-    def _filter_excludes(self):
-        include_dir, include_file = self._pattern_matchers
-        def rec(base):
-            for entry in base.iterdir():
-                if entry.is_file() and include_file(entry):
-                    yield entry
-                elif entry.is_dir() and include_dir(entry):
-                    yield from rec(entry)
-        return LazyList(rec(self.base))
-
-    @property
-    def _pattern_matchers(self):
-        is_dir = lambda pat: True
-        is_file = lambda pat: pat.endswith('*') or '/' not in pat
-        def pred(separator):
-            pats = self.exclude_patterns.filter(separator)
-            return lambda path: not pats.exists(path.match)
-        return pred(is_dir), pred(is_file)
-
-    @property
     def index_dirty(self):
         f = lambda: Map(self.status.staged).values.exists(bool)
         return Try(f) | True
-
-    @property
-    def committer(self):
-        return 'proteome <proteome@nvim.local>'
 
     def commit_master(self, msg):
         return Try(
@@ -310,6 +272,11 @@ class Repo(Logging):
 
     def to_master(self):
         return self.master_commit.map(self._switch)
+
+    def reset_master(self):
+        def set_ref(ref):
+            self.repo[b'HEAD'] = ref
+        return self._master_id / set_ref / (lambda a: self.state)
 
     @property
     def master_commit(self):
@@ -528,6 +495,12 @@ class Git(ProcessExecutor):
     def clone(self, client, url, location):
         self.log.info('Cloning {}...'.format(url))
         return self.command(client, [], 'clone', url, location)
+
+    def add_all(self, project: Project):
+        return self.project_command(project, 'add', '-A', '.')
+
+    def commit(self, project: Project, msg: str):
+        return self.project_command(project, 'commit', '-m', msg)
 
 
 class HistoryGit(Git):
