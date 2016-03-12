@@ -1,13 +1,10 @@
 import io
 from pathlib import Path
 from itertools import takewhile
-from typing import Callable
 from datetime import datetime
 from asyncio import coroutine
 
 from fn import _, F
-
-from proteome.project import Project
 
 import pyrsistent
 
@@ -16,16 +13,17 @@ from dulwich.repo import BASE_DIRECTORIES, OBJECTDIR
 from dulwich.object_store import DiskObjectStore
 from dulwich.objects import Commit
 
-from tryp import may, List, Maybe, Map, Empty, Just, __, Left
+from tryp import may, List, Maybe, Map, Empty, Just, __, Left, Either
 from tryp.logging import Logging
 from tryp.transformer import Transformer
 from tryp.lazy import lazy
 from tryp.task import Try
 from tryp.lazy_list import LazyList
 
-from trypnv.record import field, bool_field, dfield, maybe_field, Record
-from trypnv import ProcessExecutor, Job
+from trypnv.record import field, bool_field, maybe_field, Record
 from trypnv.process import JobClient
+
+from proteome.project import Project
 
 
 _master_ref = 'refs/heads/master'
@@ -52,6 +50,9 @@ def format_since(stamp):
 
 class RepoState(Record):
     current = maybe_field(str)
+
+class ProjectRepoState(RepoState):
+    project = field(Project)
 
 
 class Diff(Logging):
@@ -217,17 +218,33 @@ class Repo(Logging):
         return '{}({}, {})'.format(
             self.__class__.__name__, self.repo.path, self.state)
 
-    @lazy
-    def current(self):
-        return self.state.current.or_else(self._head_id)
-
     def ref(self, name):
         return Maybe.from_call(lambda: self.repo.refs[name.encode()],
                                exc=KeyError)
 
     @property
-    def master(self):
+    def current(self):
+        return self.state.current.or_else(self._head_id)
+
+    @property
+    def current_b(self):
+        return self.current / __.encode()
+
+    @property
+    def _master_id_b(self):
         return self.ref(_master_ref)
+
+    @property
+    def _master_id(self):
+        return self._master_id_b / __.decode()
+
+    @property
+    def _head_id_b(self) -> Either[str, bytes]:
+        return Try(self.repo.head)
+
+    @property
+    def _head_id(self) -> Either[str, str]:
+        return self._head_id_b / __.decode()
 
     @property
     def _master_ref_b(self):
@@ -247,11 +264,11 @@ class Repo(Logging):
 
     @coroutine
     def add_commit_all(self, project, executor, msg):
-        if ((yield from executor.add_all(project)).success and
-                (yield from executor.commit(project, msg)).success):
-            return self.state.set(current=self._master_id / __.decode())
+        if (yield from executor.add_all(project)).success and self.index_dirty:
+            ret = self.commit_master(msg)
+            return ret
         else:
-            return self.state
+            return Just(self.state)
 
     @property
     def base(self):
@@ -263,12 +280,12 @@ class Repo(Logging):
         return Try(f) | True
 
     def commit_master(self, msg):
-        return Try(
+        committed = Try(
             self.repo.do_commit,
             message=msg.encode(),
-            committer=self.committer.encode(),
             ref=self._master_ref_b,
-        ) // (lambda a: self.to_master())
+        )
+        return committed // (lambda a: self.to_master())
 
     def to_master(self):
         return self.master_commit.map(self._switch)
@@ -280,7 +297,7 @@ class Repo(Logging):
 
     @property
     def master_commit(self):
-        return self._master_id // F(Try, self.repo.get_object)
+        return self._master_id_b // F(Try, self.repo.get_object)
 
     @lazy
     def history(self):
@@ -291,25 +308,17 @@ class Repo(Logging):
         return LazyList(self._master_id.map(self.history_at) | [])
 
     def history_at(self, sha):
-        return self.repo.get_walker(include=[sha])
+        return self.repo.get_walker(include=[sha.encode()])
 
     @property
     def history_ids(self):
         return self.history.map(_.id)
 
     @property
-    def _master_id(self):
-        return self.ref(_master_ref)
+    def head_commit(self) -> Either[str, Commit]:
+        return self._head_id_b // F(Try, self.repo.get_object)
 
-    @property
-    def _head_id(self):
-        return Try(self.repo.head)
-
-    @property
-    def head_commit(self):
-        return self._head_id // F(Try, self.repo.get_object)
-
-    def _switch(self, commit):
+    def _switch(self, commit: Commit):
         self._checkout_commit(commit)
         return self.state.set(current=Just(commit.id.decode()))
 
@@ -330,17 +339,13 @@ class Repo(Logging):
             .smap(self.commit_info)\
             .filter_not(_.empty)
 
-    @property
-    def current_b(self):
-        return self.current / __.encode()
-
     @lazy
     def current_commit(self):
         return self.current_b / self.repo.get_object
 
     @property
     def current_commit_info(self):
-        com = self.current_commit
+        com = self.current_commit.to_maybe
         index = com // self.history.index_of
         return index.map2(com, self.commit_info)
 
@@ -408,118 +413,31 @@ class RepoAdapter(Logging):
         except KeyError:
             pass
 
-    @may
-    def repo(self, state: RepoState=RepoState()) -> Maybe[Repo]:
-        if self.initialize():
-            return Repo(self._repo, state)
-
     @property
     def _repo(self):
         return DulwichRepo.at(self.work_tree, self.git_dir)
 
     def t(self, state: RepoState):
-        return self.repo(state).map(RepoT)
-
-
-class HistoryState(Record):
-    repos = dfield(Map())
-    browse = dfield(Map())
-
-
-class History(Logging):
-
-    def __init__(self, base: Path, state: HistoryState=HistoryState()) -> None:
-        self.base = base
-        self.state = state
+        return self.repo(state) / RepoT
 
     @property
-    def repos(self):
-        return self.state.repos
-
-    def adapter(self, project: Project):
-        git_dir = self.base / project.fqn
-        work_tree = project.root
-        return RepoAdapter(work_tree, Just(git_dir))
-
-    def state_for(self, project: Project):
-        return self.repos.get(project) | (lambda: RepoState())
-
-    def at(self, project: Project, f: Callable[[RepoT], RepoT]):
-        return self.adapter(project)\
-            .t(self.state_for(project))\
-            .map(f)\
-            .map(lambda r: self.repos + (project, r.state))\
-            .map(lambda r: self.state.set(repos=r))
-
-    def repo(self, project: Project):
-        return self.adapter(project).repo(self.state_for(project))
+    def _new_state(self):
+        return RepoState()
 
 
-class HistoryT(Transformer[History]):
+class ProjectRepoAdapter(RepoAdapter):
 
-    def pure(self, h: Maybe[HistoryState]) -> History:  # type: ignore
-        new_state = h | self.state
-        return History(self.val.base, new_state)
+    def __init__(self, project: Project, git_dir: Maybe[Path]=Empty()) -> None:
+        self.project = project
+        super().__init__(self.project.root, git_dir)
+
+    @may
+    def repo(self, state: Maybe[RepoState]=Empty()) -> Maybe[Repo]:
+        if self.initialize():
+            return Repo(self._repo, state | self._new_state)
 
     @property
-    def state(self):
-        return self.val.state
+    def _new_state(self):
+        return ProjectRepoState(project=self.project)
 
-
-class Git(ProcessExecutor):
-
-    def pre_args(self, project: Project):
-        return []
-
-    def command(self, client, git_args, name, *cmd_args):
-        args = list(map(str, git_args + [name] + list(cmd_args)))
-        self.log.debug('running git {}'.format(' '.join(args)))
-        job = Job(
-            client=client,
-            exe='git',
-            args=args,
-            loop=self.loop,
-        )
-        return self.run(job)
-
-    def project_command(self, project: Project, name: str, *cmd_args):
-        return self.command(project.job_client, self.pre_args(project), name,
-                            *cmd_args)
-
-    def revert(self, project: Project, commit: CommitInfo):
-        return self.project_command(project, 'revert', '-n', commit.hex)
-
-    def revert_abort(self, project: Project):
-        return self.project_command(project, 'revert', '--abort')
-
-    def clone(self, client, url, location):
-        self.log.info('Cloning {}...'.format(url))
-        return self.command(client, [], 'clone', url, location)
-
-    def add_all(self, project: Project):
-        return self.project_command(project, 'add', '-A', '.')
-
-    def commit(self, project: Project, msg: str):
-        return self.project_command(project, 'commit', '-m', msg)
-
-
-class HistoryGit(Git):
-
-    def __init__(self, base: Path, vim) -> None:
-        self.base = base
-        super(HistoryGit, self).__init__(vim)
-
-    def pre_args(self, project: Project):
-        d = str(project.root)
-        h = str(self._history_dir(project))
-        return [
-            '--git-dir',
-            h,
-            '--work-tree',
-            d,
-        ]
-
-    def _history_dir(self, project: Project):
-        return self.base / project.fqn
-
-__all__ = ('History', 'RepoAdapter', 'RepoT', 'Repo', 'RepoState', 'HistoryT')
+__all__ = ('RepoAdapter', 'RepoT', 'Repo', 'RepoState')

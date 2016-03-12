@@ -3,12 +3,12 @@ import os
 from pathlib import Path
 from functools import wraps
 
-import sure  # NOQA
 from flexmock import flexmock  # NOQA
 
 from fn import _
 
-from proteome.git import History, RepoAdapter, DulwichRepo, HistoryGit
+from proteome.git import DulwichRepo
+from proteome.plugins.history import History, HistoryGit
 
 from unit.project_spec import LoaderSpec
 from unit._support.async import test_loop
@@ -34,8 +34,7 @@ class GitSpec(LoaderSpec):
                 @curried
                 def commit(msg, repo):
                     coro = repo.add_commit_all(self.pro1, self.executor, msg)
-                    value = loop.run_until_complete(coro)
-                    return Just(value)
+                    return loop.run_until_complete(coro)
                 return self.hist.at(self.pro1, lambda r: f(self, r, commit))
         return wrapper
 

@@ -1,12 +1,12 @@
 from pathlib import Path
 from datetime import datetime
-import asyncio
 
 from fn import _, F
 
 from tryp.lazy import lazy
 from tryp import Map, __, Just, Empty, may, List, Maybe
 from tryp.util.numeric import try_convert_int
+from tryp.async import gather_sync_flat
 
 from trypnv.machine import (may_handle, message, handle, IO)
 from trypnv.machine import Error
@@ -14,11 +14,10 @@ from trypnv.record import field, dfield, Record, lazy_list_field
 from trypnv.nvim import ScratchBuilder, ScratchBuffer
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
-from proteome.git import (History, HistoryT, HistoryState, Repo, CommitInfo,
-                          HistoryGit)
 from proteome.plugins.core import Save, StageIV
 from proteome.logging import Logging
 from proteome.project import Project
+from proteome.git import Repo, CommitInfo
 from proteome.plugins.history.messages import (HistoryPrev, HistoryNext,
                                                HistoryStatus, HistoryLog,
                                                HistoryBrowse,
@@ -28,6 +27,8 @@ from proteome.plugins.history.messages import (HistoryPrev, HistoryNext,
                                                HistoryBufferNext,
                                                HistoryBufferPrev, HistoryPick,
                                                HistoryRevert)
+from proteome.plugins.history.data import History, HistoryT, HistoryState
+from proteome.plugins.history.process import HistoryGit
 from proteome.plugins.history.patch import Patch
 
 
@@ -242,21 +243,20 @@ class Plugin(ProteomeComponent):
 
         @may_handle(StageIV)
         def stage_4(self):
-            excludes = self.vim.ppath('history_excludes')
-            return self._with_repos(lambda a: a.init(excludes))
+            ''' initialize repository states '''
+            return self._with_repos(lambda a: Just(a.state))
 
         # TODO handle broken repo
         # TODO allow specifying target
         @may_handle(Commit)
         async def commit(self):
-            async def go(p, r):
-                return p, await r.add_commit_all(p, self.executor,
+            async def awa(a):
+                return await a[1].add_commit_all(a[0], self.executor,
                                                  self._timestamp)
-            def folder(z, n):
-                return z + n
-            exe = self.projects.zip(self._repos_ro).smap(go)
-            results = List.wrap(await asyncio.gather(*exe))
-            new_repos = results.fold_left(self.state.repos)(folder)
+            results = await gather_sync_flat(self.projects & self._repos_ro,
+                                             awa)
+            new_repos = results\
+                .fold_left(self.state.repos)(lambda z, s: z + (s.project, s))
             return Just(self._with_sub(self.state.set(repos=new_repos)))
 
         def _switch(self, f):
@@ -300,9 +300,7 @@ class Plugin(ProteomeComponent):
 
         @may_handle(HistoryLog)
         def history_log(self):
-            self._with_current_repo(
-                _ % (lambda r: self.vim.multi_line_info(r.log_formatted))
-            )
+            self._current_repo_ro / _.log_formatted % self.vim.multi_line_info
 
         @handle(HistoryBrowse)
         def history_browse(self):

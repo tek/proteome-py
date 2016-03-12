@@ -2,7 +2,6 @@ from pathlib import Path
 
 import asyncio
 
-import sure  # NOQA
 from flexmock import flexmock  # NOQA
 
 from tryp import List, Just, _, Map
@@ -14,7 +13,7 @@ from proteome.project import Project, Projects, ProjectAnalyzer
 from proteome.plugins.core import (Next, Prev, StageI, RemoveByIdent,
                                    AddByParams)
 from proteome.main import Proteome
-from proteome.git import History
+from proteome.plugins.history.data import History
 
 from unit._support.loader import LoaderSpec
 from unit._support.async import test_loop
@@ -117,8 +116,14 @@ class Proteome_(LoaderSpec):
             for cont in self.test_content:
                 self.test_file_1.write_text(cont)
                 prot.plug_command('history', 'Commit', List())
+                self._await(plug.executor, loop)
+
+        def _await(self, executor, loop):
+            self._wait(0.1)
+            while not executor.ready:
                 self._wait(0.1)
-                plug.executor.await_threadsafe(loop)
+                executor.await_threadsafe(loop)
+                self._wait(0.1)
 
         def init(self):
             def check_head(p):
@@ -142,8 +147,7 @@ class Proteome_(LoaderSpec):
                     plug = prot.plugin('history').x
                     self.test_file_1.write_text('test')
                     prot.plug_command('history', 'Commit', List())
-                    self._wait(0.1)
-                    plug.executor.await_threadsafe(loop)
+                    self._await(plug.executor, loop)
             (hist.repo(p1) / _.history // _.head / repr).should.just
 
         def prev_next(self):
