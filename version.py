@@ -1,2 +1,2 @@
-version_parts = (6, 9, 0)
+version_parts = (6, 10, 0)
 version = '.'.join(map(str, version_parts))
