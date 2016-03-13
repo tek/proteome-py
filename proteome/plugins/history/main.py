@@ -256,7 +256,7 @@ class Plugin(ProteomeComponent):
             results = await gather_sync_flat(self.projects & self._repos_ro,
                                              awa)
             new_repos = results\
-                .fold_left(self.state.repos)(lambda z, s: z + (s.project, s))
+                .fold_map(self.state.repos, lambda s: (s.project, s))
             return Just(self._with_sub(self.state.set(repos=new_repos)))
 
         def _switch(self, f):
