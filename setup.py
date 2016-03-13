@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-from version import version
+from proteome.version import version
 
 setup(
     name='proteome',
@@ -13,8 +13,7 @@ setup(
     packages=find_packages(
         exclude=['unit', 'unit.*', 'integration', 'integration.*']),
     install_requires=[
-        'tryp-nvim>=6.3.0',
-        'tryp>=6.6.0',
+        'tryp-nvim>=7.0.0',
         'dulwich',
     ]
 )
