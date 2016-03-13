@@ -41,9 +41,6 @@ class Projects_(LoaderSpec):
 
 class ProjectLoader_(LoaderSpec):
 
-    def setup(self, *a, **kw):
-        super(ProjectLoader_, self).setup(*a, **kw)
-
     def resolve(self):
         type_name = '{}/{}'.format(self.pypro1_type, self.pypro1_name)
         split = self.loader\

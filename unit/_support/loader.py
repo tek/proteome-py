@@ -30,11 +30,12 @@ class LoaderSpec(UnitSpec):
         self.mk_project_root(self.pypro1_type, self.pypro2_name,
                              self.project_base2)
         self.mk_project_root('other', 'other2', self.project_base2)
-        self.type1_base = Path(fixture_path('type1_projects'))
+        self.type1_base = Path(temp_dir('type1_projects'))
         self.type1pro_name = 'type1pro'
+        self.type1pro_root = temp_dir(self.type1_base / self.type1pro_name)
         self.type_bases = Map({self.type1_base: List('type1')})
         self.resolver = Resolver(List(self.project_base, self.project_base2),
                                  self.type_bases)
         self.loader = ProjectLoader(self.config, self.resolver)
 
-__all__ = ['LoaderSpec']
+__all__ = ('LoaderSpec',)
