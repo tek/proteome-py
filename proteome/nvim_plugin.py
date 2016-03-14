@@ -21,7 +21,7 @@ from proteome.nvim import NvimFacade
 from proteome.logging import Logging
 from proteome.plugins.unite import (UniteSelectAdd, UniteSelectAddAll,
                                     UniteProjects)
-from proteome.plugins.unite import Plugin as Unite
+from proteome.plugins.unite import Id as Unite
 
 
 def unite_candidates(name):

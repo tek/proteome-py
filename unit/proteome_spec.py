@@ -43,7 +43,7 @@ class Proteome_(LoaderSpec):
     def create(self):
         name = 'proj'
         with self._prot() as prot:
-            data = prot.send_wait(Create(name, null))
+            data = prot.send_sync(Create(name, null))
         p = data.projects.projects[0]
         p.name.should.equal(name)
         p.root.should.equal(null)
@@ -55,9 +55,9 @@ class Proteome_(LoaderSpec):
         pros = List(Project.of(name, null), Project.of(name2, null))
         with self._prot(pros=pros) as prot:
             prot.data.current.should.equal(Just(pros[0]))
-            prot.send_wait(Next())\
+            prot.send_sync(Next())\
                 .current.should.equal(Just(pros[1]))
-            prot.send_wait(Prev())\
+            prot.send_sync(Prev())\
                 .current.should.equal(Just(pros[0]))
 
     def command(self):
@@ -175,19 +175,19 @@ class Proteome_(LoaderSpec):
         ctx = self._prot(b=List(self.project_base), t=self.type_bases)
         target = Project.of(self.pypro1_name, p, Just(self.pypro1_type))
         with ctx as prot:
-            prot.send_wait(StageI())
-            prot.send_wait(Nop())\
+            prot.send_sync(StageI())
+            prot.send_sync(Nop())\
                 .projects.projects.head\
                 .should.equal(Just(target))
 
     def add_remove_project(self):
         ctx = self._prot(List(), List(self.project_base), self.type_bases)
         with ctx as prot:
-            prot.send_wait(AddByParams(self.pypro1_name, {}))\
+            prot.send_sync(AddByParams(self.pypro1_name, {}))\
                 .project(self.pypro1_name)\
                 .map(_.root)\
                 .should.contain(self.pypro1_root)
-            prot.send_wait(RemoveByIdent(self.pypro1_name))\
+            prot.send_sync(RemoveByIdent(self.pypro1_name))\
                 .all_projects.should.be.empty
 
     def add_by_params(self):
@@ -199,7 +199,7 @@ class Proteome_(LoaderSpec):
             root=root
         )
         with self._prot() as prot:
-            prot.send_wait(AddByParams(name, params))\
+            prot.send_sync(AddByParams(name, params))\
                 .project(name)\
                 .map(_.root)\
                 .should.contain(root)
