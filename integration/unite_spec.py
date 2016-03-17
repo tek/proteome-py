@@ -67,7 +67,7 @@ class UniteSpec(VimIntegrationSpec):
         later(F(active_type, self.tpe1))
 
     @_unite
-    def remove(self, unite):
+    def delete(self, unite):
         def count(num):
             return (self.vim.pvar('projects') / len).should.contain(num)
         self.vim.cmd('ProAdd tpe2/dep')
@@ -75,6 +75,17 @@ class UniteSpec(VimIntegrationSpec):
         self.vim.cmd('Projects')
         self._wait(0.1)
         self.vim.cmd('call feedkeys("\\<tab>\\<esc>k\\<cr>")')
+        later(F(count, 1))
+
+    @_unite
+    def delete_by_mapping(self, unite):
+        def count(num):
+            return (self.vim.pvar('projects') / len).should.contain(num)
+        self.vim.cmd('ProAdd tpe2/dep')
+        later(F(count, 2))
+        self.vim.cmd('Projects')
+        self._wait(0.1)
+        self.vim.feedkeys('d')
         later(F(count, 1))
 
 __all__ = ('UniteSpec',)

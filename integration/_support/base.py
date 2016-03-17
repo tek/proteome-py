@@ -242,7 +242,7 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
             },
             {
                 'sync': 0,
-                'name': '_proteome_unite_remove_project',
+                'name': '_proteome_unite_delete_project',
                 'type': 'function',
                 'opts': {}
             },

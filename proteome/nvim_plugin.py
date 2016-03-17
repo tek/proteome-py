@@ -235,8 +235,8 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
     def pro_unite_activate_project(self, ident):
         return SetProject(ident)
 
-    @unite_action('remove_project')
-    def pro_unite_remove_project(self, ident):
+    @unite_action('delete_project')
+    def pro_unite_delete_project(self, ident):
         return RemoveByIdent(ident)
 
 __all__ = ('ProteomeNvimPlugin',)

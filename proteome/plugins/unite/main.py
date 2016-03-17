@@ -26,11 +26,11 @@ class Plugin(ProteomeComponent):
                          desc='add project')
         add_pro = UniteKind(Id.addable, List(add_action))
         projects = UniteSource(Id.projects, Id.projects_candidates, Id.project)
-        remove_action = Map(name='remove', handler=Id.remove_project,
-                            desc='remove project')
+        delete_action = Map(name='delete', handler=Id.delete_project,
+                            desc='delete project')
         activate_action = Map(name='activate', handler=Id.activate_project,
                               desc='activate project')
-        project = UniteKind(Id.project, List(activate_action, remove_action))
+        project = UniteKind(Id.project, List(activate_action, delete_action))
         addable.define(self.vim)
         all_addable.define(self.vim)
         add_pro.define(self.vim)

@@ -138,7 +138,7 @@ class Id():
     projects_candidates = '_proteome_unite_projects'
 
     add_project = '_proteome_unite_add_project'
-    remove_project = '_proteome_unite_remove_project'
+    delete_project = '_proteome_unite_delete_project'
     activate_project = '_proteome_unite_activate_project'
 
     addable = 'proteome_addable'
