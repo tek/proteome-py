@@ -1,0 +1,199 @@
+import re
+from pathlib import Path
+
+from fn import F, _
+
+from tryp import List, Map, Empty
+from tryp.lazy import lazy
+
+from trypnv.machine import handle, may_handle, Error, Info
+from trypnv.process import JobClient
+
+from proteome.state import ProteomeComponent, ProteomeTransitions
+from proteome.project import Project, mkpath
+from proteome.git import Git
+from proteome.plugins.core.message import (
+    StageI, StageIV, Add, RemoveByIdent, Create, Next, Prev,
+    SetProject, SetProjectIdent, SetProjectIndex, SwitchRoot, Added,
+    Removed, ProjectChanged, BufEnter, Initialized, MainAdded, Show,
+    AddByParams, CloneRepo)
+
+
+class Plugin(ProteomeComponent):
+
+    class Transitions(ProteomeTransitions):
+
+        def _no_such_ident(self, ident: str, params):
+            return 'no project found matching \'{}\''.format(ident)
+
+        @may_handle(StageI)
+        def stage_1(self):
+            main = self.data.analyzer(self.vim).main
+            return Add(main), MainAdded().pub  # type: ignore
+
+        @may_handle(StageIV)
+        def stage_4(self):
+            return BufEnter(self.vim.buffer).pub, Initialized().pub
+
+        @may_handle(Initialized)
+        def initialized(self):
+            return self.data.set(initialized=True), SwitchRoot(False)
+
+        @may_handle(MainAdded)
+        def main_added(self):
+            self.data.main.foreach(self._setup_main)
+
+        def _setup_main(self, pro: Project):
+            self.vim.set_pvar('main_name', pro.name)
+            self.vim.set_pvar('main_ident', pro.ident)
+            self.vim.set_pvar('main_type', pro.tpe | 'none')
+            self.vim.set_pvar('main_types', pro.all_types)
+
+        @may_handle(AddByParams)
+        def add_by_params(self):
+            params = Map(self.msg.params)
+            ident = self.msg.ident
+            return (
+                (params.get('root') /
+                 mkpath //
+                 F(self.data.loader.from_params, ident, params=params))
+                .or_else(
+                    self.data.loader.by_ident(ident)
+                    .or_else(self.data.loader.resolve_ident(
+                        ident, params, self.data.main_type))
+                ) /
+                Add |
+                Error(self._no_such_ident(ident, params))
+            )
+
+        @may_handle(Add)
+        def add(self):
+            if self.msg.project not in self.data:
+                return (self.data.add(self.msg.project),
+                        Added(self.msg.project).pub)
+
+        @may_handle(Added)
+        def added(self):
+            self.vim.set_pvar('added_project', self.msg.project.json)
+            self.vim.set_pvar('projects', self.data.projects.json)
+            self.vim.pautocmd('Added')
+            if self.data.initialized:
+                return SetProjectIndex(-1)
+
+        # TODO switch project if removed current
+        @handle(RemoveByIdent)
+        def remove_by_ident(self):
+            return self.data.project(self.msg.ident)\
+                .map(lambda a: (self.data - a, Removed(a).pub))
+
+        @may_handle(Removed)
+        def removed(self):
+            self.vim.set_pvar('projects', self.data.projects.json)
+            self.vim.pautocmd('Removed')
+            return Info('Removed project {}'.format(self.msg.project.ident))
+
+        @may_handle(Create)
+        def create(self):
+            return self.data + Project.of(self.msg.name, Path(self.msg.root))
+
+        @may_handle(Show)
+        def show(self):
+            lines = self.data.projects.show(List.wrap(self.msg.names))
+            header = List('Projects:')  # type: List[str]
+            return Info('\n'.join(header + lines))
+
+        @may_handle(SetProject)
+        def set_project(self):
+            if isinstance(self.msg.ident, str):
+                if self.msg.ident in self.data:
+                    return SetProjectIdent(self.msg.ident)
+                elif self.msg.ident.isdigit():
+                    return SetProjectIndex(int(self.msg.ident))
+                else:
+                    err = '\'{}\' is not a valid project identifier'
+                    return Error(err.format(self.msg.ident))
+
+        @may_handle(SetProjectIndex)
+        def set_project_index(self):
+            if self.msg.index < self.data.project_count:
+                return self.data.set_index(self.msg.index), SwitchRoot()
+
+        @handle(SetProjectIdent)
+        def set_project_ident(self):
+            return self.data.set_index_by_ident(self.msg.ident)\
+                .map(lambda a: (a, SwitchRoot()))
+
+        @handle(SwitchRoot)
+        def switch_root(self):
+            def go(pro: Project):
+                self.vim.switch_root(pro.root)  # type: ignore
+                pc = ProjectChanged(pro)
+                info = 'switched root to {}'
+                return (pc, Info(info.format(pro.ident))) if self.msg.notify else pc
+            if self.data.initialized:
+                return self.data.current.map(go)
+            else:
+                return Empty()
+
+        @may_handle(ProjectChanged)
+        def project_changed(self):
+            self.vim.set_pvar('active', self.msg.project.json)
+
+        @may_handle(Next)
+        def next(self):
+            return self.data.inc(1), SwitchRoot()
+
+        @may_handle(Prev)
+        def prev(self):
+            return self.data.inc(-1), SwitchRoot()
+
+        @may_handle(Error)
+        def error(self):
+            self.log.error(self.msg.message)
+
+        @may_handle(Info)
+        def info(self):
+            self.log.info(self.msg.message)
+
+        # TODO make configurable (destination dir)
+        @handle(CloneRepo)
+        def clone_repo(self):
+            uri = self.msg.uri
+            name = self.msg.params.get('name')\
+                .or_else(self._clone_repo_name(uri))
+            url = self._clone_url(uri)
+            return (
+                self.data.main_clone_dir.map2(name, _ / _)
+                .to_either('invalid parameter: {}'.format(uri)) /
+                F(self._clone_repo, url)
+            )
+
+        def _clone_url(self, uri):
+            return uri if uri.startswith('http') else self._github_url(uri)
+
+        def _github_url(self, uri):
+            return 'https://github.com/{}'.format(uri)
+
+        def _clone_repo_name(self, uri):
+            return (
+                List.wrap(uri.split('/'))
+                .lift(-1) /
+                F(re.sub, '\.git$', '')
+            )
+
+        @property
+        def cloner(self) -> Git:
+            return self._cloner  # type: ignore
+
+        @lazy
+        def _cloner(self):
+            return Git(self.vim)
+
+        async def _clone_repo(self, url: str, target):
+            ident = '/'.join(str(target).split('/')[-2:])
+            client = JobClient(cwd=Path.home(), name=self.name)
+            res = await self.cloner.clone(client, url, target)
+            return res.either(AddByParams(ident, {}).pub,
+                              'failed to clone {} to {}'.format(url, target))
+
+__all__ = ('Plugin',)

@@ -199,9 +199,7 @@ class Proteome_(LoaderSpec):
             root=root
         )
         with self._prot() as prot:
-            prot.send_sync(AddByParams(name, params))\
-                .project(name)\
-                .map(_.root)\
-                .should.contain(root)
+            ret = prot.send_sync(AddByParams(name, params))
+            (ret.project(name) / _.root).should.contain(root)
 
-__all__ = ['Proteome_']
+__all__ = ('Proteome_',)
