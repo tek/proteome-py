@@ -6,7 +6,7 @@ from fn import F, _
 from tryp import List, Map, Empty
 from tryp.lazy import lazy
 
-from trypnv.machine import handle, may_handle, message, Error
+from trypnv.machine import handle, may_handle, message, Error, Info
 from trypnv.process import JobClient
 
 from proteome.state import ProteomeComponent
@@ -102,6 +102,7 @@ class Plugin(ProteomeComponent):
     def removed(self, env: Env, msg):
         self.vim.set_pvar('projects', env.projects.json)
         self.vim.pautocmd('Removed')
+        return Info('Removed project {}'.format(msg.project.ident))
 
     @may_handle(Create)
     def create(self, env: Env, msg):
@@ -111,7 +112,7 @@ class Plugin(ProteomeComponent):
     def show(self, env: Env, msg):
         lines = env.projects.show(List.wrap(msg.names))
         header = List('Projects:')  # type: List[str]
-        self.log.info('\n'.join(header + lines))
+        return Info('\n'.join(header + lines))
 
     @may_handle(SetProject)
     def set_project(self, env: Env, msg):
@@ -138,10 +139,9 @@ class Plugin(ProteomeComponent):
     def switch_root(self, env: Env, msg):
         def go(pro: Project):
             self.vim.switch_root(pro.root)  # type: ignore
-            if msg.notify:
-                info = 'switched root to {}'
-                self.log.info(info.format(pro.ident))
-            return ProjectChanged(pro)
+            pc = ProjectChanged(pro)
+            info = 'switched root to {}'
+            return (pc, Info(info.format(pro.ident))) if msg.notify else pc
         if env.initialized:
             return env.current.map(go)
         else:
@@ -162,6 +162,10 @@ class Plugin(ProteomeComponent):
     @may_handle(Error)
     def error(self, env, msg):
         self.log.error(msg.message)
+
+    @may_handle(Info)
+    def info(self, env, msg):
+        self.log.info(msg.message)
 
     # TODO make configurable (destination dir)
     @handle(CloneRepo)
