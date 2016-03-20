@@ -13,12 +13,13 @@ from dulwich.repo import BASE_DIRECTORIES, OBJECTDIR
 from dulwich.object_store import DiskObjectStore
 from dulwich.objects import Commit
 from dulwich.patch import write_object_diff
+from dulwich.index import build_file_from_blob
 
 from tryp import may, List, Maybe, Map, Empty, Just, __, Left, Either
 from tryp.logging import Logging
 from tryp.transformer import Transformer
 from tryp.lazy import lazy
-from tryp.task import Try
+from tryp.task import Try, Task
 from tryp.lazy_list import LazyList
 
 from trypnv.record import field, bool_field, maybe_field, Record
@@ -232,6 +233,12 @@ class DulwichRepo(repo.Repo, Logging):
             else DulwichRepo.create(worktree, store)
         )
 
+    def path_blob(self, commit_sha, path):
+        tree_id = self[commit_sha.encode()].tree
+        tree = self.get_object(tree_id)
+        mode, sha = tree.lookup_path(self.get_object, str(path).encode())
+        return self[sha], mode
+
 
 class Repo(Logging):
 
@@ -344,14 +351,19 @@ class Repo(Logging):
         return self.repo.get_walker(include=[sha.encode()])
 
     def file_history(self, path: Path):
-        relpath = str(self.relpath(path))
+        relpath = str(self.relpath(path) | '///')
         def filt(entry):
             paths = List.wrap(entry.changes()) / _.new.path / __.decode()
             return paths.contains(relpath)
         return self.history_raw.filter(filt) / _.commit
 
     def relpath(self, path: Path):
-        return path.relative_to(self.base) if path.is_absolute else path
+        return (Try(path.relative_to, self.base).to_maybe
+                if path.is_absolute()
+                else Just(path))
+
+    def abspath(self, path):
+        return Path(path) if Path(path).is_absolute() else self.base / path
 
     @property
     def history_ids(self):
@@ -388,7 +400,7 @@ class Repo(Logging):
     def history_info(self):
         return self._history_info(self.history)
 
-    def file_history_info(self, path):
+    def file_history_info(self, path: Path):
         return self._history_info(self.file_history(path))
 
     @lazy
@@ -399,7 +411,7 @@ class Repo(Logging):
     def current_commit_info(self):
         com = self.current_commit.to_maybe
         index = com // self.history.index_of
-        return index.map2(com, self.commit_info)
+        return index.ap2(com, self.commit_info)
 
     def future_at(self, id):
         def search(hist):
@@ -425,6 +437,10 @@ class Repo(Logging):
     def select(self, num):
         return self.history.lift(num) / self._switch
 
+    def checkout_file(self, commit_sha, path):
+        path_s = str(self.abspath(path))
+        return (Task.call(self.repo.path_blob, commit_sha, path)
+                .map2(F(build_file_from_blob, target_path=path_s)))
 
 class RepoT(Transformer[Repo]):
 

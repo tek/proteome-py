@@ -104,6 +104,9 @@ class Project(Record):
     def job_client(self):
         return JobClient(cwd=self.root, name=self.ident)
 
+    def match_ident(self, ident):
+        return ident in (self.ident, self.name)
+
 
 class Projects(object):
 

@@ -142,7 +142,7 @@ class GitSpec(LoaderSpec):
     def file_browse(self, repo, commit):
         def check(repo):
             diffs = (repo.file_history_info(file1).drain /
-                     __.browse_format(True, Just(str(repo.relpath(file1)))))
+                     __.browse_format(True, repo.relpath(file1) / str))
             diffs.should.have.length_of(2)
             diffs[0].find(lambda a: name3 in a).should.be.empty
         first = 'first'

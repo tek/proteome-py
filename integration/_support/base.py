@@ -170,6 +170,12 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
             },
             {
                 'sync': 0,
+                'name': 'ProHistoryFileBrowse',
+                'type': 'command',
+                'opts': {'nargs': '?'}
+            },
+            {
+                'sync': 0,
                 'name': 'ProHistoryBrowseInput',
                 'type': 'command',
                 'opts': {'nargs': 1}

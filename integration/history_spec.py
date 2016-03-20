@@ -9,7 +9,7 @@ from tryp import List, Just, __
 from tryp.util.random import Random
 
 from proteome.project import Project
-from proteome.plugins.history import Plugin
+from proteome.plugins.history import Plugin, History
 
 from integration._support.base import VimIntegrationSpec
 
@@ -20,6 +20,7 @@ class _HistorySpec(VimIntegrationSpec):
         super()._pre_start()
         self.vim.set_pvar('all_projects_history', True)
         self.test_file_1 = self.main_project / 'test_file_1'
+        self.test_file_2 = self.main_project / 'test_file_2'
         self.test_content = List(
             'content_1',
             'content_2',
@@ -27,6 +28,8 @@ class _HistorySpec(VimIntegrationSpec):
         )
         self.test_file_1.write_text(self.test_content[0])
         self.pro = Project.of(self.name1, self.main_project, Just(self.tpe1))
+        self.history = History(self.history_base)
+        self.repo = self.history.repo(self.pro).x
 
     @property
     def _plugins(self):
@@ -52,6 +55,9 @@ class _HistorySpec(VimIntegrationSpec):
 
     def _write_file(self, num):
         self.test_file_1.write_text(self.test_content[num])
+
+    def _write_file2(self, num):
+        self.test_file_2.write_text(self.test_content[num])
 
     def _save(self):
         oc_pre = self._object_count
@@ -166,6 +172,45 @@ class HistoryBrowseSpec(_HistorySpec, _BrowseHelpers):
         check(0, '*')
         self.vim.feedkeys('q')
         later(lambda: self.vim.buffer.content.should.equal(List(marker_text)))
+
+
+class FileHistoryBrowseSpec(_HistorySpec, _BrowseHelpers):
+
+    def browse(self):
+        ''' Browse the history of a single file
+        adds one commit that doesn't contain changes in test_file_1.
+        there are four commits in summary, so the check for buffer line
+        count compares with 3.
+        at the end, a fifth commit must be present due to resetting the
+        file contents.
+        '''
+        self._debug = True
+        check = self._check
+        marker_text = Random.string()
+        self.vim.buffer.set_content([marker_text])
+        self._save()
+        self._write_file(1)
+        self._save()
+        self._write_file2(1)
+        self._save()
+        self._write_file(2)
+        self._write_file2(1)
+        self._save()
+        self.vim.cmd('ProHistoryFileBrowse {}'.format('test_file_1'))
+        check(0, '*')
+        self.vim.vim.feedkeys('j')
+        self.vim.vim.feedkeys('j')
+        later(lambda: self.vim.buffer.content.length.should.equal(3))
+        self.vim.vim.feedkeys('s')
+        self._await_commit(0)
+        self.vim.buffer.content.should.equal(List(marker_text))
+        self.repo.history.drain.should.have.length_of(5)
+
+    def test(self):
+        self.vim.cmd_sync('edit test.file')
+        self.vim.buffer.set_content(['a', 'b'])
+        self.vim.cmd_sync('edit! test.file')
+        self._save()
 
 
 class HistoryPickSpec(_HistorySpec, _BrowseHelpers):

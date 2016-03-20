@@ -163,7 +163,7 @@ class Plugin(ProteomeComponent):
                 .or_else(self._clone_repo_name(uri))
             url = self._clone_url(uri)
             return (
-                self.data.main_clone_dir.map2(name, _ / _)
+                self.data.main_clone_dir.ap2(name, _ / _)
                 .to_either('invalid parameter: {}'.format(uri)) /
                 F(self._clone_repo, url)
             )

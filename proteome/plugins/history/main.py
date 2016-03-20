@@ -3,12 +3,14 @@ from datetime import datetime
 
 from fn import _, F
 
+from dulwich.object_store import tree_lookup_path
+
 from tryp.lazy import lazy
-from tryp import Map, __, Just, Empty, may, List, Maybe
+from tryp import Map, __, Just, Empty, may, List, Maybe, Right
 from tryp.util.numeric import try_convert_int
 from tryp.async import gather_sync_flat
 
-from trypnv.machine import (may_handle, message, handle, IO)
+from trypnv.machine import (may_handle, message, handle, IO, RunTask, Info)
 from trypnv.machine import Error
 from trypnv.record import field, dfield, Record, lazy_list_field, maybe_field
 from trypnv.nvim import ScratchBuilder, ScratchBuffer
@@ -26,7 +28,10 @@ from proteome.plugins.history.messages import (HistoryPrev, HistoryNext,
                                                QuitBrowse, Commit,
                                                HistoryBufferNext,
                                                HistoryBufferPrev, HistoryPick,
-                                               HistoryRevert)
+                                               HistoryRevert,
+                                               HistoryFileBrowse,
+                                               HistorySwitchFile,
+                                               CommitCurrent)
 from proteome.plugins.history.data import History, HistoryT, HistoryState
 from proteome.plugins.history.process import HistoryGit
 from proteome.plugins.history.patch import Patch
@@ -57,6 +62,14 @@ class BrowseMachine(ProteomeComponent):
             sel = self.data.selected
             return List.wrap(enumerate(self.data.commits[:sel + 20]))\
                 .flat_smap(lambda i, a: a.browse_format(i == sel))
+
+        @property
+        def selected_commit(self):
+            return self.data.commits.lift(self.data.selected)
+
+        @property
+        def selected_id(self):
+            return self.selected_commit / _.hex
 
         def _create_mappings(self):
             List.wrap('jksprq').foreach(self._create_mapping)
@@ -122,7 +135,12 @@ class BrowseMachine(ProteomeComponent):
         @may
         def _switch(self):
             q = QuitBrowse(self.buffer)
-            return (HistorySwitch(self.data.selected).pub, q, q.pub)
+            switch = (
+                self.data.path //
+                (lambda path: self.selected_id / F(HistorySwitchFile, path)) |
+                HistorySwitch(self.data.selected)
+            )
+            return (switch.pub, q, q.pub)
 
         @may_handle(QuitBrowse)
         def quit(self):
@@ -247,19 +265,6 @@ class Plugin(ProteomeComponent):
             ''' initialize repository states '''
             return self._with_repos(lambda a: Just(a.state))
 
-        # TODO handle broken repo
-        # TODO allow specifying target
-        @may_handle(Commit)
-        async def commit(self):
-            async def awa(a):
-                return await a[1].add_commit_all(a[0], self.executor,
-                                                 self._timestamp)
-            results = await gather_sync_flat(self.projects & self._repos_ro,
-                                             awa)
-            new_repos = results\
-                .fold_map(self.state.repos, lambda s: (s.project, s))
-            return Just(self._with_sub(self.state.set(repos=new_repos)))
-
         def _switch(self, f):
             def notify(repo):
                 self.vim.reload_windows()
@@ -284,6 +289,15 @@ class Plugin(ProteomeComponent):
                 .map(__.select)\
                 .flat_map(self._switch)
 
+        @handle(HistorySwitchFile)
+        def switch_file(self):
+            return (
+                self._current_repo_ro /
+                __.checkout_file(self.msg.id, self.msg.path) /
+                __.map(lambda a: CommitCurrent()) /
+                RunTask
+            )
+
         @may_handle(HistoryBufferPrev)
         def history_buffer_prev(self):
             pass
@@ -291,12 +305,8 @@ class Plugin(ProteomeComponent):
         @may_handle(HistoryStatus)
         def history_status(self):
             def log_status(repo):
-                if repo.status:
-                    msg = 'history repo dirty'
-                else:
-                    msg = 'history repo clean'
-                self.log.info(msg)
-                return Empty()
+                state = 'dirty' if repo.status else 'clean'
+                return Info('history repo {}'.format(state)).pub
             self._with_current_repo(_ / log_status)
 
         @may_handle(HistoryLog)
@@ -304,7 +314,7 @@ class Plugin(ProteomeComponent):
             self._current_repo_ro / _.log_formatted % self.vim.multi_line_info
 
         def _build_browse(self, repo, commits, path: Maybe[Path]):
-            relpath = path / repo.relpath
+            relpath = path // repo.relpath
             return ScratchBuilder().build.unsafe_perform_io(self.vim)\
                 .leffect(self._io_error)\
                 .map(lambda a: BrowseState(repo=repo, current=0,
@@ -322,6 +332,16 @@ class Plugin(ProteomeComponent):
         @handle(HistoryBrowse)
         def history_browse(self):
             return self._browse(_.history_info)
+
+        @handle(HistoryFileBrowse)
+        def history_file_browse(self):
+            path = Path(
+                self.vim.buffer.name if self.msg.path == '' else self.msg.path)
+            return self._current_repo_ro // __.relpath(path) / (
+                lambda p: self._browse(__.file_history_info(p),
+                                       path=Just(p))
+            ) | Right(
+                Error('current file \'{}\' not in current repo'.format(path)))
 
         def _io_error(self, exc):
             self.log.caught_exception('nvim io', exc)
@@ -387,6 +407,14 @@ class Plugin(ProteomeComponent):
             apply = lambda pat: self._apply_patch(project, pat, commit)
             return patch.map(apply)
 
+        @may
+        def _check_pick_status(self, commit, result):
+            if result.success:
+                self.vim.reload_windows()
+                self.log.info('picked {}'.format(commit.num_since))
+            else:
+                return Error(Plugin.failed_pick_err).pub
+
         async def _apply_patch(self, project, patch, commit):
             executor = Patch(self.vim)
             result = await executor.patch(project, patch)
@@ -399,14 +427,25 @@ class Plugin(ProteomeComponent):
                 await self.executor.revert_abort(project)
             return ret
 
-        @may
-        def _check_pick_status(self, commit, result):
-            if result.success:
-                self.vim.reload_windows()
-                self.log.info('picked {}'.format(commit.num_since))
-            else:
-                return Error(Plugin.failed_pick_err).pub
+        async def _add_commit_coro(self, data):
+            project, repo = data
+            return await repo.add_commit_all(project, self.executor,
+                                             self._timestamp)
 
-__all__ = ('Commit', 'Plugin', 'HistoryPrev', 'HistoryNext',
-           'HistoryBufferPrev', 'HistoryBufferNext', 'HistorySwitch',
-           'HistoryPick', 'HistoryRevert')
+        # TODO handle broken repo
+        # TODO allow specifying target
+        @may_handle(Commit)
+        async def commit(self):
+            wanted = self.msg.projects
+            filt = (lambda p: not wanted or wanted.exists(p.match_ident))
+            candidates = self.projects.filter(filt).flat_pair(self._repo_ro)
+            results = await gather_sync_flat(candidates, self._add_commit_coro)
+            new_repos = results\
+                .fold_map(self.state.repos, lambda s: (s.project, s))
+            return Just(self._with_sub(self.state.set(repos=new_repos)))
+
+        @may_handle(CommitCurrent)
+        def commit_current(self):
+            return Commit(*(self.data.current / _.name).to_list)
+
+__all__ = ('Plugin',)

@@ -15,7 +15,8 @@ from proteome.plugins.history.messages import (HistoryPrev, HistoryNext,
                                                HistoryBrowse,
                                                HistoryBrowseInput,
                                                HistorySwitch, HistoryPick,
-                                               HistoryRevert)
+                                               HistoryRevert,
+                                               HistoryFileBrowse)
 from proteome.main import Proteome
 from proteome.nvim import NvimFacade
 from proteome.logging import Logging
@@ -185,6 +186,10 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
 
     @msg_command(HistoryBrowse)
     def pro_history_browse(self):
+        pass
+
+    @msg_command(HistoryFileBrowse)
+    def pro_history_file_browse(self):
         pass
 
     @msg_command(HistoryBrowseInput)

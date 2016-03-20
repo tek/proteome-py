@@ -1,7 +1,9 @@
 from trypnv.machine import message
 
-Commit = message('Commit')
+Commit = message('Commit', varargs='projects')
+CommitCurrent = message('CommitCurrent')
 HistorySwitch = message('HistorySwitch', 'index')
+HistorySwitchFile = message('HistorySwitchFile', 'path', 'id')
 HistoryPrev = message('HistoryPrev')
 HistoryNext = message('HistoryNext')
 HistoryBufferPrev = message('HistoryBufferPrev')
@@ -9,6 +11,7 @@ HistoryBufferNext = message('HistoryBufferNext')
 HistoryStatus = message('HistoryStatus')
 HistoryLog = message('HistoryLog')
 HistoryBrowse = message('HistoryBrowse')
+HistoryFileBrowse = message('HistoryBrowse', opt_fields=(('path', ''),))
 HistoryBrowseInput = message('HistoryBrowseInput', 'keyseq')
 HistoryPick = message('HistoryPick', 'index')
 HistoryRevert = message('HistoryRevert', 'index')

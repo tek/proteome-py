@@ -111,7 +111,7 @@ class Env(Data, Logging):
     def main_clone_dir(self):
         temp = lambda: tempfile.mkdtemp(prefix='proteome_clone')
         return self.resolver.bases.head\
-            .map2(self.main_type, _ / _)\
+            .ap2(self.main_type, _ / _)\
             .or_else(temp)
 
 __all__ = ['Env']
