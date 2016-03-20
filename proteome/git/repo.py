@@ -12,6 +12,7 @@ from dulwich import repo, config, porcelain
 from dulwich.repo import BASE_DIRECTORIES, OBJECTDIR
 from dulwich.object_store import DiskObjectStore
 from dulwich.objects import Commit
+from dulwich.patch import write_object_diff
 
 from tryp import may, List, Maybe, Map, Empty, Just, __, Left, Either
 from tryp.logging import Logging
@@ -48,8 +49,17 @@ def format_since(stamp):
     return '{} ago'.format(t)
 
 
+def file_diff(f, store, old_tree, new_tree, path):
+    changes = store.tree_changes(old_tree, new_tree)
+    for (oldpath, newpath), (oldmode, newmode), (oldsha, newsha) in changes:
+        if newpath.decode() == path:
+            write_object_diff(f, store, (oldpath, oldmode, oldsha),
+                                        (newpath, newmode, newsha))
+
+
 class RepoState(Record):
     current = maybe_field(str)
+
 
 class ProjectRepoState(RepoState):
     project = field(Project)
@@ -68,13 +78,29 @@ class Diff(Logging):
 
     @property
     def patch_lines(self):
-        return self.patch / __.splitlines() | ['no diff']
+        return self._patch_lines(self.patch)
 
     @lazy
     def patch(self):
+        return self._patch(
+            lambda f:
+            porcelain.diff_tree(self.repo.repo, self.parent, self.target, f)
+        )
+
+    def show_file(self, path: str):
+        return self._patch_lines(self.file_patch(path))
+
+    def file_patch(self, path: str):
+        return self._patch(
+            lambda f:
+            file_diff(f, self.repo.repo.object_store, self.parent, self.target,
+                      path)
+        )
+
+    def _patch(self, diff):
         f = io.BytesIO()
         try:
-            porcelain.diff_tree(self.repo.repo, self.parent, self.target, f)
+            diff(f)
         except Exception as e:
             return Left(e)
         else:
@@ -84,6 +110,9 @@ class Diff(Logging):
                 return Try(p.decode) / __.replace(nl, '')
             else:
                 return Left('empty diff')
+
+    def _patch_lines(self, patch):
+        return patch / __.splitlines() | ['no diff']
 
     @property
     def revert(self):
@@ -126,11 +155,14 @@ class CommitInfo(Record):
         prefix = '*' if self.current else ' '
         return '{} {} {}'.format(prefix, self.hex[:8], self.since)
 
-    def browse_format(self, show_diff: bool):
+    def browse_format(self, show_diff: bool, path: Maybe[Path]=Empty()):
         prefix = '*' if self.current else ' '
         info = '{}  {}    {}'.format(prefix, self.hex[:8], self.since)
-        diff = self.diff.map(_.show) if show_diff else Empty()
+        diff = self.show_diff(path) if show_diff else Empty()
         return List(info) + (diff | List())
+
+    def show_diff(self, path: Maybe[Path]=Empty()):
+        return self.diff / (lambda d: path.cata(d.show_file, lambda: d.show))
 
     @property
     def empty(self):
@@ -279,6 +311,7 @@ class Repo(Logging):
         f = lambda: Map(self.status.staged).values.exists(bool)
         return Try(f) | True
 
+    # FIXME checking out master seems to change files to wrong states sometimes
     def commit_master(self, msg):
         committed = Try(
             self.repo.do_commit,
@@ -310,6 +343,16 @@ class Repo(Logging):
     def history_at(self, sha):
         return self.repo.get_walker(include=[sha.encode()])
 
+    def file_history(self, path: Path):
+        relpath = str(self.relpath(path))
+        def filt(entry):
+            paths = List.wrap(entry.changes()) / _.new.path / __.decode()
+            return paths.contains(relpath)
+        return self.history_raw.filter(filt) / _.commit
+
+    def relpath(self, path: Path):
+        return path.relative_to(self.base) if path.is_absolute else path
+
     @property
     def history_ids(self):
         return self.history.map(_.id)
@@ -332,12 +375,21 @@ class Repo(Logging):
     def log_formatted(self):
         return self.history_info / _.log_format
 
-    @lazy
-    def history_info(self):
-        return self.history\
+    def file_log_formatted(self, path):
+        return self.file_history_info(path) / _.log_format
+
+    def _history_info(self, commits):
+        return commits\
             .with_index\
             .smap(self.commit_info)\
             .filter_not(_.empty)
+
+    @lazy
+    def history_info(self):
+        return self._history_info(self.history)
+
+    def file_history_info(self, path):
+        return self._history_info(self.file_history(path))
 
     @lazy
     def current_commit(self):

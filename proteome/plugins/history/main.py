@@ -10,7 +10,7 @@ from tryp.async import gather_sync_flat
 
 from trypnv.machine import (may_handle, message, handle, IO)
 from trypnv.machine import Error
-from trypnv.record import field, dfield, Record, lazy_list_field
+from trypnv.record import field, dfield, Record, lazy_list_field, maybe_field
 from trypnv.nvim import ScratchBuilder, ScratchBuffer
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
@@ -38,6 +38,7 @@ class BrowseState(Record):
     commits = lazy_list_field()
     buffer = field(ScratchBuffer)
     selected = dfield(0)
+    path = maybe_field(Path)
 
 Init = message('Init')
 
@@ -302,17 +303,25 @@ class Plugin(ProteomeComponent):
         def history_log(self):
             self._current_repo_ro / _.log_formatted % self.vim.multi_line_info
 
+        def _build_browse(self, repo, commits, path: Maybe[Path]):
+            relpath = path / repo.relpath
+            return ScratchBuilder().build.unsafe_perform_io(self.vim)\
+                .leffect(self._io_error)\
+                .map(lambda a: BrowseState(repo=repo, current=0,
+                                           commits=commits, buffer=a,
+                                           path=relpath))
+
+        def _browse(self, f, path: Maybe[Path]=Empty()):
+            commits = lambda r: (r, f(r))
+            return (
+                (self._current_repo_ro / commits)
+                .flat_smap(F(self._build_browse, path=path)) /
+                F(self._add_browse)
+            )
+
         @handle(HistoryBrowse)
         def history_browse(self):
-            def f(repo):
-                commits = repo.history_info
-                return ScratchBuilder().build.unsafe_perform_io(self.vim)\
-                    .leffect(self._io_error)\
-                    .map(lambda a: BrowseState(repo=repo, current=0,
-                                               commits=commits, buffer=a))
-            return self._current_repo_ro\
-                .flat_map(f)\
-                .map(self._add_browse)
+            return self._browse(_.history_info)
 
         def _io_error(self, exc):
             self.log.caught_exception('nvim io', exc)

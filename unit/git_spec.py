@@ -9,6 +9,7 @@ from fn import _
 
 from proteome.git import DulwichRepo
 from proteome.plugins.history import History, HistoryGit
+from proteome.plugins.history.main import BrowseState
 
 from unit.project_spec import LoaderSpec
 from unit._support.async import test_loop
@@ -19,6 +20,14 @@ from tryp.lazy import lazy
 
 from dulwich.index import (
     _tree_to_fs_path, blob_from_path_and_stat)
+
+from trypnv.nvim import ScratchBuffer
+
+
+class MockScratchBuffer(ScratchBuffer):
+
+    def __init__(self) -> None:
+        pass
 
 
 class GitSpec(LoaderSpec):
@@ -112,7 +121,7 @@ class GitSpec(LoaderSpec):
         )
 
     @with_repo
-    def logg(self, repo, commit):
+    def repo_log(self, repo, commit):
         def marked(lg, index):
             lg[index][0].should.equal('*')
         first = 'first'
@@ -127,6 +136,31 @@ class GitSpec(LoaderSpec):
             (lambda a: marked(a.log_formatted, 0)) /
             __.prev() %
             (lambda a: marked(a.log_formatted, 1))
+        )
+
+    @with_repo
+    def file_browse(self, repo, commit):
+        def check(repo):
+            diffs = (repo.file_history_info(file1).drain /
+                     __.browse_format(True, Just(str(repo.relpath(file1)))))
+            diffs.should.have.length_of(2)
+            diffs[0].find(lambda a: name3 in a).should.be.empty
+        first = 'first'
+        second = 'second'
+        third = 'third'
+        file1 = (self.pro1.root / 'test_file_2')
+        name3 = 'test_file_3'
+        file2 = (self.pro1.root / name3)
+        file1.write_text(first)
+        return (
+            repo /
+            commit(first) @
+            (lambda: file1.write_text(second)) @
+            (lambda: file2.write_text(first)) /
+            commit(second) @
+            (lambda: file2.write_text(third)) /
+            commit(third) %
+            check
         )
 
     @with_repo
