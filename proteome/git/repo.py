@@ -304,8 +304,7 @@ class Repo(Logging):
     @coroutine
     def add_commit_all(self, project, executor, msg):
         if (yield from executor.add_all(project)).success and self.index_dirty:
-            ret = self.commit_master(msg)
-            return ret
+            return self.commit_master(msg)
         else:
             return Just(self.state)
 
@@ -325,15 +324,16 @@ class Repo(Logging):
             message=msg.encode(),
             ref=self._master_ref_b,
         )
-        return committed // (lambda a: self.to_master())
+        return committed // (lambda a: self.reset_master())
 
     def to_master(self):
         return self.master_commit.map(self._switch)
 
     def reset_master(self):
         def set_ref(ref):
-            self.repo[b'HEAD'] = ref
-        return self._master_id / set_ref / (lambda a: self.state)
+            self.repo[b'HEAD'] = ref.encode()
+            return self.state.set(current=Just(ref))
+        return self._master_id / set_ref
 
     @property
     def master_commit(self):
