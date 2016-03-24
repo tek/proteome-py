@@ -206,12 +206,6 @@ class FileHistoryBrowseSpec(_HistorySpec, _BrowseHelpers):
         self.vim.buffer.content.should.equal(List(marker_text))
         self.repo.history.drain.should.have.length_of(5)
 
-    def test(self):
-        self.vim.cmd_sync('edit test.file')
-        self.vim.buffer.set_content(['a', 'b'])
-        self.vim.cmd_sync('edit! test.file')
-        self._save()
-
 
 class HistoryPickSpec(_HistorySpec, _BrowseHelpers):
 

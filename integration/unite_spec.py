@@ -31,6 +31,10 @@ class UniteSpec(VimIntegrationSpec):
         temp_dir(str(self.type1_base / self.other))
         temp_dir(str(self.base2 / self.tpe1 / self.other2))
 
+    def _count(self, num):
+        return later(
+            lambda: (self.vim.pvar('projects') / len).should.contain(num))
+
     @_unite
     def select_add(self, unite):
         self._mk_projects()
@@ -56,6 +60,14 @@ class UniteSpec(VimIntegrationSpec):
         later(lambda: self.vim.buffer.content.should.equal(lines))
 
     @_unite
+    def selectable_add(self, unite):
+        self._mk_projects()
+        self.vim.cmd('ProSelectAddAll -auto-resize')
+        self._wait(0.1)
+        self.vim.cmd('call feedkeys("\\<space>\\<space>\\<space>\\<cr>")')
+        self._count(3)
+
+    @_unite
     def activate(self, unite):
         def active_type(tpe):
             self.vim.pvar('active').map(_['tpe']).should.contain(tpe)
@@ -68,24 +80,32 @@ class UniteSpec(VimIntegrationSpec):
 
     @_unite
     def delete(self, unite):
-        def count(num):
-            return (self.vim.pvar('projects') / len).should.contain(num)
         self.vim.cmd('ProAdd tpe2/dep')
-        later(F(count, 2))
+        self._count(2)
         self.vim.cmd('Projects')
         self._wait(0.1)
         self.vim.cmd('call feedkeys("\\<tab>\\<esc>k\\<cr>")')
-        later(F(count, 1))
+        self._count(1)
 
     @_unite
     def delete_by_mapping(self, unite):
-        def count(num):
-            return (self.vim.pvar('projects') / len).should.contain(num)
         self.vim.cmd('ProAdd tpe2/dep')
-        later(F(count, 2))
+        self._count(2)
         self.vim.cmd('Projects')
         self._wait(0.1)
         self.vim.feedkeys('d')
-        later(F(count, 1))
+        self._count(1)
+
+    @_unite
+    def selectable_delete(self, unite):
+        ''' Remove two projects
+        by selecting them via `<space>` and pressing `d`
+        '''
+        self.vim.cmd('ProAdd tpe2/dep')
+        self._count(2)
+        self.vim.cmd('Projects')
+        self._wait(0.1)
+        self.vim.cmd('call feedkeys("\\<space>\\<space>d")')
+        self._count(0)
 
 __all__ = ('UniteSpec',)

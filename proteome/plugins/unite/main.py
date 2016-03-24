@@ -29,7 +29,7 @@ class Plugin(ProteomeComponent):
         delete_action = Map(name='delete', handler=Id.delete_project,
                             desc='delete project')
         activate_action = Map(name='activate', handler=Id.activate_project,
-                              desc='activate project')
+                              desc='activate project', is_selectable=0)
         project = UniteKind(Id.project, List(activate_action, delete_action))
         addable.define(self.vim)
         all_addable.define(self.vim)

@@ -106,8 +106,11 @@ class UniteKind(UniteEntity):
     '{name}': {{
         'func': function('{handler}'),
         'description': '{desc}',
+        'is_selectable': '{is_selectable}',
     }}
     '''.replace('\n', '')
+
+    _defaults = Map(is_selectable=1)
 
     @property
     def tpe(self):
@@ -115,7 +118,7 @@ class UniteKind(UniteEntity):
 
     def __init__(self, name: str, actions: List[Map]) -> None:
         super().__init__(name)
-        self.actions = actions
+        self.actions = actions / self._defaults.merge
         self.default = actions.head / _['name'] | 'none'
 
     @property

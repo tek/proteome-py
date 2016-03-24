@@ -36,7 +36,13 @@ def unite_candidates(name):
 
 
 def _unite_word(args):
-    return List.wrap(args).lift(0) / Map // __.get('word')
+    first = List.wrap(args).lift(0)
+    candidates = (
+        first.to_list.flatten
+        if first.exists(lambda a: isinstance(a, list))
+        else first
+    )
+    return candidates / Map // __.get('word')
 
 
 def unite_action(name):
