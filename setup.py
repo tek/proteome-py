@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version_parts = (7, 4, 0)
+version_parts = (7, 4, 1)
 version = '.'.join(map(str, version_parts))
 
 setup(
@@ -15,6 +15,7 @@ setup(
         exclude=['unit', 'unit.*', 'integration', 'integration.*']),
     install_requires=[
         'tryp-nvim>=7.4.0',
+        'tryp>=7.4.0',
         'dulwich',
     ]
 )
