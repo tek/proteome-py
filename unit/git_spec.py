@@ -1,25 +1,14 @@
-import io
-import os
-from pathlib import Path
 from functools import wraps
-
-from flexmock import flexmock  # NOQA
 
 from fn import _
 
-from proteome.git import DulwichRepo
 from proteome.plugins.history import History, HistoryGit
-from proteome.plugins.history.main import BrowseState
 
 from unit.project_spec import LoaderSpec
 from unit._support.async import test_loop
 
-from tryp import Just, __, List, F, curried
-from tryp.test import temp_file
+from tryp import __, curried
 from tryp.lazy import lazy
-
-from dulwich.index import (
-    _tree_to_fs_path, blob_from_path_and_stat)
 
 from trypnv.nvim import ScratchBuffer
 
@@ -170,4 +159,4 @@ class GitSpec(LoaderSpec):
             (lambda a: a.current_commit_info.map(_.num).should.contain(0))
         )
 
-__all__ = ('GitSpec', 'NoCommitRepoSpec')
+__all__ = ('GitSpec',)
