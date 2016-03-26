@@ -353,7 +353,11 @@ class Repo(Logging):
     def file_history(self, path: Path):
         relpath = str(self.relpath(path) | '///')
         def filt(entry):
-            paths = List.wrap(entry.changes()) / _.new.path / __.decode()
+            paths = (
+                List.wrap(entry.changes()) //
+                (F(_.new.path) >> Maybe) /
+                __.decode()
+            )
             return paths.contains(relpath)
         return self.history_raw.filter(filt) / _.commit
 
