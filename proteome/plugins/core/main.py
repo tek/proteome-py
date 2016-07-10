@@ -90,10 +90,13 @@ class Plugin(ProteomeComponent):
 
         @handle(RemoveByIdent)
         def remove_by_ident(self):
-            switch = self.data.is_ident_current(self.msg.ident)\
-                .maybe(SetProjectIndex(0)) | Nop
-            return self.data.project(self.msg.ident)\
-                .map(lambda a: (self.data - a, Removed(a).pub, switch))
+            id = self.msg.ident
+            target = self.data.projects.index_of_ident(id) | float('nan')
+            cur = self.data.current_index
+            switch = SetProjectIndex(0) if target == cur else Nop
+            data = self.data.set_index(cur - 1) if target < cur else self.data
+            return self.data.project(id)\
+                .map(lambda a: (data - a, Removed(a).pub, switch))
 
         @may_handle(Removed)
         def removed(self):
