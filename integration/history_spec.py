@@ -120,7 +120,7 @@ class _BrowseHelpers(object):
         def checker():
             buf = self.vim.buffer.target
             len(buf).should.be.greater_than(max(3, index + 1))
-            buf[index].decode().startswith(start).should.be.ok
+            buf[index].startswith(start).should.be.ok
         later(checker)
 
 
