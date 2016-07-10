@@ -1,6 +1,3 @@
-import sure  # NOQA
-from flexmock import flexmock  # NOQA
-
 from fn import _
 
 from tryp.test import later

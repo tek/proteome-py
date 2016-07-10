@@ -3,10 +3,10 @@ from pathlib import Path
 
 from fn import F, _
 
-from tryp import List, Map, Empty
+from tryp import List, Map, Empty, may
 from tryp.lazy import lazy
 
-from trypnv.machine import handle, may_handle, Error, Info
+from trypnv.machine import handle, may_handle, Error, Info, Nop
 from trypnv.process import JobClient
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
@@ -17,6 +17,14 @@ from proteome.plugins.core.message import (
     SetProject, SetProjectIdent, SetProjectIndex, SwitchRoot, Added,
     Removed, ProjectChanged, BufEnter, Initialized, MainAdded, Show,
     AddByParams, CloneRepo)
+
+
+@may
+def valid_index(i, total):
+    if i >= 0 and i < total:
+        return i
+    elif i < 0 and -i <= total:
+        return total + i
 
 
 class Plugin(ProteomeComponent):
@@ -80,11 +88,12 @@ class Plugin(ProteomeComponent):
             if self.data.initialized:
                 return SetProjectIndex(-1)
 
-        # TODO switch project if removed current
         @handle(RemoveByIdent)
         def remove_by_ident(self):
+            switch = self.data.is_ident_current(self.msg.ident)\
+                .maybe(SetProjectIndex(0)) | Nop
             return self.data.project(self.msg.ident)\
-                .map(lambda a: (self.data - a, Removed(a).pub))
+                .map(lambda a: (self.data - a, Removed(a).pub, switch))
 
         @may_handle(Removed)
         def removed(self):
@@ -113,10 +122,13 @@ class Plugin(ProteomeComponent):
                     err = '\'{}\' is not a valid project identifier'
                     return Error(err.format(self.msg.ident))
 
-        @may_handle(SetProjectIndex)
+        @handle(SetProjectIndex)
         def set_project_index(self):
-            if self.msg.index < self.data.project_count:
-                return self.data.set_index(self.msg.index), SwitchRoot()
+            return (
+                valid_index(self.msg.index, self.data.project_count) /
+                self.data.set_index /
+                (lambda a: (a, SwitchRoot()))
+            )
 
         @handle(SetProjectIdent)
         def set_project_ident(self):
@@ -129,11 +141,10 @@ class Plugin(ProteomeComponent):
                 self.vim.switch_root(pro.root)  # type: ignore
                 pc = ProjectChanged(pro)
                 info = 'switched root to {}'
-                return (pc, Info(info.format(pro.ident))) if self.msg.notify else pc
-            if self.data.initialized:
-                return self.data.current.map(go)
-            else:
-                return Empty()
+                return ((pc, Info(info.format(pro.ident))) if self.msg.notify
+                        else pc)
+            return (self.data.current.map(go) if self.data.initialized else
+                    Empty())
 
         @may_handle(ProjectChanged)
         def project_changed(self):

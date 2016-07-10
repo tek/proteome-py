@@ -1,5 +1,3 @@
-from pathlib import Path
-import os
 import logging
 from contextlib import contextmanager
 import json
@@ -7,8 +5,6 @@ import asyncio
 
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
-
-from fn import _
 
 import neovim
 
@@ -37,7 +33,6 @@ def _mock_async(self, f):
     return ret
 
 
-@property
 def _mock_proxy(self):
     return self
 
@@ -56,7 +51,7 @@ class ProteomePlugin_(IntegrationSpec):
         self.neovim = neovim.attach('child', argv=argv)
         NvimFacade.async = _mock_async
         NvimFacade.main_event_loop = _nop_main_loop
-        NvimFacade.proxy = _mock_proxy
+        NvimFacade.proxy = property(_mock_proxy)
         NvimFacade.clean = lambda self: True
         self.proteome = ProteomeNvimPlugin(self.neovim)
         self.vim = self.proteome.vim
@@ -130,12 +125,22 @@ class ProteomePlugin_(IntegrationSpec):
         root = temp_dir('plugin/from_params')
         params = Map(
             root=str(root),
-            history=False
+            history=False,
         )
         self.proteome.proteome_start()
         self.proteome.pro_add([ident] + json.dumps(params).split(' '))
         self._await()
         self._projects.last.should.contain(Project.of(name, root, Just(tpe)))
+
+    @main_looped
+    def remove_by_ident(self):
+        self.proteome.proteome_start()
+        self.proteome.proteome_post_startup()
+        self._await()
+        self.proteome.pro_add(['python/pro2'])
+        later(lambda: self._env.current_index.should.equal(1))
+        self.proteome.pro_remove(['python/pro2'])
+        later(lambda: self._env.current_index.should.equal(0))
 
     @main_looped
     def ctags(self):

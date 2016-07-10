@@ -274,4 +274,4 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
     def _project_becomes(self, name):
         self._pvar_becomes_map('active', name, _['name'])
 
-__all__ = ['IntegrationSpec']
+__all__ = ('IntegrationSpec', 'VimIntegrationSpec')

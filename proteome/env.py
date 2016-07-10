@@ -10,7 +10,7 @@ from trypnv.data import Data
 from trypnv.record import field
 from trypnv import NvimFacade
 
-from tryp import List, Map, Just
+from tryp import List, Map, Just, Boolean
 
 
 class Env(Data, Logging):
@@ -113,5 +113,9 @@ class Env(Data, Logging):
         return self.resolver.bases.head\
             .ap2(self.main_type, _ / _)\
             .or_else(temp)
+
+    def is_ident_current(self, ident):
+        return Boolean(
+            self.projects.index_of_ident(ident).contains(self.current_index))
 
 __all__ = ['Env']
