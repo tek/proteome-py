@@ -5,7 +5,7 @@ from fn import _
 
 from tryp.test import fixture_path, temp_dir
 
-from tryp import List, Map, Just, Maybe
+from tryp import List, Map, Just, Maybe, Right
 from trypnv.test import IntegrationSpec as TrypnvIntegrationSpec
 from trypnv.test import VimIntegrationSpec as TrypnvVimIntegrationSpec
 
@@ -13,6 +13,7 @@ from proteome.project import Project
 from proteome.nvim import NvimFacade
 from proteome.logging import Logging
 from proteome.test import Spec
+from proteome.nvim_plugin import ProteomeNvimPlugin
 
 
 class IntegrationCommon(Spec):
@@ -68,7 +69,6 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
         self.typed1 = 'type1'
         self.type1_base = temp_dir('projects', self.typed1)
         self.type_bases = Map({self.type1_base: List(self.typed1)})
-        self._setup_plugin()
 
     def _post_start_neovim(self):
         self._set_vars()
@@ -92,173 +92,9 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
         self.vim.set_pvar('history_base', str(self.history_base))
         self.vim.set_pvar('plugins', self._plugins)
 
-    def _setup_plugin(self):
-        self._rplugin_path = fixture_path(
-            'nvim_plugin', 'rplugin', 'python3', 'proteome_nvim.py')
-        self._handlers = [
-            {
-                'sync': 1,
-                'name': 'ProteomeStart',
-                'type': 'command',
-                'opts': {'nargs': 0}
-            },
-            {
-                'sync': 0,
-                'name': 'ProteomePostStartup',
-                'type': 'command',
-                'opts': {'nargs': 0}
-            },
-            {
-                'sync': 0,
-                'name': 'ProAdd',
-                'type': 'command',
-                'opts': {'nargs': '+'}
-            },
-            {
-                'sync': 0,
-                'name': 'ProTo',
-                'type': 'command',
-                'opts': {'nargs': 1}
-            },
-            {
-                'sync': 0,
-                'name': 'ProSave',
-                'type': 'command',
-                'opts': {'nargs': 0}
-            },
-            {
-                'sync': 0,
-                'name': 'ProShow',
-                'type': 'command',
-                'opts': {'nargs': 0}
-            },
-            {
-                'sync': 0,
-                'name': 'ProNext',
-                'type': 'command',
-                'opts': {'nargs': 0}
-            },
-            {
-                'sync': 0,
-                'name': 'ProPrev',
-                'type': 'command',
-                'opts': {'nargs': 0}
-            },
-            {
-                'sync': 0,
-                'name': 'ProHistoryPrev',
-                'type': 'command',
-                'opts': {'nargs': 0}
-            },
-            {
-                'sync': 0,
-                'name': 'ProHistoryNext',
-                'type': 'command',
-                'opts': {'nargs': 0}
-            },
-            {
-                'sync': 0,
-                'name': 'ProHistoryLog',
-                'type': 'command',
-                'opts': {'nargs': 0}
-            },
-            {
-                'sync': 0,
-                'name': 'ProHistoryBrowse',
-                'type': 'command',
-                'opts': {'nargs': 0}
-            },
-            {
-                'sync': 0,
-                'name': 'ProHistoryFileBrowse',
-                'type': 'command',
-                'opts': {'nargs': '?'}
-            },
-            {
-                'sync': 0,
-                'name': 'ProHistoryBrowseInput',
-                'type': 'command',
-                'opts': {'nargs': 1}
-            },
-            {
-                'sync': 0,
-                'name': 'ProHistorySwitch',
-                'type': 'command',
-                'opts': {'nargs': 1}
-            },
-            {
-                'sync': 0,
-                'name': 'ProHistoryPick',
-                'type': 'command',
-                'opts': {'nargs': 1}
-            },
-            {
-                'sync': 0,
-                'name': 'ProClone',
-                'type': 'command',
-                'opts': {'nargs': '+'}
-            },
-            {
-                'sync': 0,
-                'name': 'ProSelectAdd',
-                'type': 'command',
-                'opts': {'nargs': '*'}
-            },
-            {
-                'sync': 0,
-                'name': 'ProSelectAddAll',
-                'type': 'command',
-                'opts': {'nargs': '*'}
-            },
-            {
-                'sync': 0,
-                'name': 'Projects',
-                'type': 'command',
-                'opts': {'nargs': '*'}
-            },
-            {
-                'sync': 1,
-                'name': '_proteome_unite_addable',
-                'type': 'function',
-                'opts': {}
-            },
-            {
-                'sync': 1,
-                'name': '_proteome_unite_all_addable',
-                'type': 'function',
-                'opts': {}
-            },
-            {
-                'sync': 1,
-                'name': '_proteome_unite_projects',
-                'type': 'function',
-                'opts': {}
-            },
-            {
-                'sync': 0,
-                'name': '_proteome_unite_add_project',
-                'type': 'function',
-                'opts': {}
-            },
-            {
-                'sync': 0,
-                'name': '_proteome_unite_activate_project',
-                'type': 'function',
-                'opts': {}
-            },
-            {
-                'sync': 0,
-                'name': '_proteome_unite_delete_project',
-                'type': 'function',
-                'opts': {}
-            },
-            {
-                'sync': 0,
-                'name': 'BufEnter',
-                'type': 'autocmd',
-                'opts': {'pattern': '*'}
-            },
-        ]
+    @property
+    def plugin_class(self):
+        return Right(ProteomeNvimPlugin)
 
     @property
     def _plugins(self):
