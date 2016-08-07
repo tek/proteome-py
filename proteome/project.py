@@ -204,7 +204,7 @@ class Resolver(object):
     def specific(self, tpe: str, name: str) -> Maybe[Path]:
         return self.types\
             .valfilter(_.call('contains', tpe))\
-            .keys\
+            .k\
             .map(_ / name)\
             .find(lambda a: a.is_dir())
 

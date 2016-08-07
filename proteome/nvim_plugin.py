@@ -59,7 +59,7 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
 
     def __init__(self, vim: neovim.Nvim) -> None:
         super().__init__(NvimFacade(vim))
-        self.pro = None  # type: Proteome
+        self.pro = None
         self._post_initialized = False
 
     def state(self):

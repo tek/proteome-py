@@ -25,7 +25,7 @@ class Ctags_(LoaderSpec):
             result = loop.run_until_complete(ctags.gen(p))
             result.success.should.be.ok
         p.tag_file.exists().should.be.ok
-        ctags.current.keys.should.be.empty
+        ctags.current.k.should.be.empty
 
     def fail(self):
         with test_loop() as loop:

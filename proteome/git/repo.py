@@ -314,7 +314,7 @@ class Repo(Logging):
 
     @property
     def index_dirty(self):
-        f = lambda: Map(self.status.staged).values.exists(bool)
+        f = lambda: Map(self.status.staged).v.exists(bool)
         return Try(f) | True
 
     # FIXME checking out master seems to change files to wrong states sometimes
