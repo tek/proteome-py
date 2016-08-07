@@ -93,7 +93,7 @@ class Plugin(ProteomeComponent):
             id = self.msg.ident
             target = self.data.projects.index_of_ident(id) | float('nan')
             cur = self.data.current_index
-            switch = SetProjectIndex(0) if target == cur else Nop
+            switch = SetProjectIndex(0) if target == cur else Nop()
             data = self.data.set_index(cur - 1) if target < cur else self.data
             return self.data.project(id)\
                 .map(lambda a: (data - a, Removed(a).pub, switch))

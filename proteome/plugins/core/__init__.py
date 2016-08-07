@@ -9,4 +9,4 @@ __all__ = ('StageI', 'StageII', 'StageIII', 'StageIV', 'Add', 'RemoveByIdent',
            'Create', 'Next', 'Prev', 'SetProject', 'SetProjectIdent',
            'SetProjectIndex', 'SwitchRoot', 'Save', 'Added', 'Removed',
            'ProjectChanged', 'BufEnter', 'Initialized', 'MainAdded', 'Show',
-           'AddByParams', 'CloneRepo')
+           'AddByParams', 'CloneRepo', 'Plugin')

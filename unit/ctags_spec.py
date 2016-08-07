@@ -1,5 +1,3 @@
-import sure  # NOQA
-from flexmock import flexmock  # NOQA
 from pathlib import Path
 
 from tryp import List, Just
@@ -19,8 +17,8 @@ class Ctags_(LoaderSpec):
         with test_loop() as loop:
             ctags = Ctags(None)
             p = Project.of(self.pypro1_name, self.pypro1_root,
-                        tpe=Just(self.pypro1_type),
-                        langs=List(self.pypro1_type))
+                           tpe=Just(self.pypro1_type),
+                           langs=List(self.pypro1_type))
             p.remove_tag_file()
             result = loop.run_until_complete(ctags.gen(p))
             result.success.should.be.ok
@@ -30,8 +28,8 @@ class Ctags_(LoaderSpec):
     def fail(self):
         with test_loop() as loop:
             ctags = Ctags(None)
-            p = Project.of('invalid', Path(temp_path('invalid')), tpe=Just('c'),
-                        langs=List('c'))
+            p = Project.of('invalid', Path(temp_path('invalid')),
+                           tpe=Just('c'), langs=List('c'))
             result = loop.run_until_complete(ctags.gen(p))
             result.success.should_not.be.ok
 
