@@ -7,8 +7,9 @@ from tryp.lazy import lazy
 from tryp import Map, __, Just, Empty, may, List, Maybe, Right
 from tryp.util.numeric import try_convert_int
 from tryp.async import gather_sync_flat
+from tryp.task import Task
 
-from trypnv.machine import (may_handle, message, handle, IO, RunTask, Info)
+from trypnv.machine import (may_handle, message, handle, RunTask, Info)
 from trypnv.machine import Error
 from trypnv.record import field, dfield, Record, lazy_list_field, maybe_field
 from trypnv.nvim import ScratchBuilder, ScratchBuffer
@@ -375,7 +376,7 @@ class Plugin(ProteomeComponent):
             browse = Browse(state, self.vim)
             return (
                 self._with_browse(self.state.browse + (browse.repo, browse)),
-                IO(browse.run)
+                RunTask(Task(browse.run))
             )
 
         def _remove_browse(self, target: Browse):
