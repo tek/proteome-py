@@ -178,7 +178,7 @@ class Projects(object):
 
 
 def sub_path(base: Path, path: Path):
-    check = lambda: path.relative_to(base)
+    check = lambda: path.relative_to(str(base))
     return Maybe.from_call(check, exc=ValueError)\
         .map(_.parts)\
         .map(List.wrap)
