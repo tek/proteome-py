@@ -28,6 +28,7 @@ class Proteome(ProteomeState):
         core = 'proteome.plugins.core'
         ProteomeState.__init__(self, vim, List.wrap(cons(core, plugins)))
 
+    @property
     def init(self):
         return Env(  # type: ignore
             config_path=self._config_path,
