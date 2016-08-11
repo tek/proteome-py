@@ -10,8 +10,8 @@ from tryp import List
 
 class ProteomeComponent(ModularMachine, HasNvim, Logging):
 
-    def __init__(self, name: str, vim: NvimFacade) -> None:
-        Machine.__init__(self, name)
+    def __init__(self, name: str, vim: NvimFacade, parent=None) -> None:
+        Machine.__init__(self, name, parent)
         HasNvim.__init__(self, vim)
 
 
