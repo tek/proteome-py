@@ -446,6 +446,7 @@ class Repo(Logging):
         return (Task.call(self.repo.path_blob, commit_sha, path)
                 .map2(F(build_file_from_blob, target_path=path_s)))
 
+
 class RepoT(Transformer[Repo]):
 
     @property

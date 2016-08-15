@@ -38,7 +38,7 @@ def unite_candidates(name):
 def _unite_word(args):
     first = List.wrap(args).lift(0)
     candidates = (
-        first.to_list.flatten
+        first.to_list.join
         if first.exists(lambda a: isinstance(a, list))
         else first
     )

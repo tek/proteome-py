@@ -26,6 +26,7 @@ null = Path('/dev/null')
 class DictProteome(Proteome):
     _data_type = dict
 
+    @property
     def init(self):
         return dict()
 

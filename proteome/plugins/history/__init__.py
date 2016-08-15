@@ -396,7 +396,7 @@ class Plugin(ProteomeComponent):
         def _pick_commit(self):
             index = try_convert_int(self.msg.index)
             lifter = self._current_repo_ro / _.history_info / _.lift
-            return index.ap(lifter).flatten.product(self.current)
+            return index.ap(lifter).join.product(self.current)
 
         def _pick_patch(self, commit: CommitInfo, project: Project):
             patch = (

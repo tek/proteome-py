@@ -130,7 +130,7 @@ class UniteKind(UniteEntity):
 
     @property
     def data(self):
-        actions = self.actions.map(self._action).join(', ')
+        actions = self.actions.map(self._action).mk_string(', ')
         return self._templ.format(name=self.name, actions=actions,
                                   default=self.default)
 
