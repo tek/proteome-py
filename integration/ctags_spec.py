@@ -5,10 +5,10 @@ from tryp.test import later
 
 from tryp import List
 
-from integration._support.base import VimIntegrationSpec
+from integration._support.base import ProteomePluginIntegrationSpec
 
 
-class _CtagsSpec(VimIntegrationSpec):
+class _CtagsSpec(ProteomePluginIntegrationSpec):
 
     def _pre_start(self):
         self.tag_file = self.main_project / '.tags'

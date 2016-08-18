@@ -3,7 +3,7 @@ from functools import wraps
 from tryp import List, env, _, F
 from tryp.test import later, temp_dir
 
-from integration._support.base import VimIntegrationSpec
+from integration._support.base import ProteomePluginIntegrationSpec
 
 
 def _unite(f):
@@ -19,7 +19,7 @@ def _unite(f):
     return wrapper
 
 
-class UniteSpec(VimIntegrationSpec):
+class UniteSpec(ProteomePluginIntegrationSpec):
 
     @property
     def _plugins(self):

@@ -6,8 +6,7 @@ from fn import _
 from tryp.test import fixture_path, temp_dir
 
 from tryp import List, Map, Just, Maybe, Right
-from trypnv.test import IntegrationSpec as TrypnvIntegrationSpec
-from trypnv.test import VimIntegrationSpec as TrypnvVimIntegrationSpec
+from trypnv.test import IntegrationSpec, PluginIntegrationSpec
 
 from proteome.project import Project
 from proteome.nvim import NvimFacade
@@ -33,7 +32,7 @@ class IntegrationCommon(Spec):
         self._cd_back()
 
 
-class IntegrationSpec(TrypnvIntegrationSpec, IntegrationCommon):
+class ProteomeIntegrationSpec(IntegrationSpec, IntegrationCommon):
 
     def setup(self):
         super().setup()
@@ -51,7 +50,8 @@ class IntegrationSpec(TrypnvIntegrationSpec, IntegrationCommon):
         return List(*pros).smap(self.mk_project)
 
 
-class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
+class ProteomePluginIntegrationSpec(PluginIntegrationSpec, IntegrationCommon,
+                                    Logging):
 
     def setup(self):
         super().setup()
@@ -64,6 +64,7 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
         return NvimFacade(vim)
 
     def _pre_start_neovim(self):
+        super()._pre_start_neovim()
         self.base = temp_dir('projects', 'base')
         self.base2 = temp_dir('projects', 'base2')
         self.typed1 = 'type1'
@@ -71,6 +72,7 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
         self.type_bases = Map({self.type1_base: List(self.typed1)})
 
     def _post_start_neovim(self):
+        super()._post_start_neovim()
         self._set_vars()
         self.tpe1 = 'tpe'
         self.tpe2 = 'tpe2'
@@ -110,4 +112,4 @@ class VimIntegrationSpec(TrypnvVimIntegrationSpec, IntegrationCommon, Logging):
     def _project_becomes(self, name):
         self._pvar_becomes_map('active', name, _['name'])
 
-__all__ = ('IntegrationSpec', 'VimIntegrationSpec')
+__all__ = ('ProteomeIntegrationSpec', 'ProteomePluginIntegrationSpec')

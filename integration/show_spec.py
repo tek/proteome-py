@@ -3,10 +3,10 @@ from flexmock import flexmock  # NOQA
 
 from tryp import List
 
-from integration._support.base import VimIntegrationSpec
+from integration._support.base import ProteomePluginIntegrationSpec
 
 
-class ShowSpec(VimIntegrationSpec):
+class ShowSpec(ProteomePluginIntegrationSpec):
 
     @property
     def _plugins(self):

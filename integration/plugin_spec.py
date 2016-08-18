@@ -20,7 +20,7 @@ from proteome.nvim_plugin import ProteomeNvimPlugin
 from proteome.project import Project
 from proteome.nvim import NvimFacade
 
-from integration._support.base import IntegrationSpec
+from integration._support.base import ProteomeIntegrationSpec
 
 
 @contextmanager
@@ -37,7 +37,7 @@ def _mock_proxy(self):
     return self
 
 
-class ProteomePlugin_(IntegrationSpec):
+class ProteomePlugin_(ProteomeIntegrationSpec):
 
     def setup(self):
         trypnv.in_vim = False

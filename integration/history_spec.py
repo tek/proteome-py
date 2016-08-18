@@ -8,10 +8,10 @@ from tryp.util.random import Random
 from proteome.project import Project
 from proteome.plugins.history import Plugin, History
 
-from integration._support.base import VimIntegrationSpec
+from integration._support.base import ProteomePluginIntegrationSpec
 
 
-class _HistorySpec(VimIntegrationSpec):
+class _HistorySpec(ProteomePluginIntegrationSpec):
 
     def _pre_start(self):
         super()._pre_start()

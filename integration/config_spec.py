@@ -5,10 +5,10 @@ from tryp import List
 
 from tryp.test import fixture_path
 
-from integration._support.base import VimIntegrationSpec
+from integration._support.base import ProteomePluginIntegrationSpec
 
 
-class _ConfigSpec(VimIntegrationSpec):
+class _ConfigSpec(ProteomePluginIntegrationSpec):
 
     @property
     def _plugins(self):

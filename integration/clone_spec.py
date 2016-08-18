@@ -6,10 +6,10 @@ from fn import _
 from tryp.test import later
 from tryp import __
 
-from integration._support.base import VimIntegrationSpec
+from integration._support.base import ProteomePluginIntegrationSpec
 
 
-class CloneSpec(VimIntegrationSpec):
+class CloneSpec(ProteomePluginIntegrationSpec):
 
     def valid(self):
         name = 'proteome.nvim'
