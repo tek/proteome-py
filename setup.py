@@ -14,8 +14,8 @@ setup(
     packages=find_packages(
         exclude=['unit', 'unit.*', 'integration', 'integration.*']),
     install_requires=[
-        'tryp-nvim>=7.4.0',
-        'tryp>=7.4.0',
+        'ribosome>=8.0.0',
+        'amino>=8.0.0',
         'dulwich',
     ]
 )

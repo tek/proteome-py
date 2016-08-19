@@ -1,9 +1,9 @@
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
 
-from tryp.test import later
+from amino.test import later
 
-from tryp import List
+from amino import List
 
 from integration._support.base import ProteomePluginIntegrationSpec
 

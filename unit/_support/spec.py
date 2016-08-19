@@ -1,6 +1,6 @@
 import proteome.test
 
-from trypnv.test.spec import MockNvimSpec
+from ribosome.test.spec import MockNvimSpec
 
 
 class UnitSpec(MockNvimSpec, proteome.test.Spec):

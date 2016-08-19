@@ -1,4 +1,4 @@
-from trypnv.machine import message
+from ribosome.machine import message
 
 StageI = message('StageI')
 StageII = message('StageII')

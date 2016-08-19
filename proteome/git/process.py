@@ -1,4 +1,4 @@
-from trypnv import ProcessExecutor, Job
+from ribosome import ProcessExecutor, Job
 
 from proteome.project import Project
 from proteome.git.repo import CommitInfo

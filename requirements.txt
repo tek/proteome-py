@@ -1,4 +1,4 @@
-tryp-nvim
+amino-nvim
 dulwich
 spec
 sure

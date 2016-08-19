@@ -1,7 +1,7 @@
 from proteome.project import Project
-from trypnv import ProcessExecutor, Job
+from ribosome import ProcessExecutor, Job
 
-from tryp import Just
+from amino import Just
 
 
 class Patch(ProcessExecutor):  # type: ignore

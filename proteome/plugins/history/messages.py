@@ -1,4 +1,4 @@
-from trypnv.machine import message
+from ribosome.machine import message
 
 Commit = message('Commit', varargs='projects')
 CommitCurrent = message('CommitCurrent')

@@ -1,6 +1,6 @@
 from fn import F, _
 
-from trypnv.machine import may_handle
+from ribosome.machine import may_handle
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
 from proteome.plugins.core import MainAdded, StageIII

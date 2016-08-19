@@ -2,9 +2,9 @@ from pathlib import Path
 
 import neovim
 
-from tryp import List, Map, __, F, _
+from amino import List, Map, __, F, _
 
-from trypnv import command, NvimStatePlugin, msg_command, json_msg_command
+from ribosome import command, NvimStatePlugin, msg_command, json_msg_command
 
 from proteome.plugins.core import (
     AddByParams, Show, Create, SetProject, Next, Prev, StageI,

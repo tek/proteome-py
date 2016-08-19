@@ -1,6 +1,6 @@
-from trypnv.machine import may_handle
+from ribosome.machine import may_handle
 
-from tryp import List, Map
+from amino import List, Map
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
 from proteome.plugins.unite.data import (UniteSelectAdd, UniteSelectAddAll,

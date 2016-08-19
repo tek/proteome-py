@@ -15,15 +15,15 @@ from dulwich.objects import Commit
 from dulwich.patch import write_object_diff
 from dulwich.index import build_file_from_blob
 
-from tryp import may, List, Maybe, Map, Empty, Just, __, Left, Either
-from tryp.logging import Logging
-from tryp.transformer import Transformer
-from tryp.lazy import lazy
-from tryp.task import Try, Task
-from tryp.lazy_list import LazyList
+from amino import may, List, Maybe, Map, Empty, Just, __, Left, Either
+from amino.logging import Logging
+from amino.transformer import Transformer
+from amino.lazy import lazy
+from amino.task import Try, Task
+from amino.lazy_list import LazyList
 
-from trypnv.record import field, bool_field, maybe_field, Record
-from trypnv.process import JobClient
+from ribosome.record import field, bool_field, maybe_field, Record
+from ribosome.process import JobClient
 
 from proteome.project import Project
 

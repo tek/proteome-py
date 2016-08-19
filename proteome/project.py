@@ -2,14 +2,14 @@ from pathlib import Path
 from typing import Tuple
 import json
 
-from tryp import Maybe, Empty, Just, List, Map, may, Boolean, flat_may, __, F
-from tryp.lazy import lazy
+from amino import Maybe, Empty, Just, List, Map, may, Boolean, flat_may, __, F
+from amino.lazy import lazy
 
 from fn import _
 
-from trypnv.nvim import NvimFacade, HasNvim
-from trypnv.record import field, list_field, Record
-from trypnv.process import JobClient
+from ribosome.nvim import NvimFacade, HasNvim
+from ribosome.record import field, list_field, Record
+from ribosome.process import JobClient
 
 from proteome.logging import Logging
 

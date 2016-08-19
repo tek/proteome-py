@@ -3,16 +3,16 @@ from datetime import datetime
 
 from fn import _, F
 
-from tryp.lazy import lazy
-from tryp import Map, __, Just, Empty, may, List, Maybe, Right
-from tryp.util.numeric import try_convert_int
-from tryp.async import gather_sync_flat
-from tryp.task import Task
+from amino.lazy import lazy
+from amino import Map, __, Just, Empty, may, List, Maybe, Right
+from amino.util.numeric import try_convert_int
+from amino.async import gather_sync_flat
+from amino.task import Task
 
-from trypnv.machine import (may_handle, message, handle, RunTask, Info)
-from trypnv.machine import Error
-from trypnv.record import field, dfield, Record, lazy_list_field, maybe_field
-from trypnv.nvim import ScratchBuilder, ScratchBuffer
+from ribosome.machine import (may_handle, message, handle, RunTask, Info)
+from ribosome.machine import Error
+from ribosome.record import field, dfield, Record, lazy_list_field, maybe_field
+from ribosome.nvim import ScratchBuilder, ScratchBuffer
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
 from proteome.plugins.core import Save, StageIV

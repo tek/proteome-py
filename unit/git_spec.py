@@ -7,10 +7,10 @@ from proteome.plugins.history import History, HistoryGit
 from unit.project_spec import LoaderSpec
 from unit._support.async import test_loop
 
-from tryp import __, curried
-from tryp.lazy import lazy
+from amino import __, curried
+from amino.lazy import lazy
 
-from trypnv.nvim import ScratchBuffer
+from ribosome.nvim import ScratchBuffer
 
 
 class MockScratchBuffer(ScratchBuffer):

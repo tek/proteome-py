@@ -4,9 +4,9 @@ import asyncio
 
 from flexmock import flexmock  # NOQA
 
-from tryp import List, Just, _, Map
+from amino import List, Just, _, Map
 
-from trypnv.machine import Nop
+from ribosome.machine import Nop
 
 from proteome.nvim_plugin import Create
 from proteome.project import Project, Projects, ProjectAnalyzer
@@ -18,7 +18,7 @@ from proteome.plugins.history.data import History
 from unit._support.loader import LoaderSpec
 from unit._support.async import test_loop
 
-from tryp.test import temp_dir, later
+from amino.test import temp_dir, later
 
 null = Path('/dev/null')
 

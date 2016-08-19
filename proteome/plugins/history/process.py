@@ -1,4 +1,4 @@
-from tryp import Path
+from amino import Path
 
 from proteome.project import Project
 from proteome.git import Git

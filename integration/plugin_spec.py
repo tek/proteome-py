@@ -8,13 +8,13 @@ from flexmock import flexmock  # NOQA
 
 import neovim
 
-from tryp import List, Map, Just
-import tryp.logging
+from amino import List, Map, Just
+import amino.logging
 
-from tryp.test import temp_dir, later
+from amino.test import temp_dir, later
 
-import trypnv
-from trypnv.test.integration import main_looped
+import ribosome
+from ribosome.test.integration import main_looped
 
 from proteome.nvim_plugin import ProteomeNvimPlugin
 from proteome.project import Project
@@ -40,13 +40,13 @@ def _mock_proxy(self):
 class ProteomePlugin_(ProteomeIntegrationSpec):
 
     def setup(self):
-        trypnv.in_vim = False
+        ribosome.in_vim = False
         super().setup()
         self.logfile = temp_dir('log') / 'proteome_spec'
         self.vimlog = temp_dir('log') / 'vim'
         self.logfile.touch()
-        tryp.logging.logfile = self.logfile
-        tryp.logging.tryp_file_logging(handler_level=logging.WARN)
+        amino.logging.logfile = self.logfile
+        amino.logging.amino_file_logging(handler_level=logging.WARN)
         argv = ['nvim', '--embed', '-V{}'.format(self.vimlog), '-u', 'NONE']
         self.neovim = neovim.attach('child', argv=argv)
         NvimFacade.async = _mock_async

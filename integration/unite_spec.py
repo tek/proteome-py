@@ -1,7 +1,7 @@
 from functools import wraps
 
-from tryp import List, env, _, F
-from tryp.test import later, temp_dir
+from amino import List, env, _, F
+from amino.test import later, temp_dir
 
 from integration._support.base import ProteomePluginIntegrationSpec
 

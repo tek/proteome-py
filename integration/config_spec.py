@@ -1,9 +1,9 @@
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
 
-from tryp import List
+from amino import List
 
-from tryp.test import fixture_path
+from amino.test import fixture_path
 
 from integration._support.base import ProteomePluginIntegrationSpec
 

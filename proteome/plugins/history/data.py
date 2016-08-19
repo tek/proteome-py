@@ -1,10 +1,10 @@
 from typing import Callable
 from pathlib import Path
 
-from trypnv.record import Record, dfield
+from ribosome.record import Record, dfield
 
-from tryp import Map, Maybe, Just
-from tryp.transformer import Transformer
+from amino import Map, Maybe, Just
+from amino.transformer import Transformer
 
 from proteome.logging import Logging
 from proteome.project import Project

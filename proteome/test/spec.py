@@ -1,14 +1,14 @@
 from pathlib import Path
 
-from tryp.test import temp_dir
+from amino.test import temp_dir
 
-import tryp.test
-from tryp import Just
+import amino.test
+from amino import Just
 
 from proteome.project import Project
 
 
-class Spec(tryp.test.Spec):
+class Spec(amino.test.Spec):
 
     def setup(self):
         super().setup()

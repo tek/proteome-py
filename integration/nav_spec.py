@@ -1,7 +1,7 @@
 import sure  # NOQA
 from flexmock import flexmock  # NOQA
 
-from tryp import List
+from amino import List
 
 from integration._support.base import ProteomePluginIntegrationSpec
 

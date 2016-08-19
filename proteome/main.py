@@ -2,7 +2,7 @@ from pathlib import Path
 
 from toolz.itertoolz import cons
 
-from tryp import List, Map, Maybe, Empty
+from amino import List, Map, Maybe, Empty
 
 from proteome.nvim import NvimFacade
 from proteome.env import Env

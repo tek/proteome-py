@@ -3,10 +3,10 @@ from pathlib import Path
 
 from fn import _
 
-from tryp.test import fixture_path, temp_dir
+from amino.test import fixture_path, temp_dir
 
-from tryp import List, Map, Just, Maybe, Right
-from trypnv.test import IntegrationSpec, PluginIntegrationSpec
+from amino import List, Map, Just, Maybe, Right
+from ribosome.test import IntegrationSpec, PluginIntegrationSpec
 
 from proteome.project import Project
 from proteome.nvim import NvimFacade

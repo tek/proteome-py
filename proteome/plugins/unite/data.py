@@ -1,9 +1,9 @@
 import abc
 
-from trypnv.machine import Message
-from trypnv import NvimFacade
+from ribosome.machine import Message
+from ribosome import NvimFacade
 
-from tryp import F, List, Map, _
+from amino import F, List, Map, _
 
 from proteome.logging import Logging
 

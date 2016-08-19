@@ -1,9 +1,9 @@
 from fn import _
 
-from tryp.test import later
+from amino.test import later
 
-from tryp import List, Just, __
-from tryp.util.random import Random
+from amino import List, Just, __
+from amino.util.random import Random
 
 from proteome.project import Project
 from proteome.plugins.history import Plugin, History

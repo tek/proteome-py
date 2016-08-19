@@ -3,8 +3,8 @@ from flexmock import flexmock  # NOQA
 
 from fn import _
 
-from tryp.test import later
-from tryp import __
+from amino.test import later
+from amino import __
 
 from integration._support.base import ProteomePluginIntegrationSpec
 

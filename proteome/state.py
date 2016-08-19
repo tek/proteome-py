@@ -1,11 +1,11 @@
-from trypnv import Machine, PluginStateMachine
-from trypnv.nvim import HasNvim
-from trypnv.machine import ModularMachine, Transitions
+from ribosome import Machine, PluginStateMachine
+from ribosome.nvim import HasNvim
+from ribosome.machine import ModularMachine, Transitions
 
 from proteome.nvim import NvimFacade
 from proteome.logging import Logging
 
-from tryp import List
+from amino import List
 
 
 class ProteomeComponent(ModularMachine, HasNvim, Logging):

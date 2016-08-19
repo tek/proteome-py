@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from tryp import List, Just
+from amino import List, Just
 
 from proteome.project import Project
 from proteome.ctags import Ctags
@@ -8,7 +8,7 @@ from proteome.ctags import Ctags
 from unit._support.async import test_loop
 from unit._support.loader import LoaderSpec
 
-from tryp.test import temp_path
+from amino.test import temp_path
 
 
 class Ctags_(LoaderSpec):

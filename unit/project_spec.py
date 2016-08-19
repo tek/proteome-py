@@ -6,9 +6,9 @@ from pathlib import Path
 
 from fn import _
 
-from tryp.test import temp_dir
+from amino.test import temp_dir
 
-from tryp import Just, List, Empty, Map
+from amino import Just, List, Empty, Map
 
 from proteome.project import Project, Projects, ProjectAnalyzer
 from proteome.logging import Logging

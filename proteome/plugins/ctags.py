@@ -1,10 +1,10 @@
 from fn import _
 
-from trypnv.machine import may_handle, message
-from trypnv.nvim import Buffer
+from ribosome.machine import may_handle, message
+from ribosome.nvim import Buffer
 
-from tryp import List, Empty
-from tryp.lazy import lazy
+from amino import List, Empty
+from amino.lazy import lazy
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
 from proteome.ctags import Ctags

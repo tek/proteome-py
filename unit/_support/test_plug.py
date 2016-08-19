@@ -1,6 +1,6 @@
 from toolz import dicttoolz
 
-from trypnv.machine import may_handle, message
+from ribosome.machine import may_handle, message
 
 from proteome.state import ProteomeComponent
 

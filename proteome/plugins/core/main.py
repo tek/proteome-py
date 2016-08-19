@@ -3,11 +3,11 @@ from pathlib import Path
 
 from fn import F, _
 
-from tryp import List, Map, Empty, may
-from tryp.lazy import lazy
+from amino import List, Map, Empty, may
+from amino.lazy import lazy
 
-from trypnv.machine import handle, may_handle, Error, Info, Nop
-from trypnv.process import JobClient
+from ribosome.machine import handle, may_handle, Error, Info, Nop
+from ribosome.process import JobClient
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
 from proteome.project import Project, mkpath

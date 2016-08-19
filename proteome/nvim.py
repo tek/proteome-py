@@ -2,15 +2,15 @@ from pathlib import Path
 
 import neovim
 
-import trypnv
+import ribosome
 
 from proteome.logging import Logging
 
 
-class NvimFacade(Logging, trypnv.nvim.NvimFacade):
+class NvimFacade(Logging, ribosome.nvim.NvimFacade):
 
     def __init__(self, nvim: neovim.Nvim) -> None:
-        trypnv.nvim.NvimFacade.__init__(self, nvim, 'proteome')
+        ribosome.nvim.NvimFacade.__init__(self, nvim, 'proteome')
 
     def cd(self, d):
         self.vim.chdir(str(d))

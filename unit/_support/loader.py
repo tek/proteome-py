@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from tryp.test import fixture_path, temp_dir
+from amino.test import fixture_path, temp_dir
 
-from tryp import List, Map
+from amino import List, Map
 
 from proteome.project import Resolver, ProjectLoader
 

@@ -6,11 +6,11 @@ from fn import _
 from proteome.project import (Projects, Resolver, ProjectLoader, Project,
                               ProjectAnalyzer)
 from proteome.logging import Logging
-from trypnv.data import Data
-from trypnv.record import field
-from trypnv import NvimFacade
+from ribosome.data import Data
+from ribosome.record import field
+from ribosome import NvimFacade
 
-from tryp import List, Map, Just, Boolean
+from amino import List, Map, Just, Boolean
 
 
 class Env(Data, Logging):
