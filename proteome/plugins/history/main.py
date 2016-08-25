@@ -147,7 +147,7 @@ class BrowseMachine(ProteomeComponent):
 
         @may
         def _close_tab(self):
-            self.buffer.tab.close()
+            self.buffer.close()
 
         def _pick(self):
             return self._pick_commit(HistoryPick)
