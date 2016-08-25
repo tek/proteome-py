@@ -155,8 +155,8 @@ class ProteomePlugin_(ProteomeIntegrationSpec):
     @main_looped
     def history(self):
         def check_commit(pro: Project):
-            len(self.object_files(pro))\
-                .should.be.greater_than(2)
+            l = len(self.object_files(pro))
+            l.should.be.greater_than(2)  # type: ignore
         self.vim.set_pvar('all_projects_history', 1)
         self.proteome.proteome_start()
         self.pros.foreach(lambda a: self.proteome.pro_add([a.ident]))

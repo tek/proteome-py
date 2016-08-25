@@ -314,7 +314,7 @@ class Plugin(ProteomeComponent):
 
         def _build_browse(self, repo, commits, path: Maybe[Path]):
             relpath = path // repo.relpath
-            return ScratchBuilder().build.unsafe_perform_io(self.vim)\
+            return ScratchBuilder().tab.build.unsafe_perform_io(self.vim)\
                 .leffect(self._io_error)\
                 .map(lambda a: BrowseState(repo=repo, current=0,
                                            commits=commits, buffer=a,
