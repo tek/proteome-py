@@ -46,119 +46,121 @@ class BrowseState(Record):
 Init = message('Init')
 
 
+class BrowseTransitions(ProteomeTransitions):
+
+    @property
+    def buffer(self):
+        return self.data.buffer.proxy
+
+    @lazy
+    def content(self):
+        sel = self.data.selected
+        return List.wrap(enumerate(self.data.commits[:sel + 20]))\
+            .flat_smap(lambda i, a: a.browse_format(i == sel))
+
+    @property
+    def selected_commit(self):
+        return self.data.commits.lift(self.data.selected)
+
+    @property
+    def selected_id(self):
+        return self.selected_commit / _.hex
+
+    def _create_mappings(self):
+        List.wrap('jksprq').foreach(self._create_mapping)
+        self._create_mapping('<cr>', to='%CR%')
+
+    def _create_mapping(self, keyseq, mode='n', to=None):
+        to_seq = Maybe(to) | keyseq
+        raw = self.buffer.buffer
+        cmd = ':ProHistoryBrowseInput {}<cr>'.format(to_seq)
+        raw.nmap(keyseq, cmd)
+
+    def _configure_appearance(self):
+        self.buffer.set_options('filetype', 'diff')
+        self.buffer.set_options('syntax', 'diff')
+        self.buffer.window.set_optionb('cursorline', True)
+        self.vim.doautocmd('FileType')
+        sy = self.buffer.syntax
+        id_fmt = '[a-f0-9]\+'
+        sy.match('Commit', '^[* ]\s\+{}'.format(id_fmt),
+                 contains='Star,Sha')
+        sy.match('Star', '^*', 'contained')
+        sy.match('Sha', id_fmt, 'contained')
+        sy.link('Star', 'Title')
+        sy.link('Sha', 'Identifier')
+
+    @may_handle(Init)
+    def browse_init(self):
+        self._create_mappings()
+        self._configure_appearance()
+        return Redraw()
+
+    @may_handle(Redraw)
+    def redraw(self):
+        self.buffer.set_content(self.content)
+        self.vim.cursor(self.data.selected + 1, 1)
+        self.vim.feedkeys('zz')
+
+    @handle(HistoryBrowseInput)
+    def input(self):
+        handlers = Map({
+            'j': self._down,
+            'k': self._up,
+            '%CR%': self._switch,
+            's': self._switch,
+            'p': self._pick,
+            'r': self._revert,
+            'q': self._close_tab,
+        })
+        return handlers.get(self.msg.keyseq).flat_map(lambda f: f())
+
+    def _down(self):
+        return self._select_diff(1)
+
+    def _up(self):
+        return self._select_diff(-1)
+
+    @may
+    def _select_diff(self, diff):
+        index = self.data.selected + diff
+        if index >= 0 and self.data.commits.min_length(index + 1):
+            return self.data.set(selected=index), Redraw()
+
+    @may
+    def _switch(self):
+        q = QuitBrowse(self.buffer)
+        switch = (
+            self.data.path //
+            (lambda path: self.selected_id / F(HistorySwitchFile, path)) |
+            HistorySwitch(self.data.selected)
+        )
+        return (switch.pub, q, q.pub)
+
+    @may_handle(QuitBrowse)
+    def quit(self):
+        if self.msg.buffer == self.buffer:
+            self._close_tab()
+
+    @may
+    def _close_tab(self):
+        self.buffer.close()
+
+    def _pick(self):
+        return self._pick_commit(HistoryPick)
+
+    def _revert(self):
+        return self._pick_commit(HistoryRevert)
+
+    @may
+    def _pick_commit(self, tpe):
+        q = QuitBrowse(self.buffer)
+        return (tpe(self.data.selected).pub, q, q.pub)
+
+
 class BrowseMachine(ProteomeComponent):
+    Transitions = BrowseTransitions
     _data_type = BrowseState
-
-    class Transitions(ProteomeTransitions):
-
-        @property
-        def buffer(self):
-            return self.data.buffer.proxy
-
-        @lazy
-        def content(self):
-            sel = self.data.selected
-            return List.wrap(enumerate(self.data.commits[:sel + 20]))\
-                .flat_smap(lambda i, a: a.browse_format(i == sel))
-
-        @property
-        def selected_commit(self):
-            return self.data.commits.lift(self.data.selected)
-
-        @property
-        def selected_id(self):
-            return self.selected_commit / _.hex
-
-        def _create_mappings(self):
-            List.wrap('jksprq').foreach(self._create_mapping)
-            self._create_mapping('<cr>', to='%CR%')
-
-        def _create_mapping(self, keyseq, mode='n', to=None):
-            to_seq = Maybe(to) | keyseq
-            raw = self.buffer.buffer
-            cmd = ':ProHistoryBrowseInput {}<cr>'.format(to_seq)
-            raw.nmap(keyseq, cmd)
-
-        def _configure_appearance(self):
-            self.buffer.set_options('filetype', 'diff')
-            self.buffer.set_options('syntax', 'diff')
-            self.buffer.window.set_optionb('cursorline', True)
-            self.vim.doautocmd('FileType')
-            sy = self.buffer.syntax
-            id_fmt = '[a-f0-9]\+'
-            sy.match('Commit', '^[* ]\s\+{}'.format(id_fmt),
-                     contains='Star,Sha')
-            sy.match('Star', '^*', 'contained')
-            sy.match('Sha', id_fmt, 'contained')
-            sy.link('Star', 'Title')
-            sy.link('Sha', 'Identifier')
-
-        @may_handle(Init)
-        def browse_init(self):
-            self._create_mappings()
-            self._configure_appearance()
-            return Redraw()
-
-        @may_handle(Redraw)
-        def redraw(self):
-            self.buffer.set_content(self.content)
-            self.vim.cursor(self.data.selected + 1, 1)
-            self.vim.feedkeys('zz')
-
-        @handle(HistoryBrowseInput)
-        def input(self):
-            handlers = Map({
-                'j': self._down,
-                'k': self._up,
-                '%CR%': self._switch,
-                's': self._switch,
-                'p': self._pick,
-                'r': self._revert,
-                'q': self._close_tab,
-            })
-            return handlers.get(self.msg.keyseq).flat_map(lambda f: f())
-
-        def _down(self):
-            return self._select_diff(1)
-
-        def _up(self):
-            return self._select_diff(-1)
-
-        @may
-        def _select_diff(self, diff):
-            index = self.data.selected + diff
-            if index >= 0 and self.data.commits.min_length(index + 1):
-                return self.data.set(selected=index), Redraw()
-
-        @may
-        def _switch(self):
-            q = QuitBrowse(self.buffer)
-            switch = (
-                self.data.path //
-                (lambda path: self.selected_id / F(HistorySwitchFile, path)) |
-                HistorySwitch(self.data.selected)
-            )
-            return (switch.pub, q, q.pub)
-
-        @may_handle(QuitBrowse)
-        def quit(self):
-            if self.msg.buffer == self.buffer:
-                self._close_tab()
-
-        @may
-        def _close_tab(self):
-            self.buffer.close()
-
-        def _pick(self):
-            return self._pick_commit(HistoryPick)
-
-        def _revert(self):
-            return self._pick_commit(HistoryRevert)
-
-        @may
-        def _pick_commit(self, tpe):
-            q = QuitBrowse(self.buffer)
-            return (tpe(self.data.selected).pub, q, q.pub)
 
 
 class Browse(Logging):

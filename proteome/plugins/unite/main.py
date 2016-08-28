@@ -8,7 +8,27 @@ from proteome.plugins.unite.data import (UniteSelectAdd, UniteSelectAddAll,
                                          Id, UniteMessage)
 
 
+class UniteTransitions(ProteomeTransitions):
+
+    def unite_cmd(self, cmd):
+        args = ' '.join(self.msg.unite_args)
+        self.vim.cmd('Unite {} {}'.format(cmd, args))
+
+    @may_handle(UniteSelectAdd)
+    def select_add(self):
+        self.unite_cmd(Id.addable)
+
+    @may_handle(UniteSelectAddAll)
+    def select_add_all(self):
+        self.unite_cmd(Id.all_addable)
+
+    @may_handle(UniteProjects)
+    def projects(self):
+        self.unite_cmd(Id.projects)
+
+
 class Plugin(ProteomeComponent):
+    Transitions = UniteTransitions
 
     def __init__(self, *a, **kw):
         super().__init__(*a, **kw)
@@ -37,23 +57,5 @@ class Plugin(ProteomeComponent):
         projects.define(self.vim)
         project.define(self.vim)
         self._unite_ready = True
-
-    class Transitions(ProteomeTransitions):
-
-        def unite_cmd(self, cmd):
-            args = ' '.join(self.msg.unite_args)
-            self.vim.cmd('Unite {} {}'.format(cmd, args))
-
-        @may_handle(UniteSelectAdd)
-        def select_add(self):
-            self.unite_cmd(Id.addable)
-
-        @may_handle(UniteSelectAddAll)
-        def select_add_all(self):
-            self.unite_cmd(Id.all_addable)
-
-        @may_handle(UniteProjects)
-        def projects(self):
-            self.unite_cmd(Id.projects)
 
 __all__ = ('Plugin')
