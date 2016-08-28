@@ -184,7 +184,7 @@ class Proteome_(LoaderSpec):
     def add_remove_project(self):
         ctx = self._prot(List(), List(self.project_base), self.type_bases)
         with ctx as prot:
-            prot.send_sync(AddByParams(self.pypro1_name, {}))\
+            prot.send_sync(AddByParams(self.pypro1_name, Map()))\
                 .project(self.pypro1_name)\
                 .map(_.root)\
                 .should.contain(self.pypro1_root)

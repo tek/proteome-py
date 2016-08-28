@@ -59,19 +59,19 @@ class Plugin(ProteomeComponent):
 
         @may_handle(AddByParams)
         def add_by_params(self):
-            params = Map(self.msg.params)
+            options = Map(self.msg.options)
             ident = self.msg.ident
             return (
-                (params.get('root') /
+                (options.get('root') /
                  mkpath //
-                 F(self.data.loader.from_params, ident, params=params))
+                 F(self.data.loader.from_params, ident, params=options))
                 .or_else(
                     self.data.loader.by_ident(ident)
                     .or_else(self.data.loader.resolve_ident(
-                        ident, params, self.data.main_type))
+                        ident, options, self.data.main_type))
                 ) /
                 Add |
-                Error(self._no_such_ident(ident, params))
+                Error(self._no_such_ident(ident, options))
             )
 
         @may_handle(Add)
@@ -173,7 +173,7 @@ class Plugin(ProteomeComponent):
         @handle(CloneRepo)
         def clone_repo(self):
             uri = self.msg.uri
-            name = self.msg.params.get('name')\
+            name = self.msg.options.get('name')\
                 .or_else(self._clone_repo_name(uri))
             url = self._clone_url(uri)
             return (
@@ -207,7 +207,9 @@ class Plugin(ProteomeComponent):
             ident = '/'.join(str(target).split('/')[-2:])
             client = JobClient(cwd=Path.home(), name=self.name)
             res = await self.cloner.clone(client, url, target)
-            return res.either(AddByParams(ident, {}).pub,
-                              'failed to clone {} to {}'.format(url, target))
+            return res.either(
+                AddByParams(ident, Map()).pub,
+                Error('failed to clone {} to {}'.format(url, target)).pub
+            )
 
 __all__ = ('Plugin',)

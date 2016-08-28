@@ -241,7 +241,7 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
 
     @unite_action('add_project')
     def pro_unite_add_project(self, ident):
-        return AddByParams(ident, params=Map())
+        return AddByParams(ident, options=Map())
 
     @unite_action('activate_project')
     def pro_unite_activate_project(self, ident):
