@@ -19,7 +19,7 @@ class NvimFacade(Logging, ribosome.nvim.NvimFacade):
         p = str(path)
         self.cd(p)
         self.pautocmd('SwitchedRoot')
-        self.set_pvar('root_dir', p)
+        self.vars.set_p('root_dir', p)
 
 
 __all__ = ['NvimFacade']

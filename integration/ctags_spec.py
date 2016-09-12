@@ -34,7 +34,7 @@ class CtagsGenSpec(_CtagsSpec):
 class CtagsAddBufferSpec(_CtagsSpec):
 
     def add_buffer(self):
-        tags = lambda: self.vim.buffer.optionl('tags')
+        tags = lambda: self.vim.buffer.options.l('tags')
         later(lambda: tags().should.contain(str(self.tag_file)))
         self.vim.cmd('ProAdd tpe2/dep')
         later(lambda: tags().should.have.length_of(2))

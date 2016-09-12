@@ -10,7 +10,7 @@ def _unite(f):
     @wraps(f)
     def wrapper(self):
         def go(unite):
-            self.vim.amend_optionl('rtp', [unite])
+            self.vim.options.amend_l('rtp', [unite])
             self.vim.cmd('source {}/plugin/*.vim'.format(unite))
             self.vim.cmd('source {}/plugin/unite/*.vim'.format(unite))
             self.vim.cmd('source {}/syntax/*.vim'.format(unite))
@@ -33,7 +33,7 @@ class UniteSpec(ProteomePluginIntegrationSpec):
 
     def _count(self, num):
         return later(
-            lambda: (self.vim.pvar('projects') / len).should.contain(num))
+            lambda: (self.vim.vars.p('projects') / len).should.contain(num))
 
     @_unite
     def select_add(self, unite):
@@ -70,7 +70,7 @@ class UniteSpec(ProteomePluginIntegrationSpec):
     @_unite
     def activate(self, unite):
         def active_type(tpe):
-            self.vim.pvar('active').map(_['tpe']).should.contain(tpe)
+            self.vim.vars.p('active').map(_['tpe']).should.contain(tpe)
         self.vim.cmd('ProAdd tpe2/dep')
         later(F(active_type, self.tpe2))
         self.vim.cmd('Projects')

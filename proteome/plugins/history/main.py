@@ -9,10 +9,11 @@ from amino.util.numeric import try_convert_int
 from amino.async import gather_sync_flat
 from amino.task import Task
 
-from ribosome.machine import (may_handle, message, handle, RunTask, Info)
+from ribosome.machine import may_handle, message, handle, Info
 from ribosome.machine import Error
 from ribosome.record import field, dfield, Record, lazy_list_field, maybe_field
 from ribosome.nvim import ScratchBuilder, ScratchBuffer
+from ribosome.machine.base import UnitTask
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
 from proteome.plugins.core import Save, StageIV
@@ -77,9 +78,9 @@ class BrowseTransitions(ProteomeTransitions):
         raw.nmap(keyseq, cmd)
 
     def _configure_appearance(self):
-        self.buffer.set_options('filetype', 'diff')
-        self.buffer.set_options('syntax', 'diff')
-        self.buffer.window.set_optionb('cursorline', True)
+        self.buffer.options.set_s('filetype', 'diff')
+        self.buffer.options.set_s('syntax', 'diff')
+        self.buffer.window.options.set_b('cursorline', True)
         self.vim.doautocmd('FileType')
         sy = self.buffer.syntax
         id_fmt = '[a-f0-9]\+'
@@ -191,7 +192,7 @@ class Plugin(ProteomeComponent):
 
     @lazy
     def base(self):
-        return self.vim.pdir('history_base').get_or_else(Path('/dev/null'))
+        return self.vim.vars.pdir('history_base') | Path('/dev/null')
 
     @lazy
     def executor(self):
@@ -295,7 +296,7 @@ class Plugin(ProteomeComponent):
                 self._current_repo_ro /
                 __.checkout_file(self.msg.id, self.msg.path) /
                 __.map(lambda a: CommitCurrent()) /
-                RunTask
+                UnitTask
             )
 
         # TODO
@@ -378,7 +379,7 @@ class Plugin(ProteomeComponent):
             browse = Browse(state, self.vim)
             return (
                 self._with_browse(self.state.browse + (browse.repo, browse)),
-                RunTask(Task(browse.run))
+                UnitTask(Task(browse.run))
             )
 
         def _remove_browse(self, target: Browse):

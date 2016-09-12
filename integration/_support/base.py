@@ -56,7 +56,7 @@ class ProteomePluginIntegrationSpec(PluginIntegrationSpec, IntegrationCommon,
     def setup(self):
         super().setup()
         self.vim.cmd_sync('ProteomeStart')
-        self._wait_for(lambda: self.vim.pvar('projects').is_just)
+        self._wait_for(lambda: self.vim.vars.p('projects').is_just)
         self.vim.cmd('ProteomePostStartup')
         self._pvar_becomes('root_dir', str(self.main_project))
 
@@ -88,11 +88,11 @@ class ProteomePluginIntegrationSpec(PluginIntegrationSpec, IntegrationCommon,
         self.vim.cd(str(self.main_project))
 
     def _set_vars(self):
-        self.vim.set_pvar('config_path', str(self._config_path))
-        self.vim.set_pvar('base_dirs', List(str(self.base), str(self.base2)))
-        self.vim.set_pvar('type_base_dirs', self.type_bases.keymap(str))
-        self.vim.set_pvar('history_base', str(self.history_base))
-        self.vim.set_pvar('plugins', self._plugins)
+        self.vim.vars.set_p('config_path', str(self._config_path))
+        self.vim.vars.set_p('base_dirs', List(str(self.base), str(self.base2)))
+        self.vim.vars.set_p('type_base_dirs', self.type_bases.keymap(str))
+        self.vim.vars.set_p('history_base', str(self.history_base))
+        self.vim.vars.set_p('plugins', self._plugins)
 
     @property
     def plugin_class(self):

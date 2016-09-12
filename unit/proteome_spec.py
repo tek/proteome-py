@@ -101,8 +101,8 @@ class Proteome_(LoaderSpec):
     class history_(object):
 
         def setup(self):
-            self.vim.set_pvar('all_projects_history', 1)
-            self.vim.vars['proteome_history_base'] = str(self.history_base)
+            self.vim.vars.set_p('all_projects_history', 1)
+            self.vim.vars.set('proteome_history_base', str(self.history_base))
             self.plug_name = 'proteome.plugins.history'
             self.main_project = self.mk_project('pro1', 'c')
             self.test_file_1 = self.main_project.root / 'test_file_1'

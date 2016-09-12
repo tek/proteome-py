@@ -12,12 +12,12 @@ class Plugin(ProteomeComponent):
 
         @property
         def _project_dir(self):
-            return self.vim.pvar('config_project_dir')\
+            return self.vim.vars.p('config_project_dir')\
                 .get_or_else('project')
 
         @property
         def _project_after_dir(self):
-            return self.vim.pvar('config_project_after_dir')\
+            return self.vim.vars.p('config_project_after_dir')\
                 .get_or_else('project_after')
 
         def _runtime(self, project, base):

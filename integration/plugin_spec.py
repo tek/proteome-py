@@ -55,11 +55,11 @@ class ProteomePlugin_(ProteomeIntegrationSpec):
         NvimFacade.clean = lambda self: True
         self.proteome = ProteomeNvimPlugin(self.neovim)
         self.vim = self.proteome.vim
-        self.vim.set_pvar('config_path', str(self.config))
-        self.vim.set_pvar('base_dirs', List(str(self.base)))
-        self.vim.set_pvar('type_base_dirs', self.type_bases.keymap(str))
-        self.vim.set_pvar('history_base', str(self.history_base))
-        self.vim.set_pvar('plugins', List('proteome.plugins.history',
+        self.vim.vars.set_p('config_path', str(self.config))
+        self.vim.vars.set_p('base_dirs', List(str(self.base)))
+        self.vim.vars.set_p('type_base_dirs', self.type_bases.keymap(str))
+        self.vim.vars.set_p('history_base', str(self.history_base))
+        self.vim.vars.set_p('plugins', List('proteome.plugins.history',
                                           'proteome.plugins.ctags',
                                           'proteome.plugins.config',
                                           'proteome.plugins.unite',
@@ -157,7 +157,7 @@ class ProteomePlugin_(ProteomeIntegrationSpec):
         def check_commit(pro: Project):
             l = len(self.object_files(pro))
             l.should.be.greater_than(2)  # type: ignore
-        self.vim.set_pvar('all_projects_history', 1)
+        self.vim.vars.set_p('all_projects_history', 1)
         self.proteome.proteome_start()
         self.pros.foreach(lambda a: self.proteome.pro_add([a.ident]))
         self._post_startup()

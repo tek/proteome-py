@@ -81,16 +81,16 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
 
     @command(sync=True)
     def proteome_start(self):
-        config_path = self.vim.ppath('config_path')\
+        config_path = self.vim.vars.ppath('config_path')\
             .get_or_else(Path('/dev/null'))
-        bases = self.vim.ppathl('base_dirs')\
+        bases = self.vim.vars.ppathl('base_dirs')\
             .get_or_else(List())\
             .map(Path)
-        type_bases = self.vim.pd('type_base_dirs')\
+        type_bases = self.vim.vars.pd('type_base_dirs')\
             .get_or_else(Map())\
             .keymap(lambda a: Path(a).expanduser())\
             .valmap(List.wrap)
-        plugins = self.vim.pl('plugins') | List()
+        plugins = self.vim.vars.pl('plugins') | List()
         self.pro = Proteome(self.vim.proxy, Path(config_path), plugins, bases,
                             type_bases)
         self.pro.start()

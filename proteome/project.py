@@ -382,7 +382,7 @@ class ProjectAnalyzer(HasNvim, Logging):
     def _detect_data(self, wd: Path):
         return self.loader.json_by_root(wd)\
             .or_else(
-                self.vim.pvar('project_detector')
+                self.vim.vars.p('project_detector')
                 .flat_map(lambda a: self.vim.call(a, str(wd))))\
             .or_else(self._default_detect_data(wd))
 
@@ -410,12 +410,12 @@ class ProjectAnalyzer(HasNvim, Logging):
 
     @property
     def _fallback_main(self):
-        tpe = self.vim.pvar('main_project_type')
+        tpe = self.vim.vars.p('main_project_type')
         return Project.of('main', self.main_dir_or_home, tpe)
 
     @property
     def main(self):
-        return self.vim.pvar('main_project')\
+        return self.vim.vars.p('main_project')\
             .flat_map(self.loader.by_ident)\
             .or_else(self._auto_main)\
             .get_or_else(self._fallback_main)

@@ -60,7 +60,7 @@ class CtagsTransitions(ProteomeTransitions):
 
     def set_buffer_tags(self, bufs: List[Buffer]):
         files = self.data.all_projects.map(_.root / self._tags_file_name)
-        bufs.foreach(lambda a: a.amend_optionl('tags', files))
+        bufs.foreach(lambda a: a.options.amend_l('tags', files))
 
     @may_handle(Gen)
     async def gen(self):

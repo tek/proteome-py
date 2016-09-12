@@ -50,10 +50,10 @@ class CoreTransitions(ProteomeTransitions):
         self.data.main.foreach(self._setup_main)
 
     def _setup_main(self, pro: Project):
-        self.vim.set_pvar('main_name', pro.name)
-        self.vim.set_pvar('main_ident', pro.ident)
-        self.vim.set_pvar('main_type', pro.tpe | 'none')
-        self.vim.set_pvar('main_types', pro.all_types)
+        self.vim.vars.set_p('main_name', pro.name)
+        self.vim.vars.set_p('main_ident', pro.ident)
+        self.vim.vars.set_p('main_type', pro.tpe | 'none')
+        self.vim.vars.set_p('main_types', pro.all_types)
 
     @may_handle(AddByParams)
     def add_by_params(self):
@@ -80,8 +80,8 @@ class CoreTransitions(ProteomeTransitions):
 
     @may_handle(Added)
     def added(self):
-        self.vim.set_pvar('added_project', self.msg.project.json)
-        self.vim.set_pvar('projects', self.data.projects.json)
+        self.vim.vars.set_p('added_project', self.msg.project.json)
+        self.vim.vars.set_p('projects', self.data.projects.json)
         self.vim.pautocmd('Added')
         if self.data.initialized:
             return SetProjectIndex(-1)
@@ -98,7 +98,7 @@ class CoreTransitions(ProteomeTransitions):
 
     @may_handle(Removed)
     def removed(self):
-        self.vim.set_pvar('projects', self.data.projects.json)
+        self.vim.vars.set_p('projects', self.data.projects.json)
         self.vim.pautocmd('Removed')
         return Info('Removed project {}'.format(self.msg.project.ident))
 
@@ -149,7 +149,7 @@ class CoreTransitions(ProteomeTransitions):
 
     @may_handle(ProjectChanged)
     def project_changed(self):
-        self.vim.set_pvar('active', self.msg.project.json)
+        self.vim.vars.set_p('active', self.msg.project.json)
 
     @may_handle(Next)
     def next(self):

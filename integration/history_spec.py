@@ -15,7 +15,7 @@ class _HistorySpec(ProteomePluginIntegrationSpec):
 
     def _pre_start(self):
         super()._pre_start()
-        self.vim.set_pvar('all_projects_history', True)
+        self.vim.vars.set_p('all_projects_history', True)
         self.test_file_1 = self.main_project / 'test_file_1'
         self.test_file_2 = self.main_project / 'test_file_2'
         self.test_content = List(
