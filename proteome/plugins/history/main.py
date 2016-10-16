@@ -379,7 +379,7 @@ class Plugin(ProteomeComponent):
             browse = Browse(state, self.vim)
             return (
                 self._with_browse(self.state.browse + (browse.repo, browse)),
-                UnitTask(Task(browse.run))
+                UnitTask(Task.delay(browse.run))
             )
 
         def _remove_browse(self, target: Browse):

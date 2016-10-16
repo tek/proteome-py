@@ -443,7 +443,7 @@ class Repo(Logging):
 
     def checkout_file(self, commit_sha, path):
         path_s = str(self.abspath(path))
-        return (Task.call(self.repo.path_blob, commit_sha, path)
+        return (Task.delay(self.repo.path_blob, commit_sha, path)
                 .map2(F(build_file_from_blob, target_path=path_s)))
 
 
