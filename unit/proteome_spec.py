@@ -94,8 +94,8 @@ class Proteome_(LoaderSpec):
                 def check(p):
                     plug.ctags.await_threadsafe(loop)
                     p.tag_file.exists().should.be.ok
-                later(lambda: check(p1))
-                later(lambda: check(p2))
+                later(check, p1)
+                later(check, p2)
                 plug.ctags.ready.should.be.ok
 
     class history_(object):
