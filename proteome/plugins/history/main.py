@@ -240,7 +240,7 @@ class Plugin(ProteomeComponent):
             return self._with_sub(new_state)
 
         def _with_repos(self, f):
-            g = lambda hist, pro: hist / __.at(pro, _ / f)
+            g = lambda hist, pro: hist / __.at(pro, lambda a: a / f)
             return self._all_projects(g)
 
         def _with_repo(self, pro, f):
