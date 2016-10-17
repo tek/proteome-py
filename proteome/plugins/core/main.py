@@ -8,15 +8,19 @@ from amino.lazy import lazy
 
 from ribosome.machine import handle, may_handle, Error, Info, Nop
 from ribosome.process import JobClient
+from ribosome.machine.transition import may_fallback
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
 from proteome.project import Project, mkpath
 from proteome.git import Git
-from proteome.plugins.core.message import (
-    StageI, StageIV, Add, RemoveByIdent, Create, Next, Prev,
-    SetProject, SetProjectIdent, SetProjectIndex, SwitchRoot, Added,
-    Removed, ProjectChanged, BufEnter, Initialized, MainAdded, Show,
-    AddByParams, CloneRepo)
+from proteome.plugins.core.message import (StageI, StageIV, Add,
+                                           RemoveByIdent, Create, Next, Prev,
+                                           SetProject, SetProjectIdent,
+                                           SetProjectIndex, SwitchRoot, Added,
+                                           Removed, ProjectChanged, BufEnter,
+                                           Initialized, MainAdded, Show,
+                                           AddByParams, CloneRepo, StageII,
+                                           StageIII)
 
 
 @may
@@ -36,6 +40,14 @@ class CoreTransitions(ProteomeTransitions):
     def stage_1(self):
         main = self.data.analyzer(self.vim).main
         return Add(main), MainAdded().pub  # type: ignore
+
+    @may_fallback(StageII)
+    def stage_2(self):
+        pass
+
+    @may_fallback(StageIII)
+    def stage_3(self):
+        pass
 
     @may_handle(StageIV)
     def stage_4(self):
