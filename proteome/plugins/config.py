@@ -1,6 +1,7 @@
-from fn import F, _
+from ribosome.machine import handle
+from ribosome.machine.transition import Error
 
-from ribosome.machine import may_handle
+from amino import List, L, _
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
 from proteome.plugins.core import MainAdded, StageIII
@@ -21,10 +22,22 @@ class Plugin(ProteomeComponent):
                 .get_or_else('project_after')
 
         def _runtime(self, project, base):
-            run = F(self.vim.runtime) << F('{}/{}'.format, base)
-            project.all_types.foreach(run)
-            project.tpe.map(_ + '/' + project.name).foreach(run)
-            run('all/*')
+            ''' first runtimes all project type files, like
+            `project/type.vim`, then the specific project file, like
+            `project/type/name.vim`.
+            '''
+            def run(path_suf):
+                path = '{}/{}'.format(base, path_suf)
+                err = 'error sourcing {}.vim: {{}}'.format(path)
+                return (
+                    self.vim.runtime(path)
+                    .cata(L(err.format)(_.cause) >> List, lambda a: List())
+                )
+            return (
+                project.all_types.flat_map(run) +
+                (project.tpe.map(_ + '/' + project.name).map(run) | List()) +
+                run('all/*')
+            ).map(Error)
 
         def _runtime_before(self, project):
             return self._runtime(project, self._project_dir)
@@ -32,12 +45,12 @@ class Plugin(ProteomeComponent):
         def _runtime_after(self, project):
             return self._runtime(project, self._project_after_dir)
 
-        @may_handle(MainAdded)
+        @handle(MainAdded)
         def before(self):
-            self.data.current.foreach(self._runtime_before)
+            return self.data.current.map(self._runtime_before)
 
-        @may_handle(StageIII)
+        @handle(StageIII)
         def stage_3(self):
-            self.data.current.foreach(self._runtime_after)
+            return self.data.current.map(self._runtime_after)
 
 __all__ = ('Plugin',)

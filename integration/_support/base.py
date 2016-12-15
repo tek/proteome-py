@@ -56,7 +56,7 @@ class ProteomePluginIntegrationSpec(PluginIntegrationSpec, IntegrationCommon,
     def setup(self):
         super().setup()
         self.vim.cmd_sync('ProteomeStart')
-        self._wait_for(lambda: self.vim.vars.p('projects').is_just)
+        self._wait_for(lambda: self.vim.vars.p('projects').present)
         self.vim.cmd('ProteomePostStartup')
         self._pvar_becomes('root_dir', str(self.main_project))
 

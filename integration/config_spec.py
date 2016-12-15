@@ -1,6 +1,3 @@
-import sure  # NOQA
-from flexmock import flexmock  # NOQA
-
 from amino import List
 
 from amino.test import fixture_path
@@ -21,6 +18,18 @@ class ChangeProjectSpec(_ConfigSpec):
         self._project_becomes(self.name1)
         self.vim.cmd('ProTo dep')
         self._project_becomes(self.name2)
+
+
+class ConfigErrorSpec(_ConfigSpec):
+
+    def _post_start_neovim(self):
+        super()._post_start_neovim()
+        rtp = fixture_path('config', 'error', 'rtp')
+        self.vim.options.amend_l('runtimepath', rtp)
+
+    def error(self):
+        self._project_becomes(self.name1)
+        self._log_line(0, lambda a: 'Not an editor command' in a)
 
 
 class AdditionalLangsSpec(_ConfigSpec):

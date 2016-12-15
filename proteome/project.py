@@ -8,7 +8,8 @@ from amino.lazy import lazy
 from fn import _
 
 from ribosome.nvim import NvimFacade, HasNvim
-from ribosome.record import field, list_field, Record
+from ribosome.record import (field, list_field, Record, optional_field,
+                             str_field)
 from ribosome.process import JobClient
 
 from proteome.logging import Logging
@@ -25,9 +26,9 @@ def format_path(path: Path):
 
 # TODO subprojects, e.g. sbt projects
 class Project(Record):
-    name = field(str)
+    name = str_field()
     root = field(Path)
-    tpe = field(Maybe, initial=Empty())
+    tpe = optional_field(str)
     types = list_field()
     langs = list_field()
     history = field(bool, initial=False)
@@ -98,7 +99,7 @@ class Project(Record):
 
     @property
     def has_type(self):
-        return self.tpe.is_just
+        return self.tpe.present
 
     @lazy
     def job_client(self):
@@ -158,7 +159,7 @@ class Projects(object):
     def __contains__(self, item):
         return (
             (isinstance(item, Project) and item in self.projects) or
-            (isinstance(item, str) and self.project(item).is_just)
+            (isinstance(item, str) and self.project(item).present)
         )
 
     @property
