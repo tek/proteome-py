@@ -192,6 +192,13 @@ class CoreTransitions(ProteomeTransitions):
             F(self._clone_repo, url)
         )
 
+    @may_handle(BufEnter)
+    def buf_enter(self):
+        ''' dummy handler to prevent error message in tests when ctags
+        plugin is not active
+        '''
+        pass
+
     def _clone_url(self, uri):
         return uri if uri.startswith('http') else self._github_url(uri)
 
