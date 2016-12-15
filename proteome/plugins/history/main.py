@@ -136,7 +136,7 @@ class BrowseTransitions(ProteomeTransitions):
             (lambda path: self.selected_id / F(HistorySwitchFile, path)) |
             HistorySwitch(self.data.selected)
         )
-        return (switch.pub, q, q.pub)
+        return switch.pub, q, q.pub
 
     @may_handle(QuitBrowse)
     def quit(self):
@@ -295,7 +295,7 @@ class Plugin(ProteomeComponent):
             return (
                 self._current_repo_ro /
                 __.checkout_file(self.msg.id, self.msg.path) /
-                __.map(lambda a: CommitCurrent()) /
+                __.replace(CommitCurrent()) /
                 UnitTask
             )
 
