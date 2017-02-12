@@ -29,7 +29,7 @@ class ConfigErrorSpec(_ConfigSpec):
 
     def error(self):
         self._project_becomes(self.name1)
-        self._log_line(0, lambda a: 'Not an editor command' in a)
+        self._log_line(-1, lambda a: 'Not an editor command' in a)
 
 
 class AdditionalLangsSpec(_ConfigSpec):

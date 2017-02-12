@@ -1,8 +1,5 @@
-from pathlib import Path
-
 from amino.test import fixture_path, temp_dir
-
-from amino import List, Map
+from amino import List, Map, Path
 
 from proteome.project import Resolver, ProjectLoader
 
@@ -11,14 +8,14 @@ from unit._support.spec import UnitSpec
 
 class LoaderSpec(UnitSpec):
 
-    def mk_project_root(self, tpe, name, base=None):
+    def mk_project_root(self, tpe: str, name: str, base: Path=None) -> Path:
         base = base or self.project_base
         root = temp_dir(str(base / tpe / name))
         root.mkdir(parents=True, exist_ok=True)
         return Path(root)
 
-    def setup(self):
-        super().setup()
+    def setup(self) -> None:
+        UnitSpec.setup(self)
         self.pypro1_type = 'python'
         self.pypro1_name = 'pypro1'
         self.pypro2_name = 'pypro2'

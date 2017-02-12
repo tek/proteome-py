@@ -14,7 +14,7 @@ import amino.logging
 from amino.test import temp_dir, later
 
 import ribosome
-from ribosome.test.integration import main_looped
+from ribosome.test.integration.spec import main_looped
 
 from proteome.nvim_plugin import ProteomeNvimPlugin
 from proteome.project import Project
@@ -46,7 +46,7 @@ class ProteomePlugin_(ProteomeIntegrationSpec):
         self.vimlog = temp_dir('log') / 'vim'
         self.logfile.touch()
         amino.logging.logfile = self.logfile
-        amino.logging.amino_file_logging(handler_level=logging.WARN)
+        amino.logging.amino_root_file_logging(level=logging.WARN)
         argv = ['nvim', '--embed', '-V{}'.format(self.vimlog), '-u', 'NONE']
         self.neovim = neovim.attach('child', argv=argv)
         NvimFacade.async = _mock_async
@@ -144,7 +144,6 @@ class ProteomePlugin_(ProteomeIntegrationSpec):
 
     @main_looped
     def ctags(self):
-        asyncio.get_child_watcher()
         self.proteome.proteome_start()
         self.pros.foreach(lambda a: self.proteome.pro_add([a.ident]))
         self._await()

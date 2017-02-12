@@ -2,16 +2,14 @@ from pathlib import Path
 
 from amino.test import temp_dir
 
-import amino.test
 from amino import Just
 
 from proteome.project import Project
 
 
-class Spec(amino.test.Spec):
+class Spec:
 
     def setup(self):
-        super().setup()
         self.temp_projects = Path(temp_dir('projects'))
         self.history_base = Path(temp_dir('history'))
 

@@ -7,6 +7,7 @@ from amino.test import fixture_path, temp_dir
 
 from amino import List, Map, Just, Maybe, Right
 from ribosome.test import IntegrationSpec, PluginIntegrationSpec
+from ribosome.test.integration.spec import VimIntegrationSureHelpers
 
 from proteome.project import Project
 from proteome.nvim import NvimFacade
@@ -19,7 +20,7 @@ class IntegrationCommon(Spec):
 
     def setup(self):
         self.cwd = Maybe.from_call(Path.cwd, exc=IOError)
-        super().setup()
+        Spec.setup(self)
 
     def _cd_back(self):
         try:
@@ -32,10 +33,12 @@ class IntegrationCommon(Spec):
         self._cd_back()
 
 
-class ProteomeIntegrationSpec(IntegrationSpec, IntegrationCommon):
+class ProteomeIntegrationSpec(IntegrationCommon, IntegrationSpec,
+                              VimIntegrationSureHelpers):
 
     def setup(self):
-        super().setup()
+        IntegrationCommon.setup(self)
+        IntegrationSpec.setup(self)
         self.base = temp_dir('projects', 'base')
         self.config = fixture_path('conf')
         self.type1 = 'type1'
@@ -50,11 +53,16 @@ class ProteomeIntegrationSpec(IntegrationSpec, IntegrationCommon):
         return List(*pros).smap(self.mk_project)
 
 
-class ProteomePluginIntegrationSpec(PluginIntegrationSpec, IntegrationCommon,
-                                    Logging):
+class ProteomePluginIntegrationSpec(IntegrationCommon, PluginIntegrationSpec,
+                                    VimIntegrationSureHelpers):
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.log_format = '{message}'
 
     def setup(self):
-        super().setup()
+        IntegrationCommon.setup(self)
+        PluginIntegrationSpec.setup(self)
         self.vim.cmd_sync('ProteomeStart')
         self._wait_for(lambda: self.vim.vars.p('projects').present)
         self.vim.cmd('ProteomePostStartup')
