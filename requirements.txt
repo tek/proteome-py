@@ -1,4 +1,4 @@
-amino-nvim
+ribosome
 dulwich
 spec
 sure
