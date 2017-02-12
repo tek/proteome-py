@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version_parts = (9, 1, 0)
+version_parts = (9, 2, 0)
 version = '.'.join(map(str, version_parts))
 
 setup(
@@ -14,7 +14,7 @@ setup(
     packages=find_packages(
         exclude=['unit', 'unit.*', 'integration', 'integration.*']),
     install_requires=[
-        'ribosome>=9.13.1',
+        'ribosome>=10.0.4',
         'amino>=8.10.10',
         'dulwich',
     ]
