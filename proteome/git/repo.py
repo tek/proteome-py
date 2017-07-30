@@ -4,8 +4,6 @@ from itertools import takewhile
 from datetime import datetime
 from asyncio import coroutine
 
-from fn import _, F
-
 import pyrsistent
 
 from dulwich import repo, config, porcelain
@@ -15,7 +13,7 @@ from dulwich.objects import Commit
 from dulwich.patch import write_object_diff
 from dulwich.index import build_file_from_blob
 
-from amino import may, List, Maybe, Map, Empty, Just, __, Left, Either
+from amino import may, List, Maybe, Map, Empty, Just, __, Left, Either, _, L
 from amino.logging import Logging
 from amino.transformer import Transformer
 from amino.lazy import lazy
@@ -138,7 +136,7 @@ class CommitInfo(Record):
     @staticmethod
     def create(index, commit: Commit, repo):
         id = commit.id.decode()
-        d = repo.parent(commit) / _.tree / F(Diff, repo, commit.tree)
+        d = repo.parent(commit) / _.tree / L(Diff)(repo, commit.tree, _)
         return CommitInfo(num=index, hex=id, timestamp=commit.commit_time,
                           current=repo.current.contains(id),
                           repo=repo, diff=d)
@@ -218,7 +216,7 @@ class DulwichRepo(repo.Repo, Logging):
     @staticmethod
     def create(worktree: Path, store: Path):
         List.wrap(BASE_DIRECTORIES)\
-            .smap(store.joinpath) %\
+            .map(lambda n: store.joinpath(*n)) %\
             __.mkdir(parents=True, exist_ok=True)
         DiskObjectStore.init(str(store / OBJECTDIR))
         repo = DulwichRepo(store, worktree)
@@ -337,7 +335,7 @@ class Repo(Logging):
 
     @property
     def master_commit(self):
-        return self._master_id_b // F(Try, self.repo.get_object)
+        return self._master_id_b // L(Try)(self.repo.get_object, _)
 
     @lazy
     def history(self):
@@ -355,7 +353,7 @@ class Repo(Logging):
         def filt(entry):
             paths = (
                 List.wrap(entry.changes()) //
-                (F(_.new.path) >> Maybe) /
+                (lambda a: Maybe.check(a.new.path)) /
                 __.decode()
             )
             return paths.contains(relpath)
@@ -375,7 +373,7 @@ class Repo(Logging):
 
     @property
     def head_commit(self) -> Either[str, Commit]:
-        return self._head_id_b // F(Try, self.repo.get_object)
+        return self._head_id_b // L(Try)(self.repo.get_object, _)
 
     def _switch(self, commit: Commit):
         self._checkout_commit(commit)
@@ -397,7 +395,7 @@ class Repo(Logging):
     def _history_info(self, commits):
         return commits\
             .with_index\
-            .smap(self.commit_info)\
+            .map2(self.commit_info)\
             .filter_not(_.empty)
 
     @lazy
@@ -444,7 +442,7 @@ class Repo(Logging):
     def checkout_file(self, commit_sha, path):
         path_s = str(self.abspath(path))
         return (Task.delay(self.repo.path_blob, commit_sha, path)
-                .map2(F(build_file_from_blob, target_path=path_s)))
+                .map2(L(build_file_from_blob)(_, target_path=path_s)))
 
 
 class RepoT(Transformer[Repo]):

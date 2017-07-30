@@ -1,8 +1,6 @@
-from fn import _
+from amino.test.spec_spec import later
 
-from amino.test import later
-
-from amino import List, Just, __
+from amino import List, Just, __, _
 from amino.util.random import Random
 
 from proteome.project import Project

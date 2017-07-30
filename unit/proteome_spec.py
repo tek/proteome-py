@@ -18,7 +18,8 @@ from proteome.plugins.history.data import History
 from unit._support.loader import LoaderSpec
 from unit._support.async import test_loop
 
-from amino.test import temp_dir, later
+from amino.test import temp_dir
+from amino.test.spec_spec import later
 
 null = Path('/dev/null')
 

@@ -3,15 +3,13 @@ from contextlib import contextmanager
 import json
 import asyncio
 
-import sure  # NOQA
-from flexmock import flexmock  # NOQA
-
 import neovim
 
 from amino import List, Map, Just
+from amino.test.spec_spec import later
 import amino.logging
 
-from amino.test import temp_dir, later
+from amino.test import temp_dir
 
 import ribosome
 from ribosome.test.integration.spec import main_looped
@@ -87,14 +85,12 @@ class ProteomePlugin_(ProteomeIntegrationSpec):
     def _await(self):
         self.proteome.pro.await_state()
 
-    @main_looped
     def add_by_ident(self):
         self.proteome.proteome_start()
         self.proteome.pro_add(['python/pro2'])
         self._await()
         self._projects.should.contain(self.pros[1])
 
-    @main_looped
     def complete_project(self):
         id1 = 'python/pro2'
         self.proteome.proteome_start()
@@ -103,7 +99,6 @@ class ProteomePlugin_(ProteomeIntegrationSpec):
         idents = self.proteome.pro_complete_projects(['', '', ''])
         set(idents).should.equal(set(['main', id1]))
 
-    @main_looped
     def complete_addable(self):
         def check(pre, ident):
             idents = self.proteome.pro_complete_addable_projects([pre, '', ''])
@@ -117,7 +112,6 @@ class ProteomePlugin_(ProteomeIntegrationSpec):
         check('py', ['python/pro1', 'python/pro2'])
         check('type1', [pro4])
 
-    @main_looped
     def add_by_params(self):
         tpe = 'ptype'
         name = 'pname'
@@ -132,7 +126,6 @@ class ProteomePlugin_(ProteomeIntegrationSpec):
         self._await()
         self._projects.last.should.contain(Project.of(name, root, Just(tpe)))
 
-    @main_looped
     def remove_by_ident(self):
         self.proteome.proteome_start()
         self.proteome.proteome_post_startup()
@@ -142,7 +135,6 @@ class ProteomePlugin_(ProteomeIntegrationSpec):
         self.proteome.pro_remove(['python/pro2'])
         later(lambda: self._env.current_index.should.equal(0))
 
-    @main_looped
     def ctags(self):
         self.proteome.proteome_start()
         self.pros.foreach(lambda a: self.proteome.pro_add([a.ident]))
@@ -151,7 +143,6 @@ class ProteomePlugin_(ProteomeIntegrationSpec):
         self._await()
         later(lambda: self.pros.foreach(lambda a: a.tag_file.should.exist))
 
-    @main_looped
     def history(self):
         def check_commit(pro: Project):
             l = len(self.object_files(pro))

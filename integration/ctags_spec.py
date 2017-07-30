@@ -1,7 +1,4 @@
-import sure  # NOQA
-from flexmock import flexmock  # NOQA
-
-from amino.test import later
+from amino.test.spec_spec import later
 
 from amino import List
 

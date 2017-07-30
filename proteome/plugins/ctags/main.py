@@ -1,9 +1,7 @@
-from fn import _
-
 from ribosome.machine import may_handle, message
 from ribosome.nvim import Buffer
 
-from amino import List, Empty
+from amino import List, Empty, _
 from amino.lazy import lazy
 
 from proteome.state import ProteomeComponent, ProteomeTransitions

@@ -2,10 +2,8 @@ from pathlib import Path
 from typing import Tuple
 import json
 
-from amino import Maybe, Empty, Just, List, Map, may, Boolean, flat_may, __, F
+from amino import Maybe, Empty, Just, List, Map, may, Boolean, flat_may, __, L, _
 from amino.lazy import lazy
-
-from fn import _
 
 from ribosome.nvim import NvimFacade, HasNvim
 from ribosome.record import (field, list_field, Record, optional_field,
@@ -204,7 +202,7 @@ class Resolver(object):
 
     def specific(self, tpe: str, name: str) -> Maybe[Path]:
         return self.types\
-            .valfilter(_.call('contains', tpe))\
+            .valfilter(__.contains(tpe))\
             .k\
             .map(_ / name)\
             .find(lambda a: a.is_dir())
@@ -232,7 +230,7 @@ def content(path: Path):
 
 def subdirs(path: Path, n: int):
     sub = content(path).filter(__.is_dir())
-    return sub if n <= 1 else sub // F(subdirs, n=n - 1)
+    return sub if n <= 1 else sub // L(subdirs)(_, n - 1)
 
 
 def extract_ident(path: Path):
@@ -318,11 +316,11 @@ class ProjectLoader(Logging):
             .map(mkpath)\
             .or_else(
                 json.get_all('type', 'name')
-                .flat_smap(self.resolver.type_name))
+                .flat_map2(self.resolver.type_name))
         valid_fields = root\
             .map(lambda a: json ** Map(root=a, tpe=json.get('type')))\
             .map(lambda a: a.at(*Project._pclass_fields))
-        return Maybe.from_call(lambda: valid_fields.ssmap(Project)) | Empty()
+        return Maybe.from_call(lambda: valid_fields.map(lambda kw: Project(**kw))) | Empty()
 
     # TODO log error if not a dir
     # use Either
@@ -341,14 +339,15 @@ class ProjectLoader(Logging):
     @property
     def _all_long_ident(self):
         def typed_ident(base, types):
-            names = subdirs(base, n=1) / _.name
-            return (types // (lambda t: names / F('{}/{}'.format, t)))
-        bases = self.resolver.bases // F(subdirs, n=2) // extract_ident
-        typed = self.resolver.types.to_list.flat_smap(typed_ident)
+            names = subdirs(base, 1) / _.name
+            return (types // (lambda t: names / L('{}/{}'.format)(t, _)))
+        print(self.resolver.bases)
+        bases = self.resolver.bases // L(subdirs)(_, 2) // extract_ident
+        typed = self.resolver.types.to_list.flat_map2(typed_ident)
         return bases + typed
 
     def _short_ident(self, idents):
-        return idents / __.split('/') / _[-1]
+        return idents / __.split('/') / __[-1]
 
     def _main_ids(self, idents, main: Maybe[str]):
         return main / (
@@ -373,11 +372,11 @@ class ProjectAnalyzer(HasNvim, Logging):
     def _default_detect_data(self, wd: Path):
         type_name = self.loader.resolver.dir(wd)
         return type_name\
-            .flat_smap(self.loader.json_by_type_name)\
+            .flat_map2(self.loader.json_by_type_name)\
             .map(_ + ('root', str(wd)))\
             .or_else(
                 type_name
-                .smap(lambda t, n: Map(type=t, root=str(wd), name=n))
+                .map2(lambda t, n: Map(type=t, root=str(wd), name=n))
             )
 
     def _detect_data(self, wd: Path):

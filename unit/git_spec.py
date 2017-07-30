@@ -1,13 +1,11 @@
 from functools import wraps
 
-from fn import _
-
 from proteome.plugins.history import History, HistoryGit
 
 from unit.project_spec import LoaderSpec
 from unit._support.async import test_loop
 
-from amino import __, curried
+from amino import __, curried, _
 from amino.lazy import lazy
 
 from ribosome.nvim import ScratchBuffer

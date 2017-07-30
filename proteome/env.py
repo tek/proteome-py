@@ -1,16 +1,13 @@
 from pathlib import Path
 import tempfile
 
-from fn import _
-
-from proteome.project import (Projects, Resolver, ProjectLoader, Project,
-                              ProjectAnalyzer)
+from proteome.project import (Projects, Resolver, ProjectLoader, Project, ProjectAnalyzer)
 from proteome.logging import Logging
 from ribosome.data import Data
 from ribosome.record import field
 from ribosome import NvimFacade
 
-from amino import List, Map, Just, Boolean
+from amino import List, Map, Just, Boolean, _
 
 
 class Env(Data, Logging):
@@ -110,9 +107,11 @@ class Env(Data, Logging):
     @property
     def main_clone_dir(self):
         temp = lambda: tempfile.mkdtemp(prefix='proteome_clone')
-        return self.resolver.bases.head\
-            .ap2(self.main_type, _ / _)\
+        return (
+            (self.resolver.bases.head & self.main_type)
+            .map2(lambda base, tpe: base / tpe)
             .or_else(temp)
+        )
 
     def is_ident_current(self, ident):
         return Boolean(

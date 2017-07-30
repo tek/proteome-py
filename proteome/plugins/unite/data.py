@@ -3,7 +3,7 @@ import abc
 from ribosome.machine import Message
 from ribosome import NvimFacade
 
-from amino import F, List, Map, _
+from amino import List, Map, _, L, __
 
 from proteome.logging import Logging
 
@@ -38,27 +38,27 @@ class UniteEntity(Logging, metaclass=abc.ABCMeta):
         self.name = name
 
     @abc.abstractproperty
-    def tpe(self):
+    def tpe(self) -> str:
         ...
 
     @abc.abstractproperty
-    def data(self):
+    def data(self) -> str:
         ...
 
     @property
-    def _func_defs_sync(self):
+    def _func_defs_sync(self) -> List[str]:
         return List()
 
     @property
-    def _func_defs_async(self):
+    def _func_defs_async(self) -> List[str]:
         return List()
 
-    def _force_function_defs(self, vim):
+    def _force_function_defs(self, vim: NvimFacade) -> None:
         force = lambda c, n: c('silent call {}()'.format(n))
-        self._func_defs_sync.foreach(F(force, vim.cmd_sync))
-        self._func_defs_async.foreach(F(force, vim.cmd))
+        self._func_defs_sync.foreach(L(force)(vim.cmd_sync, _))
+        self._func_defs_async.foreach(L(force)(vim.cmd, _))
 
-    def define(self, vim: NvimFacade):
+    def define(self, vim: NvimFacade) -> None:
         self._force_function_defs(vim)
         vim.cmd('call unite#define_{}({})'.format(self.tpe, self.data))
 
@@ -78,15 +78,15 @@ class UniteSource(UniteEntity):
         self.kind = kind
 
     @property
-    def tpe(self):
+    def tpe(self) -> str:
         return 'source'
 
     @property
-    def _func_defs_sync(self):
+    def _func_defs_sync(self) -> List[str]:
         return List(self.source)
 
     @property
-    def data(self):
+    def data(self) -> str:
         return self._templ.format(self.name, self.source, self.kind)
 
 
@@ -113,26 +113,25 @@ class UniteKind(UniteEntity):
     _defaults = Map(is_selectable=1)
 
     @property
-    def tpe(self):
+    def tpe(self) -> str:
         return 'kind'
 
     def __init__(self, name: str, actions: List[Map]) -> None:
         super().__init__(name)
         self.actions = actions / self._defaults.merge
-        self.default = actions.head / _['name'] | 'none'
+        self.default = actions.head / __['name'] | 'none'
 
     @property
-    def _func_defs_async(self):
-        return self.actions / _['handler']
+    def _func_defs_async(self) -> List[str]:
+        return self.actions / __['handler']
 
-    def _action(self, params):
+    def _action(self, params: dict) -> str:
         return self._action_templ.format(**params)
 
     @property
-    def data(self):
+    def data(self) -> str:
         actions = self.actions.map(self._action).mk_string(', ')
-        return self._templ.format(name=self.name, actions=actions,
-                                  default=self.default)
+        return self._templ.format(name=self.name, actions=actions, default=self.default)
 
 
 class Id():

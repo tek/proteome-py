@@ -1,14 +1,6 @@
-from pathlib import Path
-
-import sure  # NOQA
-from flexmock import flexmock  # NOQA
-from pathlib import Path
-
-from fn import _
-
 from amino.test import temp_dir
 
-from amino import Just, List, Empty, Map
+from amino import Just, List, Empty, Map, Path, _, __
 
 from proteome.project import Project, Projects, ProjectAnalyzer
 from proteome.logging import Logging
@@ -16,10 +8,10 @@ from proteome.logging import Logging
 from unit._support.loader import LoaderSpec
 
 
-class Projects_(LoaderSpec):
+class ProjectsSpec(LoaderSpec):
 
     def setup(self, *a, **kw):
-        super(Projects_, self).setup(*a, **kw)
+        super(ProjectsSpec, self).setup(*a, **kw)
 
     def show(self):
         n = 'some name'
@@ -39,7 +31,7 @@ class Projects_(LoaderSpec):
         (p2 - pro._get).projects.should.be.empty
 
 
-class ProjectLoader_(LoaderSpec):
+class ProjectLoaderSpec(LoaderSpec):
 
     def resolve(self):
         type_name = '{}/{}'.format(self.pypro1_type, self.pypro1_name)
@@ -125,10 +117,10 @@ class ProjectLoader_(LoaderSpec):
         set(self.loader.main_ident(Just(self.pypro1_type))).should.equal(pros)
 
 
-class ProjectResolver_(LoaderSpec, Logging):
+class ProjectResolverSpec(LoaderSpec, Logging):
 
     def setup(self, *a, **kw):
-        super(ProjectResolver_, self).setup(*a, **kw)
+        super(ProjectResolverSpec, self).setup(*a, **kw)
 
     def in_base(self):
         p = self.pypro1_root
@@ -139,14 +131,13 @@ class ProjectResolver_(LoaderSpec, Logging):
             Just(('type1', self.type1pro_name)))
 
 
-class ProjectAnalyzer_(LoaderSpec, Logging):
+class ProjectAnalyzerSpec(LoaderSpec, Logging):
 
     def root_to_json(self):
         root = self.project_base / 'pa_tpe_1' / 'pa_1'
         anal = ProjectAnalyzer(self.vim, self.loader)
         types = ['pa_tpe_2', 'pa_tpe_3']
-        anal._detect_data(root).map(_['types']).should.contain(types)
+        anal._detect_data(root).map(__['types']).should.contain(types)
 
 
-__all__ = ('Projects_', 'ProjectLoader_', 'ProjectResolver_',
-            'ProjectResolver_')
+__all__ = ('ProjectsSpec', 'ProjectLoaderSpec', 'ProjectResolverSpec', 'ProjectResolverSpec')

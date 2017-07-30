@@ -1,27 +1,20 @@
-from pathlib import Path
-
 import neovim
 
-from amino import List, Map, __, F, _
+from amino import List, Map, __, _, L, Path
 
 from ribosome import command, NvimStatePlugin, msg_command, json_msg_command
 
 from proteome.plugins.core import (
-    AddByParams, Show, Create, SetProject, Next, Prev, StageI,
-    Save, RemoveByIdent, BufEnter, StageII, StageIII, StageIV, CloneRepo
+    AddByParams, Show, Create, SetProject, Next, Prev, StageI, Save, RemoveByIdent, BufEnter, StageII, StageIII,
+    StageIV, CloneRepo
 )
-from proteome.plugins.history.messages import (HistoryPrev, HistoryNext,
-                                               HistoryStatus, HistoryLog,
-                                               HistoryBrowse,
-                                               HistoryBrowseInput,
-                                               HistorySwitch, HistoryPick,
-                                               HistoryRevert,
+from proteome.plugins.history.messages import (HistoryPrev, HistoryNext, HistoryStatus, HistoryLog, HistoryBrowse,
+                                               HistoryBrowseInput, HistorySwitch, HistoryPick, HistoryRevert,
                                                HistoryFileBrowse)
 from proteome.main import Proteome
 from proteome.nvim import NvimFacade
 from proteome.logging import Logging
-from proteome.plugins.unite import (UniteSelectAdd, UniteSelectAddAll,
-                                    UniteProjects)
+from proteome.plugins.unite import UniteSelectAdd, UniteSelectAddAll, UniteProjects
 from proteome.plugins.unite import Id as Unite
 
 
@@ -50,7 +43,7 @@ def unite_action(name):
     def uc_wrap(f):
         @neovim.function(handler)
         def f_wrap(self, args):
-            _unite_word(args) / F(f, self) % self.pro.send
+            _unite_word(args) / L(f)(self, _) % self.pro.send
         return f_wrap
     return uc_wrap
 

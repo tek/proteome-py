@@ -1,10 +1,8 @@
 from pathlib import Path
 from datetime import datetime
 
-from fn import _, F
-
 from amino.lazy import lazy
-from amino import Map, __, Just, Empty, may, List, Maybe, Right
+from amino import Map, __, Just, Empty, may, List, Maybe, Right, L, _
 from amino.util.numeric import try_convert_int
 from amino.async import gather_sync_flat
 from amino.task import Task
@@ -57,7 +55,7 @@ class BrowseTransitions(ProteomeTransitions):
     def content(self):
         sel = self.data.selected
         return List.wrap(enumerate(self.data.commits[:sel + 20]))\
-            .flat_smap(lambda i, a: a.browse_format(i == sel))
+            .flat_map2(lambda i, a: a.browse_format(i == sel))
 
     @property
     def selected_commit(self):
@@ -133,7 +131,7 @@ class BrowseTransitions(ProteomeTransitions):
         q = QuitBrowse(self.buffer)
         switch = (
             self.data.path //
-            (lambda path: self.selected_id / F(HistorySwitchFile, path)) |
+            (lambda path: self.selected_id / L(HistorySwitchFile)(path, _)) |
             HistorySwitch(self.data.selected)
         )
         return switch.pub, q, q.pub
@@ -209,7 +207,7 @@ class Plugin(ProteomeComponent):
 
         @property
         def _with_browse(self):
-            return F(self._with_sub) << self.state.setter('browse')
+            return lambda a: self._with_sub(self.state.setter('browse')(a))
 
         @property
         def state(self):
@@ -327,8 +325,8 @@ class Plugin(ProteomeComponent):
             commits = lambda r: (r, f(r))
             return (
                 (self._current_repo_ro / commits)
-                .flat_smap(F(self._build_browse, path=path)) /
-                F(self._add_browse)
+                .flat_map2(L(self._build_browse)(_, _, path=path)) /
+                self._add_browse
             )
 
         @handle(HistoryBrowse)
@@ -366,9 +364,12 @@ class Plugin(ProteomeComponent):
             return self._browse_for_buffer(self.vim.buffer)
 
         def _browse_for_buffer(self, buffer):
-            return self.state.browse\
-                .find(_.buffer.buffer == buffer)\
-                .map(_[1])
+            return (
+                self.state
+                .browse
+                .find(_.buffer.buffer == buffer)
+                .map(__[1])
+            )
 
         @handle(QuitBrowse)
         def quit_browse(self):

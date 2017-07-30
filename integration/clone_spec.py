@@ -1,10 +1,5 @@
-import sure  # NOQA
-from flexmock import flexmock  # NOQA
-
-from fn import _
-
-from amino.test import later
 from amino import __
+from amino.test.spec_spec import later
 
 from integration._support.base import ProteomePluginIntegrationSpec
 
@@ -16,7 +11,7 @@ class CloneSpec(ProteomePluginIntegrationSpec):
         self.vim.cmd('ProClone tek/{}'.format(name))
         readme = self.base / self.tpe1 / name / 'README.md'
         later(lambda: readme.exists().should.be.ok)
-        self._pvar_becomes_map('active', name, _['name'])
+        self._pvar_becomes_map('active', name, __['name'])
 
     def invalid(self):
         name = 'invalid@#'

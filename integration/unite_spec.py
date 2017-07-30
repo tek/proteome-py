@@ -1,15 +1,18 @@
 from functools import wraps
+from typing import Callable, Any
 
-from amino import List, env, _, F
-from amino.test import later, temp_dir
+from amino import List, env, __
+from amino.test import temp_dir
+
+from ribosome.test.integration.spec_spec import later
 
 from integration._support.base import ProteomePluginIntegrationSpec
 
 
-def _unite(f):
+def _unite(f: Callable[[Any, str], None]) -> Callable[[Any], None]:
     @wraps(f)
-    def wrapper(self):
-        def go(unite):
+    def wrapper(self: Any) -> None:
+        def go(unite: str) -> Any:
             self.vim.options.amend_l('rtp', [unite])
             self.vim.cmd('source {}/plugin/*.vim'.format(unite))
             self.vim.cmd('source {}/plugin/unite/*.vim'.format(unite))
@@ -22,21 +25,20 @@ def _unite(f):
 class UniteSpec(ProteomePluginIntegrationSpec):
 
     @property
-    def _plugins(self):
+    def _plugins(self) -> List[str]:
         return List('proteome.plugins.unite')
 
-    def _mk_projects(self):
+    def _mk_projects(self) -> None:
         self.other = 'other'
         self.other2 = 'other2'
         temp_dir(str(self.type1_base / self.other))
         temp_dir(str(self.base2 / self.tpe1 / self.other2))
 
-    def _count(self, num):
-        return later(
-            lambda: (self.vim.vars.p('projects') / len).should.contain(num))
+    def _count(self, num: int) -> bool:
+        return later(lambda: (self.vim.vars.p('projects') / len).should.contain(num))
 
     @_unite
-    def select_add(self, unite):
+    def select_add(self, unite: str) -> None:
         self._mk_projects()
         self.vim.cmd('ProSelectAdd')
         lines = List(
@@ -46,7 +48,7 @@ class UniteSpec(ProteomePluginIntegrationSpec):
         later(lambda: self.vim.buffer.content.should.equal(lines))
 
     @_unite
-    def select_add_all(self, unite):
+    def select_add_all(self, unite: str) -> None:
         self._mk_projects()
         self.vim.cmd('ProSelectAddAll -auto-resize')
         lines = List(
@@ -60,7 +62,7 @@ class UniteSpec(ProteomePluginIntegrationSpec):
         later(lambda: self.vim.buffer.content.should.equal(lines))
 
     @_unite
-    def selectable_add(self, unite):
+    def selectable_add(self, unite: str) -> None:
         self._mk_projects()
         self.vim.cmd('ProSelectAddAll -auto-resize')
         self._wait(0.1)
@@ -68,18 +70,18 @@ class UniteSpec(ProteomePluginIntegrationSpec):
         self._count(3)
 
     @_unite
-    def activate(self, unite):
-        def active_type(tpe):
-            self.vim.vars.p('active').map(_['tpe']).should.contain(tpe)
+    def activate(self, unite: str) -> None:
+        def active_type(tpe: str) -> None:
+            self.vim.vars.p('active').map(__['tpe']).should.contain(tpe)
         self.vim.cmd('ProAdd tpe2/dep')
-        later(F(active_type, self.tpe2))
+        later(active_type, self.tpe2)
         self.vim.cmd('Projects')
         self._wait(0.1)
         self.vim.cmd('call feedkeys("\\<tab>\\<esc>\\<cr>")')
-        later(F(active_type, self.tpe1))
+        later(active_type, self.tpe1)
 
     @_unite
-    def delete(self, unite):
+    def delete(self, unite: str) -> None:
         self.vim.cmd('ProAdd tpe2/dep')
         self._count(2)
         self.vim.cmd('Projects')
@@ -88,7 +90,7 @@ class UniteSpec(ProteomePluginIntegrationSpec):
         self._count(1)
 
     @_unite
-    def delete_by_mapping(self, unite):
+    def delete_by_mapping(self, unite: str) -> None:
         self.vim.cmd('ProAdd tpe2/dep')
         self._count(2)
         self.vim.cmd('Projects')
@@ -97,7 +99,7 @@ class UniteSpec(ProteomePluginIntegrationSpec):
         self._count(1)
 
     @_unite
-    def selectable_delete(self, unite):
+    def selectable_delete(self, unite: str) -> None:
         ''' Remove two projects
         by selecting them via `<space>` and pressing `d`
         '''

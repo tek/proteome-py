@@ -1,9 +1,7 @@
 import re
 from pathlib import Path
 
-from fn import F, _
-
-from amino import List, Map, Empty, may
+from amino import List, Map, Empty, may, _, L
 from amino.lazy import lazy
 
 from ribosome.machine import handle, may_handle, Error, Info, Nop
@@ -73,8 +71,8 @@ class CoreTransitions(ProteomeTransitions):
         ident = self.msg.ident
         return (
             (options.get('root') /
-                mkpath //
-                F(self.data.loader.from_params, ident, params=options))
+             mkpath //
+             L(self.data.loader.from_params)(ident, _, params=options))
             .or_else(
                 self.data.loader.by_ident(ident)
                 .or_else(self.data.loader.resolve_ident(
@@ -187,9 +185,9 @@ class CoreTransitions(ProteomeTransitions):
             .or_else(self._clone_repo_name(uri))
         url = self._clone_url(uri)
         return (
-            self.data.main_clone_dir.ap2(name, _ / _)
+            self.data.main_clone_dir.ap2(name, lambda dir, n: dir / n)
             .to_either('invalid parameter: {}'.format(uri)) /
-            F(self._clone_repo, url)
+            L(self._clone_repo)(url, _)
         )
 
     @may_handle(BufEnter)
@@ -209,7 +207,7 @@ class CoreTransitions(ProteomeTransitions):
         return (
             List.wrap(uri.split('/'))
             .lift(-1) /
-            F(re.sub, '\.git$', '')
+            L(re.sub)('\.git$', '', _)
         )
 
     @property
