@@ -1,6 +1,7 @@
-from ribosome import Machine, RootMachine
+from ribosome import RootMachine
 from ribosome.nvim import HasNvim
 from ribosome.machine import ModularMachine, Transitions
+from ribosome.machine.base import MachineBase
 
 from proteome.nvim import NvimFacade
 from proteome.logging import Logging
@@ -9,7 +10,7 @@ from proteome.logging import Logging
 class ProteomeComponent(ModularMachine, HasNvim, Logging):
 
     def __init__(self, vim: NvimFacade, parent=None, title=None) -> None:
-        Machine.__init__(self, parent, title=title)
+        MachineBase.__init__(self, parent, title=title)
         HasNvim.__init__(self, vim)
 
 
