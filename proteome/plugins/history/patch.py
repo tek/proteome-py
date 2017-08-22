@@ -1,10 +1,10 @@
 from proteome.project import Project
-from ribosome import ProcessExecutor, Job
+from ribosome import NvimProcessExecutor, Job
 
 from amino import Just
 
 
-class Patch(ProcessExecutor):  # type: ignore
+class Patch(NvimProcessExecutor):  # type: ignore
 
     def patch(self, project: Project, diff: str):
         args = ['-p1', '-r-']

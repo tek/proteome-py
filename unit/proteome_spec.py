@@ -32,10 +32,10 @@ class DictProteome(Proteome):
         return dict()
 
 
-class Proteome_(LoaderSpec):
+class ProteomeSpec(LoaderSpec):
 
     def setup(self):
-        super().setup()
+        LoaderSpec.setup(self)
         asyncio.get_child_watcher()
 
     def _prot(self, p=List(), b=List(), t=Map(), pros=List()):
@@ -204,4 +204,4 @@ class Proteome_(LoaderSpec):
             ret = prot.send_sync(AddByParams(name, params))
             (ret.project(name) / _.root).should.contain(root)
 
-__all__ = ('Proteome_',)
+__all__ = ('ProteomeSpec',)

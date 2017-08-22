@@ -1,10 +1,10 @@
-from ribosome import ProcessExecutor, Job
+from ribosome import NvimProcessExecutor, Job
 
 from proteome.project import Project
 from proteome.git.repo import CommitInfo
 
 
-class Git(ProcessExecutor):
+class Git(NvimProcessExecutor):
 
     def pre_args(self, project: Project):
         return []

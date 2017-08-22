@@ -31,7 +31,7 @@ class Plugin(ProteomeComponent):
                 err = 'error sourcing {}.vim: {{}}'.format(path)
                 return (
                     self.vim.runtime(path)
-                    .cata(L(err.format)(_.cause) >> List, lambda a: List())
+                    .cata(L(err.format)(_) >> List, lambda a: List())
                 )
             return (
                 project.all_types.flat_map(run) +

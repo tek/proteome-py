@@ -1,8 +1,8 @@
 from proteome.project import Project
-from ribosome import ProcessExecutor, Job
+from ribosome import NvimProcessExecutor, Job
 
 
-class Ctags(ProcessExecutor):  # type: ignore
+class Ctags(NvimProcessExecutor):
 
     def gen(self, project: Project):
         langs = ','.join(project.ctags_langs)

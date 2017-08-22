@@ -21,7 +21,7 @@ class CtagsGenSpec(_CtagsSpec):
 
     def _pre_start(self):
         super()._pre_start()
-        self.tag_file.should_not.exist
+        self.tag_file.exists().should_not.be.ok
 
     def gen(self):
         self.vim.cmd('ProSave')
