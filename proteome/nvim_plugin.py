@@ -55,7 +55,6 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
         self.pro = None
         self._post_initialized = False
 
-    @property
     def state(self):
         return self.pro
 
