@@ -48,12 +48,13 @@ def unite_action(name):
     return uc_wrap
 
 
-class ProteomeNvimPlugin(NvimStatePlugin, Logging):
+class ProteomeNvimPlugin(NvimStatePlugin, Logging, name='proteome', prefix='pro'):
 
     def __init__(self, vim: neovim.Nvim) -> None:
         super().__init__(NvimFacade(vim))
         self.pro = None
         self._post_initialized = False
+        self.start_plugin()
 
     def state(self):
         return self.pro
@@ -71,8 +72,7 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging):
             self.pro.stop()
             self.pro = None
 
-    @command(sync=True)
-    def proteome_start(self):
+    def start_plugin(self):
         config_path = self.vim.vars.ppath('config_path')\
             .get_or_else(Path('/dev/null'))
         bases = self.vim.vars.ppathl('base_dirs')\
