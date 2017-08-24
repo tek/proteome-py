@@ -134,7 +134,7 @@ class UniteKind(UniteEntity):
         return self._templ.format(name=self.name, actions=actions, default=self.default)
 
 
-class Id():
+class UniteNames():
     addable_candidates = '_proteome_unite_addable'
     all_addable_candidates = '_proteome_unite_all_addable'
     projects_candidates = '_proteome_unite_projects'
@@ -148,4 +148,4 @@ class Id():
     projects = 'proteome_projects'
     project = 'proteome_project'
 
-__all__ = ('Id', 'UniteSelectAdd', 'UniteSelectAddAll', 'UniteProjects')
+__all__ = ('UniteNames', 'UniteSelectAdd', 'UniteSelectAddAll', 'UniteProjects')

@@ -5,7 +5,7 @@ from amino import List, Map
 from proteome.state import ProteomeComponent, ProteomeTransitions
 from proteome.plugins.unite.data import (UniteSelectAdd, UniteSelectAddAll,
                                          UniteProjects, UniteSource, UniteKind,
-                                         Id, UniteMessage)
+                                         UniteNames, UniteMessage)
 
 
 class UniteTransitions(ProteomeTransitions):
@@ -16,15 +16,15 @@ class UniteTransitions(ProteomeTransitions):
 
     @may_handle(UniteSelectAdd)
     def select_add(self):
-        self.unite_cmd(Id.addable)
+        self.unite_cmd(UniteNames.addable)
 
     @may_handle(UniteSelectAddAll)
     def select_add_all(self):
-        self.unite_cmd(Id.all_addable)
+        self.unite_cmd(UniteNames.all_addable)
 
     @may_handle(UniteProjects)
     def projects(self):
-        self.unite_cmd(Id.projects)
+        self.unite_cmd(UniteNames.projects)
 
 
 class Plugin(ProteomeComponent):
@@ -39,18 +39,18 @@ class Plugin(ProteomeComponent):
             self._setup_unite()
 
     def _setup_unite(self):
-        addable = UniteSource(Id.addable, Id.addable_candidates, Id.addable)
-        all_addable = UniteSource(Id.all_addable, Id.all_addable_candidates,
-                                  Id.addable)
-        add_action = Map(name='add', handler=Id.add_project,
+        addable = UniteSource(UniteNames.addable, UniteNames.addable_candidates, UniteNames.addable)
+        all_addable = UniteSource(UniteNames.all_addable, UniteNames.all_addable_candidates,
+                                  UniteNames.addable)
+        add_action = Map(name='add', handler=UniteNames.add_project,
                          desc='add project')
-        add_pro = UniteKind(Id.addable, List(add_action))
-        projects = UniteSource(Id.projects, Id.projects_candidates, Id.project)
-        delete_action = Map(name='delete', handler=Id.delete_project,
+        add_pro = UniteKind(UniteNames.addable, List(add_action))
+        projects = UniteSource(UniteNames.projects, UniteNames.projects_candidates, UniteNames.project)
+        delete_action = Map(name='delete', handler=UniteNames.delete_project,
                             desc='delete project')
-        activate_action = Map(name='activate', handler=Id.activate_project,
+        activate_action = Map(name='activate', handler=UniteNames.activate_project,
                               desc='activate project', is_selectable=0)
-        project = UniteKind(Id.project, List(activate_action, delete_action))
+        project = UniteKind(UniteNames.project, List(activate_action, delete_action))
         addable.define(self.vim)
         all_addable.define(self.vim)
         add_pro.define(self.vim)
