@@ -63,6 +63,9 @@ class ProteomeNvimPluginImpl(NvimStatePlugin, Logging, name='proteome', prefix='
         self.pro.start()
         self.pro.wait_for_running()
         self.pro.send(StageI())
+        self.pro.send(StageII().at(1))
+        self.pro.send(StageIII().at(1))
+        self.pro.send(StageIV().at(1))
 
     @neovim.autocmd('VimEnter')
     def vim_enter(self):
