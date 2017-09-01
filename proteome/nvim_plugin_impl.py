@@ -44,21 +44,20 @@ class ProteomeNvimPluginImpl(NvimStatePlugin, Logging, name='proteome', prefix='
             .keymap(lambda a: Path(a).expanduser())\
             .valmap(List.wrap)
         plugins = self.vim.vars.pl('plugins') | List()
-        self.pro = Proteome(self.vim.proxy, Path(config_path), plugins, bases,
-                            type_bases)
+        self.pro = Proteome(self.vim.proxy, Path(config_path), plugins, bases, type_bases)
         self.pro.start()
         self.pro.wait_for_running()
         self.pro.send(StageI())
 
     def stage_2(self):
         self.initialized = True
-        self.pro.send(StageII().at(1))
+        self.pro.send(StageII().at(.9))
 
     def stage_3(self):
-        self.pro.send(StageIII().at(1))
+        self.pro.send(StageIII().at(.92))
 
     def stage_4(self):
-        self.pro.send(StageIV().at(1))
+        self.pro.send(StageIV().at(.94))
 
     @command()
     def pro_plug(self, plug_name, cmd_name, *args):
