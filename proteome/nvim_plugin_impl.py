@@ -28,8 +28,8 @@ class ProteomeNvimPluginImpl(NvimStatePlugin, Logging, name='proteome', prefix='
     def __init__(self, vim: neovim.Nvim) -> None:
         super().__init__(NvimFacade(vim))
         self.pro = None
-        self._post_initialized = False
-        self.start_plugin()
+        self.initialized = False
+        self.stage_1()
 
     def state(self):
         return self.pro
@@ -47,7 +47,7 @@ class ProteomeNvimPluginImpl(NvimStatePlugin, Logging, name='proteome', prefix='
             self.pro.stop()
             self.pro = None
 
-    def start_plugin(self):
+    def stage_1(self):
         config_path = self.vim.vars.ppath('config_path')\
             .get_or_else(Path('/dev/null'))
         bases = self.vim.vars.ppathl('base_dirs')\
@@ -63,24 +63,16 @@ class ProteomeNvimPluginImpl(NvimStatePlugin, Logging, name='proteome', prefix='
         self.pro.start()
         self.pro.wait_for_running()
         self.pro.send(StageI())
+
+    def stage_2(self):
+        self.initialized = True
         self.pro.send(StageII().at(1))
+
+    def stage_3(self):
         self.pro.send(StageIII().at(1))
+
+    def stage_4(self):
         self.pro.send(StageIV().at(1))
-
-    @neovim.autocmd('VimEnter')
-    def vim_enter(self):
-        if not self._post_initialized:
-            self.proteome_post_startup()
-
-    @command()
-    def proteome_post_startup(self):
-        self._post_initialized = True
-        if self.pro is not None:
-            self.pro.send(StageII().at(1))
-            self.pro.send(StageIII().at(1))
-            self.pro.send(StageIV().at(1))
-        else:
-            self.log.error('proteome startup failed')
 
     @command()
     def pro_plug(self, plug_name, cmd_name, *args):
@@ -138,7 +130,7 @@ class ProteomeNvimPluginImpl(NvimStatePlugin, Logging, name='proteome', prefix='
 
     @neovim.autocmd('BufEnter')
     def buf_enter(self):
-        if self._post_initialized:
+        if self.initialized:
             self.pro.send(BufEnter(self.vim.buffer.proxy))
 
     @json_msg_command(CloneRepo)
