@@ -86,14 +86,14 @@ class ProteomePlugin_(ProteomeIntegrationSpec):
         self.proteome.pro.await_state()
 
     def add_by_ident(self):
-        self.proteome.proteome_start()
+        self.proteome.stage_1()
         self.proteome.pro_add(['python/pro2'])
         self._await()
         self._projects.should.contain(self.pros[1])
 
     def complete_project(self):
         id1 = 'python/pro2'
-        self.proteome.proteome_start()
+        self.proteome.stage_1()
         self.proteome.pro_add([id1])
         self._await()
         idents = self.proteome.pro_complete_projects(['', '', ''])
@@ -106,7 +106,7 @@ class ProteomePlugin_(ProteomeIntegrationSpec):
         pro4n = 'pro4'
         pro4 = '{}/{}'.format(self.type1, pro4n)
         temp_dir(self.type1_base / pro4n)
-        self.proteome.proteome_start()
+        self.proteome.stage_1()
         self._await()
         check('', ['python/pro1', 'python/pro2', 'vim/pro3', pro4])
         check('py', ['python/pro1', 'python/pro2'])
@@ -121,13 +121,13 @@ class ProteomePlugin_(ProteomeIntegrationSpec):
             root=str(root),
             history=False,
         )
-        self.proteome.proteome_start()
+        self.proteome.stage_1()
         self.proteome.pro_add([ident] + json.dumps(params).split(' '))
         self._await()
         self._projects.last.should.contain(Project.of(name, root, Just(tpe)))
 
     def remove_by_ident(self):
-        self.proteome.proteome_start()
+        self.proteome.stage_1()
         self.proteome.proteome_post_startup()
         self._await()
         self.proteome.pro_add(['python/pro2'])
@@ -136,7 +136,7 @@ class ProteomePlugin_(ProteomeIntegrationSpec):
         later(lambda: self._env.current_index.should.equal(0))
 
     def ctags(self):
-        self.proteome.proteome_start()
+        self.proteome.stage_1()
         self.pros.foreach(lambda a: self.proteome.pro_add([a.ident]))
         self._await()
         self.proteome.pro_save()
@@ -148,7 +148,7 @@ class ProteomePlugin_(ProteomeIntegrationSpec):
             l = len(self.object_files(pro))
             l.should.be.greater_than(2)  # type: ignore
         self.vim.vars.set_p('all_projects_history', 1)
-        self.proteome.proteome_start()
+        self.proteome.stage_1()
         self.pros.foreach(lambda a: self.proteome.pro_add([a.ident]))
         self._post_startup()
         self._await()

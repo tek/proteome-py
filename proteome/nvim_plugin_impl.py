@@ -1,6 +1,6 @@
 import neovim
 
-from amino import List, Map, __, _, L, Path
+from amino import List, Map, __, _, Path
 
 from ribosome import command, NvimStatePlugin, msg_command, json_msg_command
 from ribosome.unite import mk_unite_candidates, mk_unite_action
@@ -29,23 +29,9 @@ class ProteomeNvimPluginImpl(NvimStatePlugin, Logging, name='proteome', prefix='
         super().__init__(NvimFacade(vim))
         self.pro = None
         self.initialized = False
-        self.stage_1()
 
     def state(self):
         return self.pro
-
-    @command()
-    def proteome_reload(self):
-        self.proteome_quit()
-        self.proteome_start()
-        self._post_startup()
-
-    @command()
-    def proteome_quit(self):
-        if self.pro is not None:
-            self.vim.clean()
-            self.pro.stop()
-            self.pro = None
 
     def stage_1(self):
         config_path = self.vim.vars.ppath('config_path')\

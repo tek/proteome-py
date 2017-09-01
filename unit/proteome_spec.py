@@ -8,12 +8,12 @@ from amino import List, Just, _, Map
 
 from ribosome.machine import Nop
 
-from proteome.nvim_plugin import Create
 from proteome.project import Project, Projects, ProjectAnalyzer
 from proteome.plugins.core import (Next, Prev, StageI, RemoveByIdent,
                                    AddByParams)
 from proteome.main import Proteome
 from proteome.plugins.history.data import History
+from proteome.plugins.core.message import Create
 
 from unit._support.loader import LoaderSpec
 from unit._support.async import test_loop
