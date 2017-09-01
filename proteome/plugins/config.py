@@ -4,7 +4,7 @@ from ribosome.machine.transition import Error
 from amino import List, L, _
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
-from proteome.plugins.core import MainAdded, StageIII
+from proteome.plugins.core import StageII, StageIII
 
 
 class Plugin(ProteomeComponent):
@@ -45,7 +45,7 @@ class Plugin(ProteomeComponent):
         def _runtime_after(self, project):
             return self._runtime(project, self._project_after_dir)
 
-        @handle(MainAdded)
+        @handle(StageII)
         def before(self):
             return self.data.current.map(self._runtime_before)
 
