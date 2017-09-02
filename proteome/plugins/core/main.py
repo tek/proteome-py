@@ -81,8 +81,7 @@ class CoreTransitions(ProteomeTransitions):
     @may_handle(Add)
     def add(self):
         if self.msg.project not in self.data:
-            return (self.data.add(self.msg.project),
-                    Added(self.msg.project).pub)
+            return self.data.add(self.msg.project), Added(self.msg.project).pub
 
     @may_handle(Added)
     def added(self):
@@ -150,8 +149,7 @@ class CoreTransitions(ProteomeTransitions):
             info = 'switched root to {}'
             return ((pc, Info(info.format(pro.ident))) if self.msg.notify
                     else pc)
-        return (self.data.current.map(go) if self.data.initialized else
-                Empty())
+        return self.data.current.map(go) if self.data.initialized else Empty()
 
     @may_handle(ProjectChanged)
     def project_changed(self):

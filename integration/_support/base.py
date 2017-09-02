@@ -11,7 +11,7 @@ from ribosome.test.integration.spec import IntegrationSpecBase
 from proteome.project import Project
 from proteome.nvim import NvimFacade
 from proteome.test import Spec
-from proteome.nvim_plugin import ProteomeNvimPlugin
+from proteome.nvim_plugin import ProteomeNvimPluginImpl
 
 
 class IntegrationCommon(Spec):
@@ -58,9 +58,11 @@ class ProteomePluginIntegrationSpec(IntegrationCommon, PluginIntegrationSpecSpec
     def setup(self) -> None:
         IntegrationCommon.setup(self)
         PluginIntegrationSpecSpec.setup(self)
-        self.vim.cmd_sync('ProteomeStart')
+        self.vim.cmd_once_defined('ProteomeStage1')
+        self.cmd_sync('ProteomeStage2')
+        self.cmd_sync('ProteomeStage3')
+        self.cmd_sync('ProteomeStage4')
         self._wait_for(lambda: self.vim.vars.p('projects').present)
-        self.vim.cmd('ProteomePostStartup')
         self._pvar_becomes('root_dir', str(self.main_project))
 
     def _nvim_facade(self, vim: Nvim) -> NvimFacade:
@@ -103,7 +105,7 @@ class ProteomePluginIntegrationSpec(IntegrationCommon, PluginIntegrationSpecSpec
 
     @property
     def plugin_class(self) -> Either[str, type]:
-        return Right(ProteomeNvimPlugin)
+        return Right(ProteomeNvimPluginImpl)
 
     @property
     def _plugins(self) -> List[str]:

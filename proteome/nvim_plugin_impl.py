@@ -27,13 +27,10 @@ class ProteomeNvimPluginImpl(NvimStatePlugin, Logging, name='proteome', prefix='
 
     def __init__(self, vim: neovim.Nvim) -> None:
         super().__init__(NvimFacade(vim))
-        self.pro = None
         self.initialized = False
+        self.init_state()
 
-    def state(self):
-        return self.pro
-
-    def stage_1(self):
+    def init_state(self) -> None:
         config_path = self.vim.vars.ppath('config_path')\
             .get_or_else(Path('/dev/null'))
         bases = self.vim.vars.ppathl('base_dirs')\
@@ -47,17 +44,22 @@ class ProteomeNvimPluginImpl(NvimStatePlugin, Logging, name='proteome', prefix='
         self.pro = Proteome(self.vim.proxy, Path(config_path), plugins, bases, type_bases)
         self.pro.start()
         self.pro.wait_for_running()
+
+    def state(self):
+        return self.pro
+
+    def stage_1(self):
         self.pro.send(StageI())
 
     def stage_2(self):
         self.initialized = True
-        self.pro.send(StageII().at(.9))
+        self.pro.send(StageII().at(.7))
 
     def stage_3(self):
-        self.pro.send(StageIII().at(.92))
+        self.pro.send(StageIII().at(.72))
 
     def stage_4(self):
-        self.pro.send(StageIV().at(.94))
+        self.pro.send(StageIV().at(.74))
 
     @command()
     def pro_plug(self, plug_name, cmd_name, *args):
