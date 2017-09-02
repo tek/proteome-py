@@ -79,7 +79,6 @@ class CoreTransitions(ProteomeTransitions):
 
     @may_handle(Add)
     def add(self):
-        self.log.test(self.msg)
         if self.msg.project not in self.data:
             return self.data.add(self.msg.project), Added.from_msg(self.msg)(self.msg.project).pub
 

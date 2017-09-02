@@ -341,7 +341,6 @@ class ProjectLoader(Logging):
         def typed_ident(base, types):
             names = subdirs(base, 1) / _.name
             return (types // (lambda t: names / L('{}/{}'.format)(t, _)))
-        print(self.resolver.bases)
         bases = self.resolver.bases // L(subdirs)(_, 2) // extract_ident
         typed = self.resolver.types.to_list.flat_map2(typed_ident)
         return bases + typed
