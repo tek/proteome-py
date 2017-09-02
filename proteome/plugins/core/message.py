@@ -24,8 +24,6 @@ Show = message('Show', varargs='names')
 AddByParams = json_message('AddByParams', 'ident')
 CloneRepo = json_message('CloneRepo', 'uri')
 
-__all__ = ('StageI', 'StageII', 'StageIII', 'StageIV', 'Add', 'RemoveByIdent',
-           'Create', 'Next', 'Prev', 'SetProject', 'SetProjectIdent',
-           'SetProjectIndex', 'SwitchRoot', 'Save', 'Added', 'Removed',
-           'ProjectChanged', 'BufEnter', 'Initialized', 'MainAdded', 'Show',
-           'AddByParams', 'CloneRepo')
+__all__ = ('StageI', 'StageII', 'StageIII', 'StageIV', 'Add', 'RemoveByIdent', 'Create', 'Next', 'Prev', 'SetProject',
+           'SetProjectIdent', 'SetProjectIndex', 'SwitchRoot', 'Save', 'Added', 'Removed', 'ProjectChanged', 'BufEnter',
+           'Initialized', 'MainAdded', 'Show', 'AddByParams', 'CloneRepo')

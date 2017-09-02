@@ -195,7 +195,7 @@ class ProteomeSpec(LoaderSpec):
     def add_by_params(self):
         tpe = 'ptype'
         name = 'pname'
-        root = temp_dir('proteome/add_by_params')
+        root = temp_dir('proteome', 'add_by_params')
         params = Map(
             type=tpe,
             root=root

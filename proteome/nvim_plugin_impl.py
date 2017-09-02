@@ -72,7 +72,7 @@ class ProteomeNvimPluginImpl(NvimStatePlugin, Logging, name='proteome', prefix='
     addable = dict(complete='customlist,ProCompleteAddableProjects')
     projects = dict(complete='customlist,ProCompleteProjects')
 
-    @json_msg_command(AddByParams, **addable)
+    @json_msg_command(AddByParams, bang=True, **addable)
     def pro_add(self):
         pass
 

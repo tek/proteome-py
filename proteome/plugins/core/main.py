@@ -71,24 +71,24 @@ class CoreTransitions(ProteomeTransitions):
              L(self.data.loader.from_params)(ident, _, params=options))
             .or_else(
                 self.data.loader.by_ident(ident)
-                .or_else(self.data.loader.resolve_ident(
-                    ident, options, self.data.main_type))
+                .or_else(self.data.loader.resolve_ident(ident, options, self.data.main_type))
             ) /
-            Add |
+            Add.from_msg(self.msg) |
             Error(self._no_such_ident(ident, options))
         )
 
     @may_handle(Add)
     def add(self):
+        self.log.test(self.msg)
         if self.msg.project not in self.data:
-            return self.data.add(self.msg.project), Added(self.msg.project).pub
+            return self.data.add(self.msg.project), Added.from_msg(self.msg)(self.msg.project).pub
 
     @may_handle(Added)
     def added(self):
         self.vim.vars.set_p('added_project', self.msg.project.json)
         self.vim.vars.set_p('projects', self.data.projects.json)
         self.vim.pautocmd('Added')
-        if self.data.initialized:
+        if self.data.initialized and not self.msg.bang:
             return SetProjectIndex(-1)
 
     @handle(RemoveByIdent)
