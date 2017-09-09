@@ -11,7 +11,7 @@ from ribosome.test.integration.spec import IntegrationSpecBase
 from proteome.project import Project
 from proteome.nvim import NvimFacade
 from proteome.test import Spec
-from proteome.nvim_plugin import ProteomeNvimPluginImpl
+from proteome.nvim_plugin import ProteomeNvimPlugin
 
 
 class IntegrationCommon(Spec):
@@ -105,7 +105,7 @@ class ProteomePluginIntegrationSpec(IntegrationCommon, PluginIntegrationSpecSpec
 
     @property
     def plugin_class(self) -> Either[str, type]:
-        return Right(ProteomeNvimPluginImpl)
+        return Right(ProteomeNvimPlugin)
 
     @property
     def _plugins(self) -> List[str]:
