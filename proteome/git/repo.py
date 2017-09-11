@@ -17,7 +17,7 @@ from amino import may, List, Maybe, Map, Empty, Just, __, Left, Either, _, L
 from amino.logging import Logging
 from amino.transformer import Transformer
 from amino.lazy import lazy
-from amino.task import Try, Task
+from amino.io import Try, IO
 from amino.lazy_list import LazyList
 
 from ribosome.record import field, bool_field, maybe_field, Record
@@ -441,7 +441,7 @@ class Repo(Logging):
 
     def checkout_file(self, commit_sha, path):
         path_s = str(self.abspath(path))
-        return (Task.delay(self.repo.path_blob, commit_sha, path)
+        return (IO.delay(self.repo.path_blob, commit_sha, path)
                 .map2(L(build_file_from_blob)(_, target_path=path_s)))
 
 

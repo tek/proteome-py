@@ -5,13 +5,13 @@ from amino.lazy import lazy
 from amino import Map, __, Just, Empty, may, List, Maybe, Right, L, _
 from amino.util.numeric import try_convert_int
 from amino.async import gather_sync_flat
-from amino.task import Task
+from amino.io import IO
 
 from ribosome.machine import may_handle, message, handle, Info
 from ribosome.machine import Error
 from ribosome.record import field, dfield, Record, lazy_list_field, maybe_field
 from ribosome.nvim import ScratchBuilder, ScratchBuffer
-from ribosome.machine.base import UnitTask
+from ribosome.machine.base import UnitIO
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
 from proteome.plugins.core import Save, StageIV
@@ -294,7 +294,7 @@ class Plugin(ProteomeComponent):
                 self._current_repo_ro /
                 __.checkout_file(self.msg.id, self.msg.path) /
                 __.replace(CommitCurrent()) /
-                UnitTask
+                UnitIO
             )
 
         # TODO
@@ -380,7 +380,7 @@ class Plugin(ProteomeComponent):
             browse = Browse(state, self.vim)
             return (
                 self._with_browse(self.state.browse + (browse.repo, browse)),
-                UnitTask(Task.delay(browse.run))
+                UnitIO(IO.delay(browse.run))
             )
 
         def _remove_browse(self, target: Browse):
