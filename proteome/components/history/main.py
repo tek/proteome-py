@@ -15,17 +15,17 @@ from ribosome.nvim import ScratchBuilder, ScratchBuffer
 from ribosome.machine.base import UnitIO
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
-from proteome.plugins.core import Save
+from proteome.components.core import Save
 from proteome.logging import Logging
 from proteome.project import Project
 from proteome.git import Repo, CommitInfo
-from proteome.plugins.history.messages import (HistoryPrev, HistoryNext, HistoryStatus, HistoryLog, HistoryBrowse,
+from proteome.components.history.messages import (HistoryPrev, HistoryNext, HistoryStatus, HistoryLog, HistoryBrowse,
                                                HistoryBrowseInput, HistorySwitch, Redraw, QuitBrowse, Commit,
                                                HistoryBufferPrev, HistoryPick, HistoryRevert, HistoryFileBrowse,
                                                HistorySwitchFile, CommitCurrent)
-from proteome.plugins.history.data import History, HistoryT, HistoryState
-from proteome.plugins.history.process import HistoryGit
-from proteome.plugins.history.patch import Patch
+from proteome.components.history.data import History, HistoryT, HistoryState
+from proteome.components.history.process import HistoryGit
+from proteome.components.history.patch import Patch
 
 
 class BrowseState(Record):

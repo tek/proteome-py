@@ -1,6 +1,6 @@
 from functools import wraps
 
-from proteome.plugins.history import History, HistoryGit
+from proteome.components.history import History, HistoryGit
 
 from unit.project_spec import LoaderSpec
 from unit._support.async import test_loop

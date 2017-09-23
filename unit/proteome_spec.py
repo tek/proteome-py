@@ -7,11 +7,11 @@ from amino import List, Just, _, Map
 from ribosome.machine.messages import Nop
 
 from proteome.project import Project, Projects, ProjectAnalyzer
-from proteome.plugins.core import (Next, Prev, Stage1, RemoveByIdent,
+from proteome.components.core import (Next, Prev, Stage1, RemoveByIdent,
                                    AddByParams)
 from proteome.main import Proteome
-from proteome.plugins.history.data import History
-from proteome.plugins.core.message import Create
+from proteome.components.history.data import History
+from proteome.components.core.message import Create
 
 from unit._support.loader import LoaderSpec
 from unit._support.async import test_loop
@@ -80,7 +80,7 @@ class ProteomeSpec(LoaderSpec):
         prot.stop()
 
     def ctags(self):
-        plug_name = 'proteome.plugins.ctags'
+        plug_name = 'proteome.components.ctags'
         p1 = self.mk_project('pro1', 'c')
         p2 = self.mk_project('pro2', 'go')
         pros = List(p1, p2)
@@ -102,7 +102,7 @@ class ProteomeSpec(LoaderSpec):
         def setup(self):
             self.vim.vars.set_p('all_projects_history', 1)
             self.vim.vars.set('proteome_history_base', str(self.history_base))
-            self.plug_name = 'proteome.plugins.history'
+            self.plug_name = 'proteome.components.history'
             self.main_project = self.mk_project('pro1', 'c')
             self.test_file_1 = self.main_project.root / 'test_file_1'
             self.test_content = List(

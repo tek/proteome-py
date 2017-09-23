@@ -7,7 +7,7 @@ class ShowSpec(ProteomePluginIntegrationSpec):
 
     @property
     def components(self):
-        return List('proteome.plugins.config')
+        return List('proteome.components.config')
 
     def show(self):
         self._project_becomes(self.name1)

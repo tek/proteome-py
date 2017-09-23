@@ -14,7 +14,7 @@ setup(
     packages=find_packages(
         exclude=['unit', 'unit.*', 'integration', 'integration.*']),
     install_requires=[
-        'ribosome~=11.1.2',
+        'ribosome~=11.2.0',
         'dulwich',
     ]
 )

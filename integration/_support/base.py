@@ -13,7 +13,7 @@ from ribosome.test.integration.klk import AutoPluginIntegrationKlkSpec, later
 from proteome.project import Project
 from proteome.test import Spec
 from proteome.nvim_plugin import ProteomeNvimPlugin
-from proteome.plugins.core.message import Initialized
+from proteome.components.core.message import Initialized
 
 
 class IntegrationCommon(Spec):

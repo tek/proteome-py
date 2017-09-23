@@ -4,7 +4,7 @@ from amino import List, Just, __, _
 from amino.util.random import Random
 
 from proteome.project import Project
-from proteome.plugins.history import Plugin, History
+from proteome.components.history import Plugin, History
 
 from integration._support.base import ProteomePluginIntegrationSpec
 
@@ -29,7 +29,7 @@ class _HistorySpec(ProteomePluginIntegrationSpec):
     @property
     def components(self):
         return List(
-            'proteome.plugins.history',
+            'proteome.components.history',
         )
 
     @property

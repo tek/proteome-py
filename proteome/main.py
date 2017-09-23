@@ -17,7 +17,7 @@ class Proteome(ProteomeState):
             self,
             vim: NvimFacade,
             config_path: Path,
-            plugins: List[str],
+            components: List[str],
             bases: List[Path],
             type_bases: Map[Path, List[str]],
             initial_projects: Maybe[Projects]=Empty()
@@ -26,8 +26,8 @@ class Proteome(ProteomeState):
         self._bases = bases
         self._type_bases = type_bases
         self._initial_projects = initial_projects
-        core = 'proteome.plugins.core'
-        ProteomeState.__init__(self, vim, List.wrap(cons(core, plugins)))
+        core = 'proteome.components.core'
+        ProteomeState.__init__(self, vim, List.wrap(cons(core, components)))
 
     @property
     def init(self):

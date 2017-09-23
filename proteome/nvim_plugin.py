@@ -8,14 +8,14 @@ from ribosome.unite.plugin import unite_plugin
 from ribosome.settings import (PluginSettings, Config, RequestHandler, path_setting, path_list_setting, setting_ctor,
                                path_list)
 
-from proteome.plugins.core import (AddByParams, Show, Create, SetProject, Next, Prev, Save, RemoveByIdent, BufEnter,
+from proteome.components.core import (AddByParams, Show, Create, SetProject, Next, Prev, Save, RemoveByIdent, BufEnter,
                                    CloneRepo)
-from proteome.plugins.history.messages import (HistoryPrev, HistoryNext, HistoryStatus, HistoryLog, HistoryBrowse,
+from proteome.components.history.messages import (HistoryPrev, HistoryNext, HistoryStatus, HistoryLog, HistoryBrowse,
                                                HistoryBrowseInput, HistorySwitch, HistoryPick, HistoryRevert,
                                                HistoryFileBrowse)
-from proteome.plugins.unite import UniteSelectAdd, UniteSelectAddAll, UniteProjects, UniteNames
+from proteome.components.unite import UniteSelectAdd, UniteSelectAddAll, UniteProjects, UniteNames
 from proteome.env import Env
-from proteome.plugins.ctags.main import Ctags
+from proteome.components.ctags.main import Ctags
 
 unite_candidates = mk_unite_candidates(UniteNames)
 unite_action = mk_unite_action(UniteNames)
@@ -77,8 +77,8 @@ config = Config(
     request_handlers=List(
         RequestHandler.json_msg_cmd(AddByParams)('Add', bang=True, **addable)
     ),
-    core_components=List('proteome.plugins.core'),
-    default_components=List('proteome.plugins.config', 'proteome.plugins.history', 'proteome.plugins.unite', 'ctags'),
+    core_components=List('proteome.components.core'),
+    default_components=List('proteome.components.config', 'proteome.components.history', 'proteome.components.unite', 'ctags'),
 )
 
 

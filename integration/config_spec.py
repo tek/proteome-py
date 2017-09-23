@@ -9,7 +9,7 @@ class _ConfigSpec(ProteomePluginIntegrationSpec):
 
     @property
     def components(self):
-        return List('proteome.plugins.config')
+        return List('proteome.components.config')
 
 
 class ChangeProjectSpec(_ConfigSpec):

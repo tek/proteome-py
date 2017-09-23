@@ -57,10 +57,10 @@ class ProteomePlugin_(ProteomeIntegrationSpec):
         self.vim.vars.set_p('base_dirs', List(str(self.base)))
         self.vim.vars.set_p('type_base_dirs', self.type_bases.keymap(str))
         self.vim.vars.set_p('history_base', str(self.history_base))
-        self.vim.vars.set_p('plugins', List('proteome.plugins.history',
-                                          'proteome.plugins.ctags',
-                                          'proteome.plugins.config',
-                                          'proteome.plugins.unite',
+        self.vim.vars.set_p('components', List('proteome.components.history',
+                                          'proteome.components.ctags',
+                                          'proteome.components.config',
+                                          'proteome.components.unite',
                                           ))
         self.pros = self.add_projects(
             ('python', 'pro1'), ('python', 'pro2'), ('vim', 'pro3'))

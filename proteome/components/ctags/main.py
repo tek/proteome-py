@@ -10,7 +10,7 @@ from ribosome.machine.state import SubTransitions
 from ribosome.machine import trans
 
 from proteome.ctags import CtagsExecutor
-from proteome.plugins.core import Save, Added, BufEnter
+from proteome.components.core import Save, Added, BufEnter
 
 Gen = message('Gen', 'project')
 GenAll = message('GenAll')

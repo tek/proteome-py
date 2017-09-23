@@ -11,7 +11,7 @@ class UniteSpec(ProteomePluginIntegrationSpec):
 
     @property
     def components(self) -> List[str]:
-        return List('proteome.plugins.unite')
+        return List('proteome.components.unite')
 
     def _mk_projects(self) -> None:
         self.other = 'other'

@@ -12,7 +12,7 @@ from ribosome.machine.transition import may_fallback
 from proteome.state import ProteomeComponent, ProteomeTransitions
 from proteome.project import Project, mkpath
 from proteome.git import Git
-from proteome.plugins.core.message import (Add, RemoveByIdent, Create, Next, Prev, SetProject, SetProjectIdent,
+from proteome.components.core.message import (Add, RemoveByIdent, Create, Next, Prev, SetProject, SetProjectIdent,
                                            SetProjectIndex, SwitchRoot, Added, Removed, ProjectChanged, BufEnter,
                                            Initialized, MainAdded, Show, AddByParams, CloneRepo)
 
