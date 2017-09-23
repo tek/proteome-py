@@ -8,13 +8,15 @@ from ribosome.machine.transition import handle, may_handle
 from ribosome.machine.messages import Error, Info, Nop, Stage1, Stage2, Stage3, Stage4
 from ribosome.process import JobClient
 from ribosome.machine.transition import may_fallback
+from ribosome.machine.state import Component
+from ribosome.machine import trans
+from ribosome.nvim import NvimIO
 
-from proteome.state import ProteomeComponent, ProteomeTransitions
 from proteome.project import Project, mkpath
 from proteome.git import Git
 from proteome.components.core.message import (Add, RemoveByIdent, Create, Next, Prev, SetProject, SetProjectIdent,
-                                           SetProjectIndex, SwitchRoot, Added, Removed, ProjectChanged, BufEnter,
-                                           Initialized, MainAdded, Show, AddByParams, CloneRepo)
+                                              SetProjectIndex, SwitchRoot, Added, Removed, ProjectChanged, BufEnter,
+                                              Initialized, MainAdded, Show, AddByParams, CloneRepo)
 
 
 @may
@@ -25,7 +27,7 @@ def valid_index(i, total):
         return total + i
 
 
-class CoreTransitions(ProteomeTransitions):
+class Core(Component):
 
     def _no_such_ident(self, ident: str, params):
         return 'no project found matching \'{}\''.format(ident)
@@ -43,9 +45,9 @@ class CoreTransitions(ProteomeTransitions):
     def stage_3(self):
         pass
 
-    @may_handle(Stage4)
+    @trans.multi(Stage4, trans.nio)
     def stage_4(self):
-        return BufEnter(self.vim.buffer).pub, Initialized().pub
+        return NvimIO(lambda v: List(BufEnter(v.buffer).pub, Initialized().pub))
 
     @may_handle(Initialized)
     def initialized(self):
@@ -97,8 +99,7 @@ class CoreTransitions(ProteomeTransitions):
         cur = self.data.current_index
         switch = SetProjectIndex(0) if target == cur else Nop()
         data = self.data.set_index(cur - 1) if target < cur else self.data
-        return self.data.project(id)\
-            .map(lambda a: (data - a, Removed(a).pub, switch))
+        return self.data.project(id).map(lambda a: (data - a, Removed(a).pub, switch))
 
     @may_handle(Removed)
     def removed(self):
@@ -189,8 +190,7 @@ class CoreTransitions(ProteomeTransitions):
 
     @may_handle(BufEnter)
     def buf_enter(self):
-        ''' dummy handler to prevent error message in tests when ctags
-        plugin is not active
+        ''' dummy handler to prevent error message in tests when ctags plugin is not active
         '''
         pass
 
@@ -209,10 +209,10 @@ class CoreTransitions(ProteomeTransitions):
 
     @property
     def cloner(self) -> Git:
-        return self._cloner  # type: ignore
+        return self._cloner
 
     @lazy
-    def _cloner(self):
+    def _cloner(self) -> Git:
         return Git(self.vim)
 
     async def _clone_repo(self, url: str, target):
@@ -224,8 +224,4 @@ class CoreTransitions(ProteomeTransitions):
             Error('failed to clone {} to {}'.format(url, target)).pub
         )
 
-
-class Plugin(ProteomeComponent):
-    Transitions = CoreTransitions
-
-__all__ = ('Plugin',)
+__all__ = ('Core',)

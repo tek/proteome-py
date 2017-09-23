@@ -9,7 +9,7 @@ class NavSpec(DefaultSpec):
 
     @property
     def components(self):
-        return List('proteome.components.config')
+        return List('config')
 
     def navigate(self):
         self.cmd_sync('ProNext')

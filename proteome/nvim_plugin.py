@@ -9,13 +9,16 @@ from ribosome.settings import (PluginSettings, Config, RequestHandler, path_sett
                                path_list)
 
 from proteome.components.core import (AddByParams, Show, Create, SetProject, Next, Prev, Save, RemoveByIdent, BufEnter,
-                                   CloneRepo)
+                                      CloneRepo)
 from proteome.components.history.messages import (HistoryPrev, HistoryNext, HistoryStatus, HistoryLog, HistoryBrowse,
-                                               HistoryBrowseInput, HistorySwitch, HistoryPick, HistoryRevert,
-                                               HistoryFileBrowse)
-from proteome.components.unite import UniteSelectAdd, UniteSelectAddAll, UniteProjects, UniteNames
+                                                  HistoryBrowseInput, HistorySwitch, HistoryPick, HistoryRevert,
+                                                  HistoryFileBrowse)
+from proteome.components.history.main import HistoryComponent
+from proteome.components.unite import UniteSelectAdd, UniteSelectAddAll, UniteProjects, UniteNames, Plugin as Unite
+from proteome.components.config import Config as ConfigC
 from proteome.env import Env
 from proteome.components.ctags.main import Ctags
+from proteome.components.core.main import Core
 
 unite_candidates = mk_unite_candidates(UniteNames)
 unite_action = mk_unite_action(UniteNames)
@@ -72,13 +75,13 @@ config = Config(
     name='proteome',
     prefix='pro',
     state_type=Env,
-    components=Map(ctags=Ctags),
+    components=Map(ctags=Ctags, core=Core, config=ConfigC, history=HistoryComponent, unite=Unite),
     settings=ProteomeSettings(),
     request_handlers=List(
         RequestHandler.json_msg_cmd(AddByParams)('Add', bang=True, **addable)
     ),
-    core_components=List('proteome.components.core'),
-    default_components=List('proteome.components.config', 'proteome.components.history', 'proteome.components.unite', 'ctags'),
+    core_components=List('core'),
+    default_components=List('config', 'history', 'unite', 'ctags'),
 )
 
 

@@ -13,6 +13,7 @@ from ribosome.machine.messages import Info, Error, Stage4
 from ribosome.record import field, dfield, Record, lazy_list_field, maybe_field
 from ribosome.nvim import ScratchBuilder, ScratchBuffer
 from ribosome.machine.base import UnitIO
+from ribosome.machine.state import Component
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
 from proteome.components.core import Save
@@ -179,7 +180,7 @@ class Browse(Logging):
         return result.pub
 
 
-class Plugin(ProteomeComponent):
+class HistoryComponent(Component):
     failed_pick_err = 'couldn\'t revert commit'
 
     @lazy
@@ -190,260 +191,254 @@ class Plugin(ProteomeComponent):
     def executor(self):
         return HistoryGit(self.base, self.vim)
 
-    class Transitions(ProteomeTransitions):
+    def _with_sub(self, state):
+        return self.data.with_sub_state(self.name, state)
 
-        @property
-        def executor(self):
-            return self.machine.executor
+    @property
+    def _with_browse(self):
+        return lambda a: self._with_sub(self.state.setter('browse')(a))
 
-        def _with_sub(self, state):
-            return self.data.with_sub_state(self.name, state)
+    @property
+    def state(self):
+        return self.data.sub_state(self.name, HistoryState)
 
-        @property
-        def _with_browse(self):
-            return lambda a: self._with_sub(self.state.setter('browse')(a))
+    @lazy
+    def history(self):
+        return History(self.base, state=self.state)
 
-        @property
-        def state(self):
-            return self.data.sub_state(self.name, HistoryState)
+    @lazy
+    def history_t(self):
+        return HistoryT(self.history)
 
-        @lazy
-        def history(self):
-            return History(self.machine.base, state=self.state)
+    @property
+    def all_projects_history(self):
+        return self.pflags.all_projects_history
 
-        @lazy
-        def history_t(self):
-            return HistoryT(self.history)
+    @lazy
+    def projects(self):
+        return self.data.history_projects(self.all_projects_history)
 
-        @property
-        def all_projects_history(self):
-            return self.pflags.all_projects_history
+    @property
+    def current(self):
+        return self.data.current
 
-        @lazy
-        def projects(self):
-            return self.data.history_projects(self.all_projects_history)
+    def _all_projects(self, f):
+        new_state = self.projects.fold_left(self.history_t)(f).state
+        return self._with_sub(new_state)
 
-        @property
-        def current(self):
-            return self.data.current
+    def _with_repos(self, f):
+        g = lambda hist, pro: hist / __.at(pro, lambda a: a / f)
+        return self._all_projects(g)
 
-        def _all_projects(self, f):
-            new_state = self.projects.fold_left(self.history_t)(f).state
-            return self._with_sub(new_state)
+    def _with_repo(self, pro, f):
+        new_state = (self.history_t / __.at(pro, f)).state
+        return self._with_sub(new_state)
 
-        def _with_repos(self, f):
-            g = lambda hist, pro: hist / __.at(pro, lambda a: a / f)
-            return self._all_projects(g)
+    def _with_current_repo(self, f):
+        return self.current.map(lambda a: self._with_repo(a, f))
 
-        def _with_repo(self, pro, f):
-            new_state = (self.history_t / __.at(pro, f)).state
-            return self._with_sub(new_state)
+    def _repo_ro(self, project: Project):
+        return self.history.repo(project)
 
-        def _with_current_repo(self, f):
-            return self.current.map(lambda a: self._with_repo(a, f))
+    @property
+    def _current_repo_ro(self):
+        return self.current // self._repo_ro
 
-        def _repo_ro(self, project: Project):
-            return self.history.repo(project)
+    @property
+    def _repos_ro(self):
+        return self.projects // self._repo_ro
 
-        @property
-        def _current_repo_ro(self):
-            return self.current // self._repo_ro
+    @may_handle(Stage4)
+    def stage_4(self):
+        ''' initialize repository states '''
+        return self._with_repos(lambda a: Just(a.state))
 
-        @property
-        def _repos_ro(self):
-            return self.projects // self._repo_ro
+    def _switch(self, f):
+        def notify(repo):
+            self.vim.reload_windows()
+            repo.current_commit_info\
+                .map(_.num_since)\
+                .foreach(self.log.info)
+            return repo
+        return self._with_current_repo(_ / f % notify)
 
-        @may_handle(Stage4)
-        def stage_4(self):
-            ''' initialize repository states '''
-            return self._with_repos(lambda a: Just(a.state))
+    # FIXME save first?
+    @handle(HistoryPrev)
+    def prev(self):
+        return self._switch(__.prev())
 
-        def _switch(self, f):
-            def notify(repo):
-                self.vim.reload_windows()
-                repo.current_commit_info\
-                    .map(_.num_since)\
-                    .foreach(self.log.info)
-                return repo
-            return self._with_current_repo(_ / f % notify)
+    @handle(HistoryNext)
+    def next(self):
+        return self._switch(__.next())
 
-        # FIXME save first?
-        @handle(HistoryPrev)
-        def prev(self):
-            return self._switch(__.prev())
+    @handle(HistorySwitch)
+    def switch(self):
+        return try_convert_int(self.msg.index)\
+            .map(__.select)\
+            .flat_map(self._switch)
 
-        @handle(HistoryNext)
-        def next(self):
-            return self._switch(__.next())
+    @handle(HistorySwitchFile)
+    def switch_file(self):
+        return (
+            self._current_repo_ro /
+            __.checkout_file(self.msg.id, self.msg.path) /
+            __.replace(CommitCurrent()) /
+            UnitIO
+        )
 
-        @handle(HistorySwitch)
-        def switch(self):
-            return try_convert_int(self.msg.index)\
-                .map(__.select)\
-                .flat_map(self._switch)
+    # TODO
+    @may_handle(HistoryBufferPrev)
+    def history_buffer_prev(self):
+        pass
 
-        @handle(HistorySwitchFile)
-        def switch_file(self):
-            return (
-                self._current_repo_ro /
-                __.checkout_file(self.msg.id, self.msg.path) /
-                __.replace(CommitCurrent()) /
-                UnitIO
-            )
+    @may_handle(HistoryStatus)
+    def history_status(self):
+        def log_status(repo):
+            state = 'dirty' if repo.status else 'clean'
+            return Info('history repo {}'.format(state)).pub
+        self._with_current_repo(_ / log_status)
 
-        # TODO
-        @may_handle(HistoryBufferPrev)
-        def history_buffer_prev(self):
-            pass
+    @may_handle(HistoryLog)
+    def history_log(self):
+        self._current_repo_ro / _.log_formatted % self.vim.multi_line_info
 
-        @may_handle(HistoryStatus)
-        def history_status(self):
-            def log_status(repo):
-                state = 'dirty' if repo.status else 'clean'
-                return Info('history repo {}'.format(state)).pub
-            self._with_current_repo(_ / log_status)
+    def _build_browse(self, repo, commits, path: Maybe[Path]):
+        relpath = path // repo.relpath
+        return ScratchBuilder().tab.build.unsafe_perform_io(self.vim)\
+            .leffect(self._io_error)\
+            .map(lambda a: BrowseState(repo=repo, current=0,
+                                        commits=commits, buffer=a,
+                                        path=relpath))
 
-        @may_handle(HistoryLog)
-        def history_log(self):
-            self._current_repo_ro / _.log_formatted % self.vim.multi_line_info
+    def _browse(self, f, path: Maybe[Path]=Empty()):
+        commits = lambda r: (r, f(r))
+        return (
+            (self._current_repo_ro / commits)
+            .flat_map2(L(self._build_browse)(_, _, path=path)) /
+            self._add_browse
+        )
 
-        def _build_browse(self, repo, commits, path: Maybe[Path]):
-            relpath = path // repo.relpath
-            return ScratchBuilder().tab.build.unsafe_perform_io(self.vim)\
-                .leffect(self._io_error)\
-                .map(lambda a: BrowseState(repo=repo, current=0,
-                                           commits=commits, buffer=a,
-                                           path=relpath))
+    @handle(HistoryBrowse)
+    def history_browse(self):
+        return self._browse(_.history_info)
 
-        def _browse(self, f, path: Maybe[Path]=Empty()):
-            commits = lambda r: (r, f(r))
-            return (
-                (self._current_repo_ro / commits)
-                .flat_map2(L(self._build_browse)(_, _, path=path)) /
-                self._add_browse
-            )
+    # FIXME seems to drain lazy commit list when cycling
+    @handle(HistoryFileBrowse)
+    def history_file_browse(self):
+        path = Path(
+            self.vim.buffer.name if self.msg.path == '' else self.msg.path)
+        return self._current_repo_ro // __.relpath(path) / (
+            lambda p: self._browse(__.file_history_info(p),
+                                    path=Just(p))
+        ) | Right(
+            Error('current file \'{}\' not in current repo'.format(path)))
 
-        @handle(HistoryBrowse)
-        def history_browse(self):
-            return self._browse(_.history_info)
+    def _io_error(self, exc):
+        self.log.caught_exception('nvim io', exc)
 
-        # FIXME seems to drain lazy commit list when cycling
-        @handle(HistoryFileBrowse)
-        def history_file_browse(self):
-            path = Path(
-                self.vim.buffer.name if self.msg.path == '' else self.msg.path)
-            return self._current_repo_ro // __.relpath(path) / (
-                lambda p: self._browse(__.file_history_info(p),
-                                       path=Just(p))
-            ) | Right(
-                Error('current file \'{}\' not in current repo'.format(path)))
+    @may_handle(Save)
+    def save(self):
+        return Commit()
 
-        def _io_error(self, exc):
-            self.log.caught_exception('nvim io', exc)
+    @property
+    def _timestamp(self):
+        return datetime.now().isoformat()
 
-        @may_handle(Save)
-        def save(self):
-            return Commit()
+    @handle(HistoryBrowseInput)
+    def history_browse_input(self):
+        return self._current_browse.map(__.send(self.msg))
 
-        @property
-        def _timestamp(self):
-            return datetime.now().isoformat()
+    @property
+    def _current_browse(self):
+        return self._browse_for_buffer(self.vim.buffer)
 
-        @handle(HistoryBrowseInput)
-        def history_browse_input(self):
-            return self._current_browse.map(__.send(self.msg))
+    def _browse_for_buffer(self, buffer):
+        return (
+            self.state
+            .browse
+            .find(_.buffer.buffer == buffer)
+            .map(__[1])
+        )
 
-        @property
-        def _current_browse(self):
-            return self._browse_for_buffer(self.vim.buffer)
+    @handle(QuitBrowse)
+    def quit_browse(self):
+        return self._browse_for_buffer(self.msg.buffer)\
+            .map(self._remove_browse)
 
-        def _browse_for_buffer(self, buffer):
-            return (
-                self.state
-                .browse
-                .find(_.buffer.buffer == buffer)
-                .map(__[1])
-            )
+    def _add_browse(self, state: BrowseState):
+        browse = Browse(state, self.vim)
+        return (
+            self._with_browse(self.state.browse + (browse.repo, browse)),
+            UnitIO(IO.delay(browse.run))
+        )
 
-        @handle(QuitBrowse)
-        def quit_browse(self):
-            return self._browse_for_buffer(self.msg.buffer)\
-                .map(self._remove_browse)
+    def _remove_browse(self, target: Browse):
+        return self._with_browse(self.state.browse - target.repo)
 
-        def _add_browse(self, state: BrowseState):
-            browse = Browse(state, self.vim)
-            return (
-                self._with_browse(self.state.browse + (browse.repo, browse)),
-                UnitIO(IO.delay(browse.run))
-            )
+    @handle(HistoryPick)
+    def pick(self):
+        return self._pick_commit\
+            .flat_map(lambda a: self._pick_patch(a[0], a[1]))
 
-        def _remove_browse(self, target: Browse):
-            return self._with_browse(self.state.browse - target.repo)
+    @handle(HistoryRevert)
+    def revert(self):
+        return self._pick_commit\
+            .map(lambda a: self._pick_revert(a[0], a[1]))
 
-        @handle(HistoryPick)
-        def pick(self):
-            return self._pick_commit\
-                .flat_map(lambda a: self._pick_patch(a[0], a[1]))
+    @property
+    def _pick_commit(self):
+        index = try_convert_int(self.msg.index)
+        lifter = self._current_repo_ro / _.history_info / _.lift
+        return index.ap(lifter).join.product(self.current)
 
-        @handle(HistoryRevert)
-        def revert(self):
-            return self._pick_commit\
-                .map(lambda a: self._pick_revert(a[0], a[1]))
+    def _pick_patch(self, commit: CommitInfo, project: Project):
+        patch = (
+            commit.diff /
+            _.revert //
+            _.patch
+        )
+        apply = lambda pat: self._apply_patch(project, pat, commit)
+        return patch.map(apply)
 
-        @property
-        def _pick_commit(self):
-            index = try_convert_int(self.msg.index)
-            lifter = self._current_repo_ro / _.history_info / _.lift
-            return index.ap(lifter).join.product(self.current)
+    @may
+    def _check_pick_status(self, commit, result):
+        if result.success:
+            self.vim.reload_windows()
+            self.log.info('picked {}'.format(commit.num_since))
+        else:
+            return Error(HistoryComponent.failed_pick_err).pub
 
-        def _pick_patch(self, commit: CommitInfo, project: Project):
-            patch = (
-                commit.diff /
-                _.revert //
-                _.patch
-            )
-            apply = lambda pat: self._apply_patch(project, pat, commit)
-            return patch.map(apply)
+    async def _apply_patch(self, project, patch, commit):
+        executor = Patch(self.vim)
+        result = await executor.patch(project, patch)
+        return self._check_pick_status(commit, result)
 
-        @may
-        def _check_pick_status(self, commit, result):
-            if result.success:
-                self.vim.reload_windows()
-                self.log.info('picked {}'.format(commit.num_since))
-            else:
-                return Error(Plugin.failed_pick_err).pub
+    async def _pick_revert(self, commit: CommitInfo, project: Project):
+        result = await self.executor.revert(project, commit)
+        ret = self._check_pick_status(commit, result)
+        if not result.success:
+            await self.executor.revert_abort(project)
+        return ret
 
-        async def _apply_patch(self, project, patch, commit):
-            executor = Patch(self.vim)
-            result = await executor.patch(project, patch)
-            return self._check_pick_status(commit, result)
+    async def _add_commit_coro(self, data):
+        project, repo = data
+        return await repo.add_commit_all(project, self.executor,
+                                            self._timestamp)
 
-        async def _pick_revert(self, commit: CommitInfo, project: Project):
-            result = await self.executor.revert(project, commit)
-            ret = self._check_pick_status(commit, result)
-            if not result.success:
-                await self.executor.revert_abort(project)
-            return ret
+    # TODO handle broken repo
+    # TODO allow specifying target
+    @may_handle(Commit)
+    async def commit(self):
+        wanted = self.msg.projects
+        filt = (lambda p: not wanted or wanted.exists(p.match_ident))
+        candidates = self.projects.filter(filt).flat_pair(self._repo_ro)
+        results = await gather_sync_flat(candidates, self._add_commit_coro)
+        new_repos = results\
+            .fold_map(self.state.repos, lambda s: (s.project, s))
+        return Just(self._with_sub(self.state.set(repos=new_repos)))
 
-        async def _add_commit_coro(self, data):
-            project, repo = data
-            return await repo.add_commit_all(project, self.executor,
-                                             self._timestamp)
-
-        # TODO handle broken repo
-        # TODO allow specifying target
-        @may_handle(Commit)
-        async def commit(self):
-            wanted = self.msg.projects
-            filt = (lambda p: not wanted or wanted.exists(p.match_ident))
-            candidates = self.projects.filter(filt).flat_pair(self._repo_ro)
-            results = await gather_sync_flat(candidates, self._add_commit_coro)
-            new_repos = results\
-                .fold_map(self.state.repos, lambda s: (s.project, s))
-            return Just(self._with_sub(self.state.set(repos=new_repos)))
-
-        @may_handle(CommitCurrent)
-        def commit_current(self):
-            return Commit(*(self.data.current / _.name).to_list)
+    @may_handle(CommitCurrent)
+    def commit_current(self):
+        return Commit(*(self.data.current / _.name).to_list)
 
 __all__ = ('Plugin')

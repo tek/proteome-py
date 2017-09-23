@@ -11,10 +11,9 @@ setup(
     author_email='torstenschmits@gmail.com',
     license='MIT',
     url='https://github.com/tek/proteome',
-    packages=find_packages(
-        exclude=['unit', 'unit.*', 'integration', 'integration.*']),
+    packages=find_packages(exclude=['unit', 'unit.*', 'integration', 'integration.*']),
     install_requires=[
-        'ribosome~=11.2.0',
+        'ribosome~=11.2.2',
         'dulwich',
     ]
 )
