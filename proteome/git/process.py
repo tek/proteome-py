@@ -1,4 +1,4 @@
-from ribosome import NvimProcessExecutor, Job
+from ribosome.process import NvimProcessExecutor, Job
 
 from proteome.project import Project
 from proteome.git.repo import CommitInfo

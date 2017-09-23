@@ -2,14 +2,12 @@ from pathlib import Path
 
 import asyncio
 
-from flexmock import flexmock  # NOQA
-
 from amino import List, Just, _, Map
 
-from ribosome.machine import Nop
+from ribosome.machine.messages import Nop
 
 from proteome.project import Project, Projects, ProjectAnalyzer
-from proteome.plugins.core import (Next, Prev, StageI, RemoveByIdent,
+from proteome.plugins.core import (Next, Prev, Stage1, RemoveByIdent,
                                    AddByParams)
 from proteome.main import Proteome
 from proteome.plugins.history.data import History
@@ -134,7 +132,7 @@ class ProteomeSpec(LoaderSpec):
             p2 = self.mk_project('pro2', 'go')
             pros = List(p1, p2)
             with self._prot(List(self.plug_name), pros=pros) as prot:
-                prot.plug_command('history', 'StageIV', List())
+                prot.plug_command('history', 'Stage4', List())
                 later(lambda: check_head(p1))
                 check_head(p2)
 
@@ -145,7 +143,7 @@ class ProteomeSpec(LoaderSpec):
             hist = History(self.history_base)
             with self._prot(List(self.plug_name), pros=pros) as prot:
                 with test_loop() as loop:
-                    prot.plug_command('history', 'StageIV', List())
+                    prot.plug_command('history', 'Stage4', List())
                     plug = prot.plugin('history').x
                     self.test_file_1.write_text('test')
                     prot.plug_command('history', 'Commit', List())
@@ -158,7 +156,7 @@ class ProteomeSpec(LoaderSpec):
             pros = List(p1, p2)
             with self._prot(List(self.plug_name), pros=pros) as prot:
                 with test_loop() as loop:
-                    prot.plug_command('history', 'StageIV', List())
+                    prot.plug_command('history', 'Stage4', List())
                     self._three_commits(prot, loop)
                     prot.plug_command('history', 'HistoryLog', List())
                     prot.plug_command('history', 'HistoryPrev', List())
@@ -177,7 +175,7 @@ class ProteomeSpec(LoaderSpec):
         ctx = self._prot(b=List(self.project_base), t=self.type_bases)
         target = Project.of(self.pypro1_name, p, Just(self.pypro1_type))
         with ctx as prot:
-            prot.send_sync(StageI())
+            prot.send_sync(Stage1())
             prot.send_sync(Nop())\
                 .projects.projects.head\
                 .should.equal(Just(target))

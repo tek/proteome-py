@@ -4,7 +4,8 @@ from toolz.itertoolz import cons
 
 from amino import List, Map, Maybe, Empty
 
-from proteome.nvim import NvimFacade
+from ribosome.nvim import NvimFacade
+
 from proteome.env import Env
 from proteome.state import ProteomeState
 from proteome.project import Projects
@@ -30,7 +31,7 @@ class Proteome(ProteomeState):
 
     @property
     def init(self):
-        return Env(  # type: ignore
+        return Env(
             config_path=self._config_path,
             bases=self._bases,
             type_bases=self._type_bases,

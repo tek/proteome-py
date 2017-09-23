@@ -10,7 +10,7 @@ from integration._support.base import ProteomePluginIntegrationSpec
 class UniteSpec(ProteomePluginIntegrationSpec):
 
     @property
-    def _plugins(self) -> List[str]:
+    def components(self) -> List[str]:
         return List('proteome.plugins.unite')
 
     def _mk_projects(self) -> None:
@@ -58,7 +58,7 @@ class UniteSpec(ProteomePluginIntegrationSpec):
     def activate(self) -> None:
         def active_type(tpe: str) -> None:
             self.vim.vars.p('active').map(__['tpe']).should.contain(tpe)
-        self.vim.cmd('ProAdd tpe2/dep')
+        self.vim.cmd('ProAdd! tpe2/dep')
         later(active_type, self.tpe2)
         self.vim.cmd('Projects')
         self._wait(0.1)
@@ -67,7 +67,7 @@ class UniteSpec(ProteomePluginIntegrationSpec):
 
     @unite
     def delete(self) -> None:
-        self.vim.cmd('ProAdd tpe2/dep')
+        self.vim.cmd('ProAdd! tpe2/dep')
         self._count(2)
         self.vim.cmd('Projects')
         self._wait(0.1)
@@ -76,7 +76,7 @@ class UniteSpec(ProteomePluginIntegrationSpec):
 
     @unite
     def delete_by_mapping(self) -> None:
-        self.vim.cmd('ProAdd tpe2/dep')
+        self.vim.cmd('ProAdd! tpe2/dep')
         self._count(2)
         self.vim.cmd('Projects')
         self._wait(0.1)
@@ -88,7 +88,7 @@ class UniteSpec(ProteomePluginIntegrationSpec):
         ''' Remove two projects
         by selecting them via `<space>` and pressing `d`
         '''
-        self.vim.cmd('ProAdd tpe2/dep')
+        self.vim.cmd('ProAdd! tpe2/dep')
         self._count(2)
         self.vim.cmd('Projects')
         self._wait(0.1)

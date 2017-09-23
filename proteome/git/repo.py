@@ -256,7 +256,7 @@ class Repo(Logging):
             self.__class__.__name__, self.repo.path, self.state)
 
     def ref(self, name):
-        return Maybe.from_call(lambda: self.repo.refs[name.encode()],
+        return Try(lambda: self.repo.refs[name.encode()],
                                exc=KeyError)
 
     @property

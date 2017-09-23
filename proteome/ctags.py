@@ -1,8 +1,8 @@
 from proteome.project import Project
-from ribosome import NvimProcessExecutor, Job
+from ribosome.process import NvimProcessExecutor, Job
 
 
-class Ctags(NvimProcessExecutor):
+class CtagsExecutor(NvimProcessExecutor):
 
     def gen(self, project: Project):
         langs = ','.join(project.ctags_langs)
@@ -21,4 +21,4 @@ class Ctags(NvimProcessExecutor):
             loop=self.loop)
         return self.run(job)
 
-__all__ = ('Ctags',)
+__all__ = ('CtagsExecutor',)

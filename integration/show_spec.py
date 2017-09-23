@@ -6,7 +6,7 @@ from integration._support.base import ProteomePluginIntegrationSpec
 class ShowSpec(ProteomePluginIntegrationSpec):
 
     @property
-    def _plugins(self):
+    def components(self):
         return List('proteome.plugins.config')
 
     def show(self):

@@ -1,12 +1,16 @@
-from ribosome.machine import may_handle, message
-from ribosome.nvim import Buffer
+from typing import Generator, Any
 
-from amino import List, Empty, _
-from amino.lazy import lazy
+from amino import List, _, Nil, do, __
 
-from proteome.state import ProteomeComponent, ProteomeTransitions
-from proteome.ctags import Ctags
-from proteome.plugins.core import Save, Added, BufEnter, StageIV
+from ribosome.machine.message_base import message
+from ribosome.machine.transition import may_handle
+from ribosome.nvim import Buffer, NvimIO
+from ribosome.machine.messages import Stage4
+from ribosome.machine.state import SubTransitions
+from ribosome.machine import trans
+
+from proteome.ctags import CtagsExecutor
+from proteome.plugins.core import Save, Added, BufEnter
 
 Gen = message('Gen', 'project')
 GenAll = message('GenAll')
@@ -14,17 +18,17 @@ Kill = message('Kill')
 CurrentBuffer = message('CurrentBuffer')
 
 
-class CtagsTransitions(ProteomeTransitions):
+class Ctags(SubTransitions):
 
     @property
-    def ctags(self) -> Ctags:
-        return self.machine.ctags  # type: ignore
+    def executor(self) -> NvimIO[CtagsExecutor]:
+        return NvimIO(CtagsExecutor)
 
     @property
     def _tags_file_name(self):
         return '.tags'
 
-    @may_handle(StageIV)
+    @may_handle(Stage4)
     def stage_4(self):
         return GenAll(), CurrentBuffer()
 
@@ -32,45 +36,40 @@ class CtagsTransitions(ProteomeTransitions):
     def save(self):
         return GenAll()
 
-    @may_handle(GenAll)
+    @trans.multi(GenAll, trans.nio)
+    @do
     def gen_all(self):
-        if self.ctags.ready:
-            return self.data.projects.projects\
-                .filter(_.want_ctags)\
-                .map(Gen)
+        exe = yield self.executor
+        yield NvimIO.pure(self.data.projects.projects.filter(_.want_ctags).map(Gen) if exe.ready else Nil)
 
     # TODO kill dangling procs
     @may_handle(Kill)
     def kill(self):
         pass
 
-    @may_handle(BufEnter)
-    def buf_enter(self):
-        self.set_buffer_tags(List(self.msg.buffer))
+    @trans.unit(BufEnter)
+    def buf_enter(self) -> None:
+        return self.set_buffer_tags(List(self.msg.buffer))
 
     @may_handle(Added)
     def added(self: Added):
         return CurrentBuffer()
 
-    @may_handle(CurrentBuffer)
-    def buffer(self):
-        self.set_buffer_tags(List(self.vim.buffer))
+    @trans.unit(CurrentBuffer, trans.nio)
+    @do
+    def buffer(self) -> Generator[NvimIO[None], Any, None]:
+        buf = yield NvimIO(_.buffer)
+        yield NvimIO.pure(self.set_buffer_tags(List(buf)))
 
     def set_buffer_tags(self, bufs: List[Buffer]):
         files = self.data.all_projects.map(_.root / self._tags_file_name)
-        bufs.foreach(lambda a: a.options.amend_l('tags', files))
+        bufs.foreach(__.options.amend_l('tags', files))
 
-    @may_handle(Gen)
-    async def gen(self):
-        await self.ctags.gen(self.msg.project)
-        return Empty()
+    @trans.unit(Gen, trans.nio, trans.coro)
+    @do
+    def gen(self):
+        exe = yield self.executor
+        yield NvimIO.pure(exe.gen(self.msg.project))
 
 
-class Plugin(ProteomeComponent):
-    Transitions = CtagsTransitions
-
-    @lazy
-    def ctags(self):
-        return Ctags(self.vim)
-
-__all__ = ('GenAll', 'Plugin')
+__all__ = ('GenAll', 'Ctags')

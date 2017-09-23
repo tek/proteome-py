@@ -1,9 +1,5 @@
-from ribosome.machine import message, json_message
+from ribosome.machine.message_base import message, json_message
 
-StageI = message('StageI')
-StageII = message('StageII')
-StageIII = message('StageIII')
-StageIV = message('StageIV')
 Add = message('Add', 'project')
 RemoveByIdent = message('RemoveByIdent', 'ident')
 Create = message('Create', 'name', 'root')
@@ -24,6 +20,6 @@ Show = message('Show', varargs='names')
 AddByParams = json_message('AddByParams', 'ident')
 CloneRepo = json_message('CloneRepo', 'uri')
 
-__all__ = ('StageI', 'StageII', 'StageIII', 'StageIV', 'Add', 'RemoveByIdent', 'Create', 'Next', 'Prev', 'SetProject',
-           'SetProjectIdent', 'SetProjectIndex', 'SwitchRoot', 'Save', 'Added', 'Removed', 'ProjectChanged', 'BufEnter',
-           'Initialized', 'MainAdded', 'Show', 'AddByParams', 'CloneRepo')
+__all__ = ('Add', 'RemoveByIdent', 'Create', 'Next', 'Prev', 'SetProject', 'SetProjectIdent', 'SetProjectIndex',
+           'SwitchRoot', 'Save', 'Added', 'Removed', 'ProjectChanged', 'BufEnter', 'Initialized', 'MainAdded', 'Show',
+           'AddByParams', 'CloneRepo')

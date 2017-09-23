@@ -8,7 +8,7 @@ from integration._support.base import ProteomePluginIntegrationSpec
 class _ConfigSpec(ProteomePluginIntegrationSpec):
 
     @property
-    def _plugins(self):
+    def components(self):
         return List('proteome.plugins.config')
 
 

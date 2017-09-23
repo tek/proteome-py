@@ -1,6 +1,7 @@
 from toolz import dicttoolz
 
-from ribosome.machine import may_handle, message
+from ribosome.machine.message_base import message
+from ribosome.machine.transition import may_handle
 
 from proteome.state import ProteomeComponent
 

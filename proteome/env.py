@@ -3,20 +3,33 @@ import tempfile
 
 from proteome.project import (Projects, Resolver, ProjectLoader, Project, ProjectAnalyzer)
 from proteome.logging import Logging
-from ribosome.data import Data
-from ribosome.record import field
+from ribosome.settings import AutoData
+from ribosome.record import field, dfield
 from ribosome import NvimFacade
 
 from amino import List, Map, Just, Boolean, _
 
 
-class Env(Data, Logging):
-    config_path = field(Path)
-    bases = field(List)
-    type_bases = field(Map)
-    projects = field(Projects)
+class Env(AutoData, Logging):
+    projects = dfield(Projects())
     current_index = field(int, initial=0)
     initialized = field(bool, initial=False)
+
+    @property
+    def vim(self) -> NvimFacade:
+        return self.vim_facade.get_or_raise('no vim facade set')
+
+    @property
+    def config_path(self) -> Path:
+        return self.settings.config_path.value_or_default.attempt(self.vim).get_or_raise
+
+    @property
+    def bases(self) -> Path:
+        return self.settings.base_dirs.value_or_default.attempt(self.vim).get_or_raise
+
+    @property
+    def type_bases(self) -> Path:
+        return self.settings.type_base_dirs.value_or_default.attempt(self.vim).get_or_raise
 
     @property
     def loader(self):

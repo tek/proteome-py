@@ -2,12 +2,11 @@ from pathlib import Path
 from typing import Tuple
 import json
 
-from amino import Maybe, Empty, Just, List, Map, may, Boolean, flat_may, __, L, _
+from amino import Maybe, Empty, Just, List, Map, may, Boolean, flat_may, __, L, _, Either, Try
 from amino.lazy import lazy
 
 from ribosome.nvim import NvimFacade, HasNvim
-from ribosome.record import (field, list_field, Record, optional_field,
-                             str_field)
+from ribosome.record import field, list_field, Record, optional_field, str_field, path_field
 from ribosome.process import JobClient
 
 from proteome.logging import Logging
@@ -25,7 +24,7 @@ def format_path(path: Path):
 # TODO subprojects, e.g. sbt projects
 class Project(Record):
     name = str_field()
-    root = field(Path)
+    root = path_field()
     tpe = optional_field(str)
     types = list_field()
     langs = list_field()
@@ -178,7 +177,7 @@ class Projects(object):
 
 def sub_path(base: Path, path: Path):
     check = lambda: path.relative_to(str(base))
-    return Maybe.from_call(check, exc=ValueError)\
+    return Either.catch(check, exc=ValueError)\
         .map(_.parts)\
         .map(List.wrap)
 
@@ -188,17 +187,19 @@ def sub_paths(dirs: List[Path], path: Path):
         .flat_map(lambda a: sub_path(a, path))
 
 
-class Resolver(object):
+class Resolver(Logging):
 
     def __init__(self, bases: List[Path], types: Map[Path, List[str]]) -> None:
         self.bases = bases
         self.types = types
 
     def type_name(self, tpe: str, name: str) -> Maybe[Path]:
-        return self.bases\
-            .map(_ / tpe / name)\
-            .find(lambda a: a.is_dir())\
+        return (
+            self.bases
+            .map(_ / tpe / name)
+            .find(lambda a: a.is_dir())
             .or_else(lambda: self.specific(tpe, name))
+        )
 
     def specific(self, tpe: str, name: str) -> Maybe[Path]:
         return self.types\
@@ -218,10 +219,9 @@ class Resolver(object):
             .head
 
     def dir_in_types(self, path: Path) -> Maybe[Tuple[str, str]]:
-        trans = lambda a, b: b.head.zip(sub_path(a, path).flat_map(_.last))
-        return self.types\
-            .flat_map(trans)\
-            .head
+        def trans(a: Path, b: List[str]) -> Maybe[Tuple[str, str]]:
+            return b.head.zip(sub_path(a, path).to_maybe.flat_map(_.last))
+        return self.types.flat_map(trans).head
 
 
 def content(path: Path):
@@ -320,7 +320,7 @@ class ProjectLoader(Logging):
         valid_fields = root\
             .map(lambda a: json ** Map(root=a, tpe=json.get('type')))\
             .map(lambda a: a.at(*Project._pclass_fields))
-        return Maybe.from_call(lambda: valid_fields.map(lambda kw: Project(**kw))) | Empty()
+        return Try(lambda: valid_fields.map(lambda kw: Project(**kw))) | Empty()
 
     # TODO log error if not a dir
     # use Either
@@ -370,24 +370,27 @@ class ProjectAnalyzer(HasNvim, Logging):
 
     def _default_detect_data(self, wd: Path):
         type_name = self.loader.resolver.dir(wd)
-        return type_name\
-            .flat_map2(self.loader.json_by_type_name)\
-            .map(_ + ('root', str(wd)))\
-            .or_else(
-                type_name
-                .map2(lambda t, n: Map(type=t, root=str(wd), name=n))
-            )
+        return (
+            type_name
+            .flat_map2(self.loader.json_by_type_name)
+            .map(_ + ('root', str(wd)))
+            .or_else(type_name.map2(lambda t, n: Map(type=t, root=str(wd), name=n)))
+        )
 
     def _detect_data(self, wd: Path):
-        return self.loader.json_by_root(wd)\
+        return (
+            self.loader
+            .json_by_root(wd)
             .or_else(
                 self.vim.vars.p('project_detector')
-                .flat_map(lambda a: self.vim.call(a, str(wd))))\
+                .flat_map(lambda a: self.vim.call(a, str(wd)))
+            )
             .or_else(self._default_detect_data(wd))
+        )
 
     @property
-    def main_dir(self) -> Maybe[Path]:
-        return Maybe.from_call(Path.cwd, exc=IOError)
+    def main_dir(self) -> Either[str, Path]:
+        return self.vim.cwd
 
     @property
     def main_dir_or_home(self) -> Path:
@@ -404,8 +407,7 @@ class ProjectAnalyzer(HasNvim, Logging):
 
     @property
     def _auto_main(self):
-        return self._main_data\
-            .flat_map(self.loader.from_json)
+        return self._main_data // self.loader.from_json
 
     @property
     def _fallback_main(self):

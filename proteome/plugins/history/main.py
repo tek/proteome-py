@@ -7,28 +7,22 @@ from amino.util.numeric import try_convert_int
 from amino.async import gather_sync_flat
 from amino.io import IO
 
-from ribosome.machine import may_handle, message, handle, Info
-from ribosome.machine import Error
+from ribosome.machine.message_base import message
+from ribosome.machine.transition import may_handle, handle
+from ribosome.machine.messages import Info, Error, Stage4
 from ribosome.record import field, dfield, Record, lazy_list_field, maybe_field
 from ribosome.nvim import ScratchBuilder, ScratchBuffer
 from ribosome.machine.base import UnitIO
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
-from proteome.plugins.core import Save, StageIV
+from proteome.plugins.core import Save
 from proteome.logging import Logging
 from proteome.project import Project
 from proteome.git import Repo, CommitInfo
-from proteome.plugins.history.messages import (HistoryPrev, HistoryNext,
-                                               HistoryStatus, HistoryLog,
-                                               HistoryBrowse,
-                                               HistoryBrowseInput,
-                                               HistorySwitch, Redraw,
-                                               QuitBrowse, Commit,
-                                               HistoryBufferPrev, HistoryPick,
-                                               HistoryRevert,
-                                               HistoryFileBrowse,
-                                               HistorySwitchFile,
-                                               CommitCurrent)
+from proteome.plugins.history.messages import (HistoryPrev, HistoryNext, HistoryStatus, HistoryLog, HistoryBrowse,
+                                               HistoryBrowseInput, HistorySwitch, Redraw, QuitBrowse, Commit,
+                                               HistoryBufferPrev, HistoryPick, HistoryRevert, HistoryFileBrowse,
+                                               HistorySwitchFile, CommitCurrent)
 from proteome.plugins.history.data import History, HistoryT, HistoryState
 from proteome.plugins.history.process import HistoryGit
 from proteome.plugins.history.patch import Patch
@@ -259,7 +253,7 @@ class Plugin(ProteomeComponent):
         def _repos_ro(self):
             return self.projects // self._repo_ro
 
-        @may_handle(StageIV)
+        @may_handle(Stage4)
         def stage_4(self):
             ''' initialize repository states '''
             return self._with_repos(lambda a: Just(a.state))

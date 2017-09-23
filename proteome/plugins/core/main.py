@@ -4,17 +4,17 @@ from pathlib import Path
 from amino import List, Map, Empty, may, _, L
 from amino.lazy import lazy
 
-from ribosome.machine import handle, may_handle, Error, Info, Nop
+from ribosome.machine.transition import handle, may_handle
+from ribosome.machine.messages import Error, Info, Nop, Stage1, Stage2, Stage3, Stage4
 from ribosome.process import JobClient
 from ribosome.machine.transition import may_fallback
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
 from proteome.project import Project, mkpath
 from proteome.git import Git
-from proteome.plugins.core.message import (StageI, StageIV, Add, RemoveByIdent, Create, Next, Prev, SetProject,
-                                           SetProjectIdent, SetProjectIndex, SwitchRoot, Added, Removed, ProjectChanged,
-                                           BufEnter, Initialized, MainAdded, Show, AddByParams, CloneRepo, StageII,
-                                           StageIII)
+from proteome.plugins.core.message import (Add, RemoveByIdent, Create, Next, Prev, SetProject, SetProjectIdent,
+                                           SetProjectIndex, SwitchRoot, Added, Removed, ProjectChanged, BufEnter,
+                                           Initialized, MainAdded, Show, AddByParams, CloneRepo)
 
 
 @may
@@ -30,20 +30,20 @@ class CoreTransitions(ProteomeTransitions):
     def _no_such_ident(self, ident: str, params):
         return 'no project found matching \'{}\''.format(ident)
 
-    @may_handle(StageI)
+    @may_handle(Stage1)
     def stage_1(self):
         main = self.data.analyzer(self.vim).main
-        return Add(main), MainAdded().pub  # type: ignore
+        return Add(main), MainAdded().pub
 
-    @may_fallback(StageII)
+    @may_fallback(Stage2)
     def stage_2(self):
         pass
 
-    @may_fallback(StageIII)
+    @may_fallback(Stage3)
     def stage_3(self):
         pass
 
-    @may_handle(StageIV)
+    @may_handle(Stage4)
     def stage_4(self):
         return BufEnter(self.vim.buffer).pub, Initialized().pub
 
@@ -143,11 +143,14 @@ class CoreTransitions(ProteomeTransitions):
     @handle(SwitchRoot)
     def switch_root(self):
         def go(pro: Project):
-            self.vim.switch_root(pro.root)  # type: ignore
+            path = pro.root
+            p = str(path)
+            self.vim.cd(p)
+            self.vim.pautocmd('SwitchedRoot')
+            self.vim.vars.set_p('root_dir', p)
             pc = ProjectChanged(pro)
             info = 'switched root to {}'
-            return ((pc, Info(info.format(pro.ident))) if self.msg.notify
-                    else pc)
+            return (pc, Info(info.format(pro.ident))) if self.msg.notify else pc
         return self.data.current.map(go) if self.data.initialized else Empty()
 
     @may_handle(ProjectChanged)
@@ -156,6 +159,7 @@ class CoreTransitions(ProteomeTransitions):
 
     @may_handle(Next)
     def next(self):
+        self.log.test(self.data)
         return self.data.inc(1), SwitchRoot()
 
     @may_handle(Prev)

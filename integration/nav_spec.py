@@ -1,20 +1,22 @@
 from amino import List
 
-from integration._support.base import ProteomePluginIntegrationSpec
+from integration._support.base import DefaultSpec
 
 
-class NavSpec(ProteomePluginIntegrationSpec):
+class NavSpec(DefaultSpec):
+    '''cycle through and select projects $navigate
+    '''
 
     @property
-    def _plugins(self):
+    def components(self):
         return List('proteome.plugins.config')
 
     def navigate(self):
-        self.vim.cmd('ProNext')
-        self._project_becomes(self.name2)
-        self.vim.cmd('ProTo 0')
-        self._project_becomes(self.name1)
-        self.vim.cmd('ProPrev')
-        self._project_becomes(self.name2)
+        self.cmd_sync('ProNext')
+        self.project_becomes(self.name2)
+        self.cmd_sync('ProTo 0')
+        self.project_becomes(self.name1)
+        self.cmd_sync('ProPrev')
+        return self.project_becomes(self.name2)
 
 __all__ = ('NavSpec',)

@@ -1,10 +1,10 @@
-from ribosome.machine import handle
-from ribosome.machine.transition import Error
+from ribosome.machine.transition import handle
+from ribosome.machine.messages import Error
 
 from amino import List, L, _
 
 from proteome.state import ProteomeComponent, ProteomeTransitions
-from proteome.plugins.core import StageII, StageIII
+from ribosome.machine.messages import Stage2, Stage3
 
 
 class Plugin(ProteomeComponent):
@@ -45,11 +45,11 @@ class Plugin(ProteomeComponent):
         def _runtime_after(self, project):
             return self._runtime(project, self._project_after_dir)
 
-        @handle(StageII)
+        @handle(Stage2)
         def before(self):
             return self.data.current.map(self._runtime_before)
 
-        @handle(StageIII)
+        @handle(Stage3)
         def stage_3(self):
             return self.data.current.map(self._runtime_after)
 

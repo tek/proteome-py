@@ -1,5 +1,5 @@
 from proteome.project import Project
-from ribosome import NvimProcessExecutor, Job
+from ribosome.process import NvimProcessExecutor, Job
 
 from amino import Just
 

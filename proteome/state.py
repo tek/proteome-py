@@ -1,9 +1,10 @@
-from ribosome import RootMachine
+from ribosome.machine.state import RootMachine
 from ribosome.nvim import HasNvim
-from ribosome.machine import ModularMachine, Transitions
+from ribosome.machine.modular import ModularMachine
+from ribosome.machine.transitions import Transitions
 from ribosome.machine.base import MachineBase
+from ribosome.nvim import NvimFacade
 
-from proteome.nvim import NvimFacade
 from proteome.logging import Logging
 
 

@@ -27,7 +27,7 @@ class _HistorySpec(ProteomePluginIntegrationSpec):
         self.repo = self.history.repo(self.pro).x
 
     @property
-    def _plugins(self):
+    def components(self):
         return List(
             'proteome.plugins.history',
         )

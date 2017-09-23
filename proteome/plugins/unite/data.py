@@ -1,6 +1,6 @@
 import abc
 
-from ribosome.machine import Message
+from ribosome.machine.message_base import Message
 from ribosome import NvimFacade
 
 from amino import List, Map, _, L, __

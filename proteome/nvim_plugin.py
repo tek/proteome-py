@@ -1,65 +1,89 @@
 import neovim
 
-from amino import List, Map, __, _, Path
+from amino import List, Map, __, _, Path, Nil, Either, Lists, L, Try, Right, do
 
-from ribosome import command, NvimStatePlugin, msg_command, json_msg_command
+from ribosome import command, msg_command, json_msg_command, AutoPlugin
 from ribosome.unite import mk_unite_candidates, mk_unite_action
 from ribosome.unite.plugin import unite_plugin
+from ribosome.settings import (PluginSettings, Config, RequestHandler, path_setting, path_list_setting, setting_ctor,
+                               path_list)
 
-from proteome.plugins.core import (
-    AddByParams, Show, Create, SetProject, Next, Prev, StageI, Save, RemoveByIdent, BufEnter, StageII, StageIII,
-    StageIV, CloneRepo
-)
+from proteome.plugins.core import (AddByParams, Show, Create, SetProject, Next, Prev, Save, RemoveByIdent, BufEnter,
+                                   CloneRepo)
 from proteome.plugins.history.messages import (HistoryPrev, HistoryNext, HistoryStatus, HistoryLog, HistoryBrowse,
                                                HistoryBrowseInput, HistorySwitch, HistoryPick, HistoryRevert,
                                                HistoryFileBrowse)
-from proteome.main import Proteome
-from proteome.nvim import NvimFacade
-from proteome.logging import Logging
 from proteome.plugins.unite import UniteSelectAdd, UniteSelectAddAll, UniteProjects, UniteNames
+from proteome.env import Env
+from proteome.plugins.ctags.main import Ctags
 
 unite_candidates = mk_unite_candidates(UniteNames)
 unite_action = mk_unite_action(UniteNames)
 
+config_path_help = '''Each json file in this directory is read to populate the list of project configurations.
+Here you can either define independent projects that can be added with `ProAdd!`:
+```
+{
+"name": ".sbt",
+"type": "scala",
+"langs": ["scala"],
+"root": "~/.sbt/0.13"
+}
+```
+Or you can amend projects that are located in one of the project base dirs, for example to set additional languages.
+'''
+
+base_dirs_help = '''A list of directories that are searched for projects of the `<type>/<name>` structure. Types are
+categories grouping projects by language or other, arbitrary, criteria. When adding a project with `ProAdd! type/name`,
+it is matched against these paths.
+'''
+
+type_base_dirs_help = '''A dictionary of directories mapped to lists of strings defining project types.
+A directory is searched when adding projects of a type matching one of the corresponding types.
+'''
+
+
+@do
+def cons_type_base_dirs(data: dict) -> Either[str, Map[Path, List[str]]]:
+    keys, values = Lists.wrap(data.items()).unzip
+    paths = yield path_list(keys)
+    types = yield values.traverse(__.traverse(L(Try)(Path, _), Either), Either)
+    yield Right(Map(paths.zip(types)))
+
+
+type_base_dirs_setting = setting_ctor(dict, cons_type_base_dirs)
+
+
+class ProteomeSettings(PluginSettings):
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.config_path = path_setting('config_path', 'config directory', config_path_help, True, Path('/dev/null'))
+        self.base_dirs = path_list_setting('base_dirs', 'project base dirs', base_dirs_help, True, Nil)
+        self.type_base_dirs = type_base_dirs_setting('type_base_dirs', 'project type base dir map', type_base_dirs_help,
+                                                     True, Nil)
+
+
+addable = dict(complete='customlist,ProCompleteAddableProjects')
+projects = dict(complete='customlist,ProCompleteProjects')
+
+
+config = Config(
+    name='proteome',
+    prefix='pro',
+    state_type=Env,
+    components=Map(ctags=Ctags),
+    settings=ProteomeSettings(),
+    request_handlers=List(
+        RequestHandler.json_msg_cmd(AddByParams)('Add', bang=True, **addable)
+    ),
+    core_components=List('proteome.plugins.core'),
+    default_components=List('proteome.plugins.config', 'proteome.plugins.history', 'proteome.plugins.unite', 'ctags'),
+)
+
 
 @unite_plugin('pro')
-class ProteomeNvimPlugin(NvimStatePlugin, Logging, name='proteome', prefix='pro'):
-
-    def __init__(self, vim: neovim.Nvim) -> None:
-        super().__init__(NvimFacade(vim))
-        self.initialized = False
-        self.init_state()
-
-    def init_state(self) -> None:
-        config_path = self.vim.vars.ppath('config_path')\
-            .get_or_else(Path('/dev/null'))
-        bases = self.vim.vars.ppathl('base_dirs')\
-            .get_or_else(List())\
-            .map(Path)
-        type_bases = self.vim.vars.pd('type_base_dirs')\
-            .get_or_else(Map())\
-            .keymap(lambda a: Path(a).expanduser())\
-            .valmap(List.wrap)
-        plugins = self.vim.vars.pl('plugins') | List()
-        self.pro = Proteome(self.vim.proxy, Path(config_path), plugins, bases, type_bases)
-        self.pro.start()
-        self.pro.wait_for_running()
-
-    def state(self):
-        return self.pro
-
-    def stage_1(self):
-        self.pro.send(StageI())
-
-    def stage_2(self):
-        self.initialized = True
-        self.pro.send(StageII().at(.7))
-
-    def stage_3(self):
-        self.pro.send(StageIII().at(.72))
-
-    def stage_4(self):
-        self.pro.send(StageIV().at(.74))
+class ProteomeNvimPlugin(AutoPlugin):
 
     @command()
     def pro_plug(self, plug_name, cmd_name, *args):
@@ -67,13 +91,6 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging, name='proteome', prefix='pro'
 
     @msg_command(Create)
     def pro_create(self):
-        pass
-
-    addable = dict(complete='customlist,ProCompleteAddableProjects')
-    projects = dict(complete='customlist,ProCompleteProjects')
-
-    @json_msg_command(AddByParams, bang=True, **addable)
-    def pro_add(self):
         pass
 
     @neovim.function('ProCompleteProjects', sync=True)
@@ -117,8 +134,7 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging, name='proteome', prefix='pro'
 
     @neovim.autocmd('BufEnter')
     def buf_enter(self):
-        if self.initialized:
-            self.pro.send(BufEnter(self.vim.buffer.proxy))
+        self.root.send(BufEnter(self.vim.buffer.proxy))
 
     @json_msg_command(CloneRepo)
     def pro_clone(self):
@@ -201,4 +217,3 @@ class ProteomeNvimPlugin(NvimStatePlugin, Logging, name='proteome', prefix='pro'
         return RemoveByIdent(ident)
 
 __all__ = ('ProteomeNvimPlugin',)
-

@@ -1,42 +1,44 @@
-from amino.test.spec_spec import later
-
 from amino import List
 
-from integration._support.base import ProteomePluginIntegrationSpec
+from kallikrein import kf, unsafe_k
+from kallikrein.matchers import contain
+from kallikrein.matchers.length import have_length
+
+from ribosome.test.integration.klk import later
+
+from integration._support.base import DefaultSpec
 
 
-class _CtagsSpec(ProteomePluginIntegrationSpec):
+class _CtagsSpec(DefaultSpec):
 
     def _pre_start(self):
         self.tag_file = self.main_project / '.tags'
 
     @property
-    def _plugins(self):
-        return List(
-            'proteome.plugins.ctags',
-        )
+    def components(self):
+        return List('ctags')
 
 
 class CtagsGenSpec(_CtagsSpec):
 
     def _pre_start(self):
         super()._pre_start()
-        self.tag_file.exists().should_not.be.ok
+        unsafe_k(self.tag_file.exists()).false
 
     def gen(self):
-        self.vim.cmd('ProSave')
-        self._wait_for(lambda: self.tag_file.exists())
+        self.cmd_sync('ProSave')
+        return later(kf(self.tag_file.exists).true)
 
 
 class CtagsAddBufferSpec(_CtagsSpec):
 
     def add_buffer(self):
         tags = lambda: self.vim.buffer.options.l('tags')
-        later(lambda: tags().should.contain(str(self.tag_file)))
-        self.vim.cmd('ProAdd! tpe2/dep')
-        later(lambda: tags().should.have.length_of(2))
-        self.vim.cmd('new')
-        later(lambda: tags().should.have.length_of(2))
+        later(kf(tags).must(contain(str(self.tag_file))))
+        self.cmd_sync('ProAdd! tpe2/dep')
+        later(kf(tags).must(have_length(2)))
+        self.cmd_sync('new')
+        return later(kf(tags).must(have_length(2)))
 
 
 __all__ = ('CtagsAddBufferSpec', 'CtagsGenSpec')
