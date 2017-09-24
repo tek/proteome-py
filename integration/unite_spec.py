@@ -4,10 +4,10 @@ from amino.test import temp_dir
 from ribosome.test.integration.spec_spec import later
 from ribosome.test.unite import unite
 
-from integration._support.base import ProteomePluginIntegrationSpec
+from integration._support.base import DefaultSpec
 
 
-class UniteSpec(ProteomePluginIntegrationSpec):
+class UniteSpec(DefaultSpec):
 
     @property
     def components(self) -> List[str]:
