@@ -402,7 +402,7 @@ class ProjectAnalyzer(HasNvim, Logging):
 
     @property
     def _main_data(self) -> Maybe[Map]:
-        return self.pflags.get('detect_main_project', True)\
+        return self.vim.pflags.get('detect_main_project', True)\
             .maybe(self._detect_main_data) | Empty()
 
     @property

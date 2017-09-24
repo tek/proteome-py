@@ -3,9 +3,8 @@ from amino import List, Map
 from ribosome.machine.transition import may_handle
 from ribosome.machine.state import Component, ComponentMachine
 
-from proteome.components.unite.data import (UniteSelectAdd, UniteSelectAddAll,
-                                         UniteProjects, UniteSource, UniteKind,
-                                         UniteNames, UniteMessage)
+from proteome.components.unite.data import (UniteSelectAdd, UniteSelectAddAll, UniteProjects, UniteSource, UniteKind,
+                                            UniteNames, UniteMessage)
 
 
 class UniteTransitions(Component):

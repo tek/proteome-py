@@ -212,7 +212,7 @@ class HistoryComponent(Component):
 
     @property
     def all_projects_history(self):
-        return self.pflags.all_projects_history
+        return self.vim.pflags.all_projects_history
 
     @lazy
     def projects(self):
