@@ -1,11 +1,11 @@
-from typing import Generator, Any
+from typing import Generator, Any, Awaitable
 
-from amino import List, _, Nil, do, __
+from amino import List, _, Nil, do, __, Either
 
-from ribosome.machine.message_base import message
+from ribosome.machine.message_base import message, Message
 from ribosome.machine.transition import may_handle
 from ribosome.nvim import Buffer, NvimIO
-from ribosome.machine.messages import Stage4
+from ribosome.machine.messages import Stage4, Nop, Error
 from ribosome.machine.state import SubTransitions
 from ribosome.machine import trans
 
@@ -65,11 +65,19 @@ class Ctags(SubTransitions):
         files = self.data.all_projects.map(_.root / self._tags_file_name)
         bufs.foreach(__.options.amend_l('tags', files))
 
-    @trans.unit(Gen, trans.nio, trans.coro)
+    @trans.one(Gen, trans.nio, trans.coro)
     @do
-    def gen(self):
+    def gen(self) -> Generator[NvimIO[Any], Any, None]:
         exe = yield self.executor
-        yield NvimIO.pure(exe.gen(self.msg.project))
+        async def gen_ctags() -> Message:
+            result = await exe.gen(self.msg.project)
+            return (
+                Nop().pub
+                if result.success else
+                Error(f'failed to generate tags for {self.msg.project}: {result.msg}').pub
+            )
+            exe.gen(self.msg.project)
+        yield NvimIO.pure(gen_ctags())
 
 
 __all__ = ('GenAll', 'Ctags')

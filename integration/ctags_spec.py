@@ -27,6 +27,9 @@ class CtagsGenSpec(_CtagsSpec):
 
     def gen(self):
         self.cmd_sync('ProSave')
+        later(kf(self.tag_file.exists).true)
+        self.tag_file.unlink()
+        self.cmd_sync('ProSave')
         return later(kf(self.tag_file.exists).true)
 
 
