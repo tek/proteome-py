@@ -9,4 +9,4 @@ def test_loop():
     yield loop
     loop.close()
 
-__all__ = ['test_loop']
+__all__ = ('test_loop',)

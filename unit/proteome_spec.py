@@ -2,84 +2,69 @@ from pathlib import Path
 
 import asyncio
 
+from kallikrein import k, Expectation, kf
+from kallikrein.matchers.maybe import be_just
+
+from amino.test import temp_dir
 from amino import List, Just, _, Map
 
-from ribosome.machine.messages import Nop
+from ribosome.machine.messages import Nop, Stage1
+from ribosome.machine.state import AutoRootMachine
+from ribosome.nvim import NvimFacade
+from ribosome.settings import Config
+from ribosome.test.integration.klk import later
 
 from proteome.project import Project, Projects, ProjectAnalyzer
-from proteome.components.core import (Next, Prev, Stage1, RemoveByIdent,
-                                   AddByParams)
-from proteome.main import Proteome
+from proteome.components.core import Next, Prev, RemoveByIdent, AddByParams
 from proteome.components.history.data import History
 from proteome.components.core.message import Create
+from proteome.nvim_plugin import mk_config
+from proteome.env import Env
+from proteome.components.core.main import Core
 
 from unit._support.loader import LoaderSpec
 from unit._support.async import test_loop
 
-from amino.test import temp_dir
-from amino.test.spec_spec import later
-
 null = Path('/dev/null')
 
 
-class DictProteome(Proteome):
-    _data_type = dict
-
-    @property
-    def init(self):
-        return dict()
-
-
 class ProteomeSpec(LoaderSpec):
+    '''transition unit tests
+    create a project $create
+    cycle through projects $cycle
+    create ctags for two projects $ctags
+    '''
 
     def setup(self):
         LoaderSpec.setup(self)
         asyncio.get_child_watcher()
 
-    def _prot(self, p=List(), b=List(), t=Map(), pros=List()):
-        initial = Just(Projects(projects=pros))
-        return Proteome(self.vim, self.config, p, b, t, initial).transient()
+    def _prot(self, p=Map(), b=List(), t=Map(), pros=List()):
+        initial = Projects(projects=pros)
+        def ctor(config: Config, vim: NvimFacade) -> Env:
+            return Env(projects=initial, config=config, vim_facade=Just(vim))
+        return AutoRootMachine(self.vim, mk_config(state_ctor=ctor, components=p), 'proteome').transient()
 
-    def create(self):
+    def create(self) -> Expectation:
         name = 'proj'
         with self._prot() as prot:
             data = prot.send_sync(Create(name, null))
         p = data.projects.projects[0]
-        p.name.should.equal(name)
-        p.root.should.equal(null)
+        return (k(p.name) == name) & (k(p.root) == null)
 
-    def cycle(self):
+    def cycle(self) -> Expectation:
         self.vim_mock.should_receive('switch_root').and_return(None)
         name = 'proj'
         name2 = 'proj2'
         pros = List(Project.of(name, null), Project.of(name2, null))
         with self._prot(pros=pros) as prot:
-            prot.data.current.should.equal(Just(pros[0]))
-            prot.send_sync(Next())\
-                .current.should.equal(Just(pros[1]))
-            prot.send_sync(Prev())\
-                .current.should.equal(Just(pros[0]))
+            return (
+                k(prot.data.current).must(be_just(pros[0])) &
+                k(prot.send_sync(Next()).current).must(be_just(pros[1])) &
+                k(prot.send_sync(Prev()).current).must(be_just(pros[0]))
+            )
 
-    def command(self):
-        plug = 'unit._support.test_plug'
-        prot = DictProteome(self.vim, null, List(plug), List(), Map())
-        prot.start_wait()
-        data = 'message_data'
-        prot.plug_command('test_plug', 'do', [data])
-        later(lambda: prot.data.should.have.key(data).being.equal(data))
-        prot.stop()
-
-    def invalid_command(self):
-        plug = 'unit._support.test_plug'
-        prot = DictProteome(self.vim, null, List(plug), List(), Map())
-        prot.start_wait()
-        data = 'message_data'
-        prot.plug_command('test_plug', 'do', [data])
-        prot.plug_command('test_plug', 'dont', [data])
-        later(lambda: prot.data.should.have.key(data).being.equal(data))
-        prot.stop()
-
-    def ctags(self):
+    def ctags(self) -> Expectation:
         plug_name = 'proteome.components.ctags'
         p1 = self.mk_project('pro1', 'c')
         p2 = self.mk_project('pro2', 'go')

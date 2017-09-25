@@ -441,4 +441,4 @@ class HistoryComponent(Component):
     def commit_current(self):
         return Commit(*(self.data.current / _.name).to_list)
 
-__all__ = ('Plugin')
+__all__ = ('HistoryComponent')

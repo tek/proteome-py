@@ -2,6 +2,8 @@ import neovim
 
 from amino import List, Map, __, _, Path, Nil, Either, Lists, L, Try, Right, do
 
+from toolz import merge
+
 from ribosome import command, msg_command, json_msg_command, AutoPlugin
 from ribosome.unite import mk_unite_candidates, mk_unite_action
 from ribosome.unite.plugin import unite_plugin
@@ -71,18 +73,24 @@ addable = dict(complete='customlist,ProCompleteAddableProjects')
 projects = dict(complete='customlist,ProCompleteProjects')
 
 
-config = Config(
-    name='proteome',
-    prefix='pro',
-    state_type=Env,
-    components=Map(ctags=Ctags, core=Core, config=ConfigC, history=HistoryComponent, unite=Unite),
-    settings=ProteomeSettings(),
-    request_handlers=List(
-        RequestHandler.json_msg_cmd(AddByParams)('Add', bang=True, **addable)
-    ),
-    core_components=List('core'),
-    default_components=List('config', 'history', 'unite', 'ctags'),
-)
+def mk_config(**override) -> Config:
+    defaults = dict(
+        name='proteome',
+        prefix='pro',
+        state_type=Env,
+        components=Map(ctags=Ctags, core=Core, config=ConfigC, history=HistoryComponent, unite=Unite),
+        settings=ProteomeSettings(),
+        request_handlers=List(
+            RequestHandler.json_msg_cmd(AddByParams)('Add', bang=True, **addable)
+        ),
+        core_components=List('core'),
+        default_components=List('config', 'history', 'unite', 'ctags'),
+    )
+    actual = merge(defaults, override)
+    return Config(**actual)
+
+
+config = mk_config()
 
 
 @unite_plugin('pro')

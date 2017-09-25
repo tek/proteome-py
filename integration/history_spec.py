@@ -1,15 +1,19 @@
 from amino.test.spec_spec import later
 
 from amino import List, Just, __, _
+
+from kallikrein.matchers.start_with import start_with
+from kallikrein.matchers.maybe import be_just
+from kallikrein import unsafe_kf
 from amino.util.random import Random
 
 from proteome.project import Project
-from proteome.components.history import Plugin, History
+from proteome.components.history import History
 
-from integration._support.base import ProteomePluginIntegrationSpec
+from integration._support.base import DefaultSpec
 
 
-class _HistorySpec(ProteomePluginIntegrationSpec):
+class _HistorySpec(DefaultSpec):
 
     def _pre_start(self):
         super()._pre_start()
@@ -28,9 +32,7 @@ class _HistorySpec(ProteomePluginIntegrationSpec):
 
     @property
     def components(self):
-        return List(
-            'proteome.components.history',
-        )
+        return List('history')
 
     @property
     def _object_count(self):
@@ -40,13 +42,10 @@ class _HistorySpec(ProteomePluginIntegrationSpec):
         self._wait_for(lambda: self._object_count > count)
 
     def _await_commit(self, num):
-        self._await_content(self.test_content[num])
+        return self._await_content(self.test_content[num])
 
     def _await_content(self, text):
-        def checker():
-            self.test_file_1.read_text()\
-                .should.equal(text)
-        later(checker)
+        return unsafe_kf(self.test_file_1.read_text) == text
 
     def _write_file(self, num):
         self.test_file_1.write_text(self.test_content[num])
@@ -105,11 +104,11 @@ class HistoryLogSpec(_HistorySpec):
         self._write_file(2)
         self._save()
         self.vim.cmd('ProHistoryLog')
-        self._log_line(-3, __.startswith('*'))
+        self._log_line(-3, be_just(start_with('*')))
         self.vim.cmd('ProHistoryPrev')
         self._await_commit(1)
         self.vim.cmd('ProHistoryLog')
-        self._log_line(-2, __.startswith('*'))
+        return self._log_line(-2, be_just(start_with('*')))
 
 
 class _BrowseHelpers(object):
