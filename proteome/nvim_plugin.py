@@ -90,7 +90,7 @@ class ProteomeNvimPlugin(AutoPlugin):
 
     @command()
     def pro_plug(self, plug_name, cmd_name, *args):
-        self.pro.plug_command(plug_name, cmd_name, args)
+        self.root.plug_command(plug_name, cmd_name, args)
 
     @msg_command(Create)
     def pro_create(self):
@@ -99,12 +99,12 @@ class ProteomeNvimPlugin(AutoPlugin):
     @neovim.function('ProCompleteProjects', sync=True)
     def pro_complete_projects(self, args):
         lead, line, pos = args
-        return self.pro.data.projects.idents.filter(__.startswith(lead))
+        return self.root.data.projects.idents.filter(__.startswith(lead))
 
     @neovim.function('ProCompleteAddableProjects', sync=True)
     def pro_complete_addable_projects(self, args):
         lead, line, pos = args
-        return self.pro.data.addable.filter(__.startswith(lead))
+        return self.root.data.addable.filter(__.startswith(lead))
 
     @msg_command(RemoveByIdent, **projects)
     def pro_remove(self):
@@ -197,15 +197,15 @@ class ProteomeNvimPlugin(AutoPlugin):
 
     @unite_candidates('addable')
     def pro_unite_addable(self, args):
-        return self.pro.data.main_addable
+        return self.root.data.main_addable
 
     @unite_candidates('all_addable')
     def pro_unite_all_addable(self, args):
-        return self.pro.data.addable
+        return self.root.data.addable
 
     @unite_candidates('projects')
     def pro_unite_projects(self, args):
-        return self.pro.data.all_projects / _.name
+        return self.root.data.all_projects / _.name
 
     @unite_action('add_project')
     def pro_unite_add_project(self, ident):
