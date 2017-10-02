@@ -5,7 +5,7 @@ from amino import List, Map, Empty, may, _, L
 from amino.lazy import lazy
 
 from ribosome.machine.transition import handle, may_handle
-from ribosome.machine.messages import Error, Info, Nop, Stage1, Stage2, Stage3, Stage4
+from ribosome.machine.messages import Error, Info, Nop, Stage1, Stage2, Stage3, Stage4, Quit
 from ribosome.process import JobClient
 from ribosome.machine.transition import may_fallback
 from ribosome.machine.state import Component
@@ -191,6 +191,12 @@ class Core(Component):
     @may_handle(BufEnter)
     def buf_enter(self):
         ''' dummy handler to prevent error message in tests when ctags plugin is not active
+        '''
+        pass
+
+    @trans.unit(Quit)
+    def quit(self) -> None:
+        '''fallback handler
         '''
         pass
 
