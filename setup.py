@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version_parts = (11, 1, 0)
+version_parts = (11, 1, 1)
 version = '.'.join(map(str, version_parts))
 
 setup(
@@ -13,7 +13,7 @@ setup(
     url='https://github.com/tek/proteome',
     packages=find_packages(exclude=['unit', 'unit.*', 'integration', 'integration.*']),
     install_requires=[
-        'ribosome~=11.2.11',
+        'ribosome~=12.0.2',
         'dulwich',
     ]
 )
