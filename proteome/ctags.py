@@ -3,35 +3,27 @@ from typing import Tuple
 from proteome.project import Project
 from ribosome.process import NvimProcessExecutor, Job, Result
 
-from amino import Future, Lists, Either, L, _, List
+from amino import Future, Lists, Either, L, _
 
 
-def custom_cmd(cmd: str, project: Project, langs: str, args_tmpl: Either[str, str]) -> Tuple[str, List[str]]:
-    args_line = (args_tmpl | '').format(tag_file=project.tag_file, langs=langs, root=project.root)
-    args = Lists.split(args_line, ' ')
-    return cmd, args
+def custom_cmd(cmd: str, args: Either[str, str]) -> Tuple[str, str]:
+    return cmd, args | ''
 
 
-def default_cmd(project: Project, langs: str) -> Tuple[str, List[str]]:
-    args = List(
-        '-R',
-        '--languages={}'.format(langs),
-        '-f',
-        str(project.tag_file),
-        str(project.root)
-    )
-    return 'ctags', args
+default_cmd = 'ctags', '-R --languages={langs} -f {tag_file} {root}'
 
 
 class CtagsExecutor(NvimProcessExecutor):
 
     def gen(self, project: Project, cmd: Either[str, str], args_tmpl: Either[str, str]) -> Future[Result]:
         langs = ','.join(project.ctags_langs)
-        exe, args = cmd / L(custom_cmd)(_, project, langs, args_tmpl) | L(default_cmd)(project, langs)
+        exe, args_line = cmd / L(custom_cmd)(_, args_tmpl) | default_cmd
+        args = args_line.format(tag_file=project.tag_file, langs=langs, root=project.root)
+        args_tok = Lists.split(args, ' ')
         job = Job(
             client=project.job_client,
             exe=exe,
-            args=args,
+            args=args_tok,
             loop=self.loop
         )
         return self.run(job)

@@ -32,6 +32,16 @@ class CtagsGenSpec(_CtagsSpec):
         self.cmd_sync('ProSave')
         return later(kf(self.tag_file.exists).true)
 
+    def gen_custom(self) -> None:
+        tag_file = self.main_project / '.tags_custom'
+        self.vim.vars.set_p('tags_command', 'ctags')
+        self.vim.vars.set_p('tags_args', f'-R -f {tag_file} {{root}}')
+        self.cmd_sync('ProSave')
+        later(kf(tag_file.exists).true)
+        self.tag_file.unlink()
+        self.cmd_sync('ProSave')
+        return later(kf(tag_file.exists).true)
+
 
 class CtagsAddBufferSpec(_CtagsSpec):
 
