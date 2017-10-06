@@ -1,14 +1,13 @@
 import neovim
 
-from amino import List, Map, __, _, Path, Nil, Either, Lists, L, Try, Right, do
+from amino import List, Map, __, _
 
 from toolz import merge
 
 from ribosome import command, msg_command, json_msg_command, AutoPlugin
 from ribosome.unite import mk_unite_candidates, mk_unite_action
 from ribosome.unite.plugin import unite_plugin
-from ribosome.settings import (PluginSettings, Config, RequestHandler, path_setting, path_list_setting, setting_ctor,
-                               path_list)
+from ribosome.settings import Config, RequestHandler
 
 from proteome.components.core import (AddByParams, Show, Create, SetProject, Next, Prev, Save, RemoveByIdent, BufEnter,
                                       CloneRepo)
@@ -21,52 +20,10 @@ from proteome.components.config import Config as ConfigC
 from proteome.env import Env
 from proteome.components.ctags.main import Ctags
 from proteome.components.core.main import Core
+from proteome.settings import ProteomeSettings
 
 unite_candidates = mk_unite_candidates(UniteNames)
 unite_action = mk_unite_action(UniteNames)
-
-config_path_help = '''Each json file in this directory is read to populate the list of project configurations.
-Here you can either define independent projects that can be added with `ProAdd!`:
-```
-{
-"name": ".sbt",
-"type": "scala",
-"langs": ["scala"],
-"root": "~/.sbt/0.13"
-}
-```
-Or you can amend projects that are located in one of the project base dirs, for example to set additional languages.
-'''
-
-base_dirs_help = '''A list of directories that are searched for projects of the `<type>/<name>` structure. Types are
-categories grouping projects by language or other, arbitrary, criteria. When adding a project with `ProAdd! type/name`,
-it is matched against these paths.
-'''
-
-type_base_dirs_help = '''A dictionary of directories mapped to lists of strings defining project types.
-A directory is searched when adding projects of a type matching one of the corresponding types.
-'''
-
-
-@do
-def cons_type_base_dirs(data: dict) -> Either[str, Map[Path, List[str]]]:
-    keys, values = Lists.wrap(data.items()).unzip
-    paths = yield path_list(keys)
-    types = yield values.traverse(__.traverse(L(Try)(Path, _), Either), Either)
-    yield Right(Map(paths.zip(types)))
-
-
-type_base_dirs_setting = setting_ctor(dict, cons_type_base_dirs)
-
-
-class ProteomeSettings(PluginSettings):
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.config_path = path_setting('config_path', 'config directory', config_path_help, True, Path('/dev/null'))
-        self.base_dirs = path_list_setting('base_dirs', 'project base dirs', base_dirs_help, True, Nil)
-        self.type_base_dirs = type_base_dirs_setting('type_base_dirs', 'project type base dir map', type_base_dirs_help,
-                                                     True, Nil)
 
 
 addable = dict(complete='customlist,ProCompleteAddableProjects')
