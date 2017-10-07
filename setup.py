@@ -13,7 +13,7 @@ setup(
     url='https://github.com/tek/proteome',
     packages=find_packages(exclude=['unit', 'unit.*', 'integration', 'integration.*']),
     install_requires=[
-        'ribosome~=12.0.2',
+        'ribosome~=12.0.3',
         'dulwich',
     ]
 )
