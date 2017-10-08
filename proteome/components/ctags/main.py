@@ -1,6 +1,6 @@
 from typing import Generator, Tuple
 
-from amino import List, _, do, __, Either, Future, Lists, L, I
+from amino import List, _, do, __, Either, Future, Lists, L, I, Nil
 from amino.do import tdo
 
 from ribosome.machine.message_base import Message
@@ -92,9 +92,9 @@ class Ctags(SubTransitions):
         job = yield gen(self.msg.project)
         def result(result: Result) -> Message:
             return (
-                Nop().pub
+                Nil
                 if result.success else
-                Error(f'failed to generate tags for {self.msg.project}: {result.msg}').pub
+                List(Error(f'failed to generate tags for {self.msg.project}: {result.msg}'))
             )
         yield NvimIOState.pure(SubProcessAsync(job, result).pub)
 
