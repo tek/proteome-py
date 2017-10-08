@@ -154,4 +154,8 @@ class DefaultSpec(AISpec):
     def module(self) -> str:
         return 'proteome.nvim_plugin'
 
+    @property
+    def plugin_prefix(self) -> str:
+        return 'Pro'
+
 __all__ = ('ProteomeIntegrationSpec', 'ProteomePluginIntegrationSpec', 'AISpec', 'DefaultSpec')
