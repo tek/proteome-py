@@ -18,7 +18,7 @@ from proteome.project import Project, Projects, ProjectAnalyzer
 from proteome.components.core import Next, Prev, RemoveByIdent, AddByParams
 from proteome.components.history.data import History
 from proteome.components.core.message import Create
-from proteome.nvim_plugin import mk_config
+from proteome import mk_config
 from proteome.env import Env
 from proteome.components.core.main import Core
 

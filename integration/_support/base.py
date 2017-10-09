@@ -12,7 +12,7 @@ from ribosome.test.integration.klk import AutoPluginIntegrationKlkSpec, later
 
 from proteome.project import Project
 from proteome.test import Spec
-from proteome.nvim_plugin import ProteomeNvimPlugin
+from proteome import ProteomeNvimPlugin
 from proteome.components.core.message import Initialized
 
 
@@ -152,7 +152,7 @@ class DefaultSpec(AISpec):
         return 'config'
 
     def module(self) -> str:
-        return 'proteome.nvim_plugin'
+        return 'proteome'
 
     @property
     def plugin_prefix(self) -> str:

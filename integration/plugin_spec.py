@@ -15,7 +15,7 @@ import ribosome
 from ribosome.test.integration.spec import main_looped
 from ribosome.nvim import NvimFacade
 
-from proteome.nvim_plugin import ProteomeNvimPlugin
+from proteome import ProteomeNvimPlugin
 from proteome.project import Project
 
 from integration._support.base import ProteomeIntegrationSpec
