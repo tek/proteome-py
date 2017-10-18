@@ -1,6 +1,6 @@
 from amino import List
 
-from kallikrein import kf, unsafe_k
+from kallikrein import kf, unsafe_k, Expectation
 from kallikrein.matchers import contain
 from kallikrein.matchers.length import have_length
 
@@ -11,28 +11,32 @@ from integration._support.base import DefaultSpec
 
 class _CtagsSpec(DefaultSpec):
 
-    def _pre_start(self):
+    def _pre_start(self) -> None:
         self.tag_file = self.main_project / '.tags'
 
     @property
-    def components(self):
+    def components(self) -> List[str]:
         return List('ctags')
 
 
 class CtagsGenSpec(_CtagsSpec):
+    '''generate ctags files
+    default generation $gen
+    custom generation $gen_custom
+    '''
 
     def _pre_start(self):
         super()._pre_start()
         unsafe_k(self.tag_file.exists()).false
 
-    def gen(self):
+    def gen(self) -> Expectation:
         self.cmd_sync('ProSave')
         later(kf(self.tag_file.exists).true)
         self.tag_file.unlink()
         self.cmd_sync('ProSave')
         return later(kf(self.tag_file.exists).true)
 
-    def gen_custom(self) -> None:
+    def gen_custom(self) -> Expectation:
         tag_file = self.main_project / '.tags_custom'
         self.vim.vars.set_p('tags_command', 'ctags')
         self.vim.vars.set_p('tags_args', f'-R -f {tag_file} {{root}}')
@@ -44,6 +48,8 @@ class CtagsGenSpec(_CtagsSpec):
 
 
 class CtagsAddBufferSpec(_CtagsSpec):
+    '''set the 'tags' option when adding a buffer $add_buffer
+    '''
 
     def add_buffer(self):
         tags = lambda: self.vim.buffer.options.l('tags')
