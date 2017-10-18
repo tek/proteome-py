@@ -21,14 +21,12 @@ The regular initialization flow is:
 
 * The [main project](#main-project) is determined.
 
-* Based on the result of that, [project specific vim config](#config) is
-  loaded.  This is where dependency projects should be added.
+* Based on the result of that, [project specific vim config](#config) is loaded.
+  This is where dependency projects should be added.
 
 * The project specific config is applied and the initial state is created.
 
 * The *after* part of the project config is loaded.
-
-* In the final initialization phase, plugins perform finishing tasks.
 
 ### Commands
 

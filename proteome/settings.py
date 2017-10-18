@@ -1,6 +1,8 @@
 from amino import List, Map, __, _, Path, Nil, Either, Lists, L, Try, Right, do
+from amino.boolean import true
 
-from ribosome.settings import PluginSettings, path_setting, path_list_setting, setting_ctor, path_list, str_setting
+from ribosome.settings import (PluginSettings, path_setting, path_list_setting, setting_ctor, path_list, str_setting,
+                               bool_setting)
 
 
 config_path_help = '''Each json file in this directory is read to populate the list of project configurations.
@@ -33,6 +35,10 @@ tags_args_help = '''Set this to a space-separated list of arguments for the cust
 You can supply a python format string containing the variables `langs`, `tag_file` and `root`.
 '''
 
+load_buffers_help = '''On invocation of `ProLoad`, proteome persists the current buffer list to disk. If this flag is
+true, they will be restored upon startup.
+'''
+
 
 @do
 def cons_type_base_dirs(data: dict) -> Either[str, Map[Path, List[str]]]:
@@ -56,5 +62,7 @@ class ProteomeSettings(PluginSettings):
         self.tags_command = str_setting('tags_command', 'custom command for ctags generation', tags_command_help, True,
                                         '')
         self.tags_args = str_setting('tags_args', 'args for custom ctags command', tags_args_help, True, '')
+        self.load_buffers = bool_setting('load_buffers', 'load persisted buffers on startup', load_buffers_help, True,
+                                         true)
 
 __all__ = ('ProteomeSettings',)

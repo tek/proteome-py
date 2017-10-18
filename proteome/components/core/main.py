@@ -1,8 +1,11 @@
 import re
 from pathlib import Path
+from typing import Generator
 
-from amino import List, Map, Empty, may, _, L
+from amino import List, Map, Empty, may, _, L, __, Try, Maybe
 from amino.lazy import lazy
+from amino.do import tdo
+from amino.dat import Dat
 
 from ribosome.machine.transition import handle, may_handle
 from ribosome.machine.messages import Error, Info, Nop, Stage1, Stage2, Stage3, Stage4, Quit
@@ -11,12 +14,16 @@ from ribosome.machine.transition import may_fallback
 from ribosome.machine.state import Component
 from ribosome.machine import trans
 from ribosome.nvim import NvimIO
+from ribosome.nvim.io import NvimIOState
+from ribosome.machine.state_a import store_json_data, load_json_data
+from ribosome.machine.message_base import Message
 
 from proteome.project import Project, mkpath
 from proteome.git import Git
 from proteome.components.core.message import (Add, RemoveByIdent, Create, Next, Prev, SetProject, SetProjectIdent,
                                               SetProjectIndex, SwitchRoot, Added, Removed, ProjectChanged, BufEnter,
-                                              Initialized, MainAdded, Show, AddByParams, CloneRepo)
+                                              Initialized, MainAdded, Show, AddByParams, CloneRepo, Save, Load)
+from proteome import Env
 
 
 @may
@@ -25,6 +32,36 @@ def valid_index(i, total):
         return i
     elif i < 0 and -i <= total:
         return total + i
+
+
+class BuffersState(Dat['BuffersState']):
+
+    def __init__(self, buffers: List[str], current: Maybe[str]) -> None:
+        self.buffers = buffers
+        self.current = current
+
+
+@tdo(NvimIOState[Env, None])
+def persist_buffers() -> Generator:
+    is_file = lambda p: Try(Path, p).map(__.is_file()).true
+    b = yield NvimIOState.io(_.buffers)
+    files = (b / _.name).filter(is_file)
+    buf = yield NvimIOState.io(_.buffer)
+    current = Maybe(buf).filter(is_file)
+    state = BuffersState(files, current)
+    yield store_json_data('buffers', state)
+
+
+@tdo(NvimIOState[Env, None])
+def load_buffers(state: BuffersState) -> Generator:
+    r = yield NvimIOState.lift(state.buffers.traverse(lambda a: NvimIO.cmd_sync(f'badd {a}'), NvimIO))
+    yield NvimIOState.lift(state.current / (lambda a: NvimIO.cmd(f'edit {a}')) | NvimIO.pure(None))
+
+
+@tdo(NvimIOState[Env, None])
+def load_persisted_buffers() -> Generator:
+    data = yield load_json_data('buffers')
+    yield data.cata(lambda a: NvimIOState.pure(None), load_buffers)
 
 
 class Core(Component):
@@ -37,9 +74,12 @@ class Core(Component):
         main = self.data.analyzer(self.vim).main
         return Add(main), MainAdded().pub
 
-    @may_fallback(Stage2)
-    def stage_2(self):
-        pass
+    @trans.one(Stage2, trans.st, trans.m)
+    @tdo(NvimIOState[Env, Maybe[Message]])
+    def stage_2(self) -> Generator:
+        settings = yield NvimIOState.inspect(_.settings)
+        load = yield NvimIOState.lift(settings.load_buffers.value_or_default)
+        yield NvimIOState.pure(load.m(Load()))
 
     @may_fallback(Stage3)
     def stage_3(self):
@@ -160,7 +200,6 @@ class Core(Component):
 
     @may_handle(Next)
     def next(self):
-        self.log.test(self.data)
         return self.data.inc(1), SwitchRoot()
 
     @may_handle(Prev)
@@ -199,6 +238,14 @@ class Core(Component):
         '''fallback handler
         '''
         pass
+
+    @trans.unit(Save, trans.st)
+    def save(self) -> NvimIOState[Env, None]:
+        return persist_buffers()
+
+    @trans.unit(Load, trans.st)
+    def load(self) -> NvimIOState[Env, None]:
+        return load_persisted_buffers()
 
     def _clone_url(self, uri):
         return uri if uri.startswith('http') else self._github_url(uri)

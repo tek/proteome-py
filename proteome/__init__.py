@@ -21,6 +21,7 @@ from proteome.env import Env
 from proteome.components.ctags.main import Ctags
 from proteome.components.core.main import Core
 from proteome.settings import ProteomeSettings
+from proteome.components.core.message import Load
 
 unite_candidates = mk_unite_candidates(UniteNames)
 unite_action = mk_unite_action(UniteNames)
@@ -38,7 +39,8 @@ def mk_config(**override) -> Config:
         components=Map(ctags=Ctags, core=Core, config=ConfigC, history=HistoryComponent, unite=Unite),
         settings=ProteomeSettings(),
         request_handlers=List(
-            RequestHandler.json_msg_cmd(AddByParams)('Add', bang=True, **addable)
+            RequestHandler.json_msg_cmd(AddByParams)('Add', bang=True, **addable),
+            RequestHandler.json_msg_cmd(Load)('Load'),
         ),
         core_components=List('core'),
         default_components=List('config', 'history', 'unite', 'ctags'),

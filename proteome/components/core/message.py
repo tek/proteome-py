@@ -10,6 +10,7 @@ SetProjectIdent = message('SetProjectIdent', 'ident')
 SetProjectIndex = message('SetProjectIndex', 'index')
 SwitchRoot = message('SwitchRoot', opt_fields=(('notify', True),))
 Save = message('Save')
+Load = message('Load')
 Added = message('Added', 'project')
 Removed = message('Removed', 'project')
 ProjectChanged = message('ProjectChanged', 'project')
@@ -21,5 +22,5 @@ AddByParams = json_message('AddByParams', 'ident')
 CloneRepo = json_message('CloneRepo', 'uri')
 
 __all__ = ('Add', 'RemoveByIdent', 'Create', 'Next', 'Prev', 'SetProject', 'SetProjectIdent', 'SetProjectIndex',
-           'SwitchRoot', 'Save', 'Added', 'Removed', 'ProjectChanged', 'BufEnter', 'Initialized', 'MainAdded', 'Show',
-           'AddByParams', 'CloneRepo')
+           'SwitchRoot', 'Save', 'Load', 'Added', 'Removed', 'ProjectChanged', 'BufEnter', 'Initialized', 'MainAdded',
+           'Show', 'AddByParams', 'CloneRepo')

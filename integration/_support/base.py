@@ -9,11 +9,12 @@ from amino.test import fixture_path, temp_dir
 from ribosome.test.integration.spec_spec import VimIntegrationSureHelpers, PluginIntegrationSpecSpec
 from ribosome.test.integration.spec import IntegrationSpecBase
 from ribosome.test.integration.klk import AutoPluginIntegrationKlkSpec, later
+from ribosome.record import encode_json, decode_json
 
 from proteome.project import Project
 from proteome.test import Spec
+from proteome.components.core.main import BuffersState
 from proteome import ProteomeNvimPlugin
-from proteome.components.core.message import Initialized
 
 
 class IntegrationCommon(Spec):
@@ -83,6 +84,7 @@ class ProteomePluginIntegrationSpecBase(IntegrationCommon):
         self.vim.vars.set_p('type_base_dirs', self.type_bases.keymap(str))
         self.vim.vars.set_p('history_base', str(self.history_base))
         self.vim.vars.set_p('components', self.components)
+        self.vim.vars.set_p('state_dir', str(self.state_dir))
 
     @property
     def components(self) -> List[str]:
@@ -98,6 +100,21 @@ class ProteomePluginIntegrationSpecBase(IntegrationCommon):
     @property
     def _prefix(self) -> str:
         return 'proteome'
+
+    @property
+    def state_dir(self) -> Path:
+        return temp_dir('persist', 'state')
+
+    @property
+    def buffers_file(self) -> Path:
+        return self.state_dir / 'buffers.json'
+
+    def write_buffers(self, data: BuffersState) -> None:
+        buffers = encode_json(data).get_or_raise
+        self.buffers_file.write_text(buffers)
+
+    def buffers(self) -> BuffersState:
+        return decode_json(self.buffers_file.read_text()).get_or_raise
 
 
 class ProteomePluginIntegrationSpec(ProteomePluginIntegrationSpecBase, PluginIntegrationSpecSpec):
