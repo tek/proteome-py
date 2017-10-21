@@ -105,9 +105,8 @@ class ProteomePluginIntegrationSpecBase(IntegrationCommon):
     def state_dir(self) -> Path:
         return temp_dir('persist', 'state')
 
-    @property
-    def buffers_file(self) -> Path:
-        return self.state_dir / 'buffers.json'
+    def buffers_file(self, name: str) -> Path:
+        return self.state_dir / name / 'buffers.json'
 
     def write_buffers(self, data: BuffersState) -> None:
         buffers = encode_json(data).get_or_raise

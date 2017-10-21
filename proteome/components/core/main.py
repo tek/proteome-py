@@ -54,7 +54,7 @@ def persist_buffers() -> Generator:
 
 @tdo(NvimIOState[Env, None])
 def load_buffers(state: BuffersState) -> Generator:
-    r = yield NvimIOState.lift(state.buffers.traverse(lambda a: NvimIO.cmd_sync(f'badd {a}'), NvimIO))
+    yield NvimIOState.lift(state.buffers.traverse(lambda a: NvimIO.cmd_sync(f'badd {a}'), NvimIO))
     yield NvimIOState.lift(state.current / (lambda a: NvimIO.cmd(f'edit {a}')) | NvimIO.pure(None))
 
 

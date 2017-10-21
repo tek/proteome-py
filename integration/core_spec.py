@@ -28,7 +28,7 @@ class CoreSpec(DefaultSpec):
 
     @property
     def state_file(self) -> Path:
-        return self.state_dir / 'buffers.json'
+        return self.state_dir / 'pro' / 'buffers.json'
 
     def save_two_bufs(self) -> Expectation:
         self.vim.edit(self.f1).run_sync()

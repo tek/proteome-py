@@ -55,14 +55,14 @@ class ProteomeSettings(PluginSettings):
 
     def __init__(self) -> None:
         super().__init__('proteome')
-        self.config_path = path_setting('config_path', 'config directory', config_path_help, True, Path('/dev/null'))
-        self.base_dirs = path_list_setting('base_dirs', 'project base dirs', base_dirs_help, True, Nil)
+        self.config_path = path_setting('config_path', 'config directory', config_path_help, True,
+                                        Right(Path('/dev/null')))
+        self.base_dirs = path_list_setting('base_dirs', 'project base dirs', base_dirs_help, True, Right(Nil))
         self.type_base_dirs = type_base_dirs_setting('type_base_dirs', 'project type base dir map', type_base_dirs_help,
-                                                     True, Nil)
-        self.tags_command = str_setting('tags_command', 'custom command for ctags generation', tags_command_help, True,
-                                        '')
-        self.tags_args = str_setting('tags_args', 'args for custom ctags command', tags_args_help, True, '')
+                                                     True, Right(Nil))
+        self.tags_command = str_setting('tags_command', 'custom command for ctags generation', tags_command_help, True)
+        self.tags_args = str_setting('tags_args', 'args for custom ctags command', tags_args_help, True)
         self.load_buffers = bool_setting('load_buffers', 'load persisted buffers on startup', load_buffers_help, True,
-                                         true)
+                                         Right(true))
 
 __all__ = ('ProteomeSettings',)
