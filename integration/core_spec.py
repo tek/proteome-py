@@ -24,6 +24,7 @@ class CoreSpec(DefaultSpec):
         super().setup()
         self.f1 = str(create_temp_file('f1'))
         self.f2 = str(create_temp_file('f2'))
+        self.f3 = str(create_temp_file('f3'))
         self.buffers_state = BuffersState(List(self.f1, self.f2), Nothing)
 
     @property
@@ -33,9 +34,11 @@ class CoreSpec(DefaultSpec):
     def save_two_bufs(self) -> Expectation:
         self.vim.edit(self.f1).run_sync()
         self.vim.edit(self.f2).run_sync()
+        self.vim.edit(self.f3).run_sync()
         self.cmd_sync('new')
+        self.vim.cmd_sync('bdel 3')
         self.cmd_sync('ProSave')
-        return later(kf(lambda: decode_json((self.state_file).read_text())).must(be_right(self.buffers_state)))
+        return later(kf(lambda: decode_json(self.state_file.read_text())).must(be_right(self.buffers_state)))
 
     def load_two_bufs(self) -> Expectation:
         self.state_file.write_text(dump_json(self.buffers_state).get_or_raise)

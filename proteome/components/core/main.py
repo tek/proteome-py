@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 from typing import Generator
 
-from amino import List, Map, Empty, may, _, L, __, Try, Maybe
+from amino import List, Map, Empty, may, _, L, __, Try, Maybe, Just
 from amino.lazy import lazy
 from amino.do import tdo
 from amino.dat import Dat
@@ -44,10 +44,11 @@ class BuffersState(Dat['BuffersState']):
 @tdo(NvimIOState[Env, None])
 def persist_buffers() -> Generator:
     is_file = lambda p: Try(Path, p).map(__.is_file()).true
+    filter_files = lambda bs: bs.map(_.name).filter(is_file)
     b = yield NvimIOState.io(_.buffers)
-    files = (b / _.name).filter(is_file)
+    files = filter_files(b.filter(_.listed))
     buf = yield NvimIOState.io(_.buffer)
-    current = Maybe(buf).filter(is_file)
+    current = filter_files(Just(buf))
     state = BuffersState(files, current)
     yield store_json_data('buffers', state)
 
