@@ -56,7 +56,9 @@ def persist_buffers() -> Generator:
 @tdo(NvimIOState[Env, None])
 def load_buffers(state: BuffersState) -> Generator:
     yield NvimIOState.lift(state.buffers.traverse(lambda a: NvimIO.cmd_sync(f'badd {a}'), NvimIO))
-    yield NvimIOState.lift(state.current / (lambda a: NvimIO.cmd(f'edit {a}')) | NvimIO.pure(None))
+    cmdline_arg_count = yield NvimIOState.lift(NvimIO.call('argc'))
+    if cmdline_arg_count == 0:
+        yield NvimIOState.lift(state.current / (lambda a: NvimIO.cmd(f'edit {a}')) | NvimIO.pure(None))
 
 
 @tdo(NvimIOState[Env, None])
