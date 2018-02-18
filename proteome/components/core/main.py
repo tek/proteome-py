@@ -59,6 +59,7 @@ def load_buffers(state: BuffersState) -> Generator:
     cmdline_arg_count = yield NvimIOState.lift(NvimIO.call('argc'))
     if cmdline_arg_count == 0:
         yield NvimIOState.lift(state.current / (lambda a: NvimIO.cmd(f'edit {a}')) | NvimIO.pure(None))
+    yield NvimIOState.pure(None)
 
 
 @tdo(NvimIOState[Env, None])
