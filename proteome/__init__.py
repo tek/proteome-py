@@ -4,7 +4,7 @@ from amino import List, Map, __, _
 
 from toolz import merge
 
-from ribosome import command, msg_command, json_msg_command, AutoPlugin
+from ribosome import command, msg_command, json_msg_command, AutoPlugin, function
 from ribosome.unite import mk_unite_candidates, mk_unite_action
 from ribosome.unite.plugin import unite_plugin
 from ribosome.settings import Config, RequestHandler
@@ -186,7 +186,7 @@ class ProteomeNvimPlugin(AutoPlugin):
     def pro_unite_delete_project(self, ident):
         return RemoveByIdent(ident)
 
-    @command()
+    @function()
     def proteome_poll(self, *args):
         return True
 
