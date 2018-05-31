@@ -186,4 +186,8 @@ class ProteomeNvimPlugin(AutoPlugin):
     def pro_unite_delete_project(self, ident):
         return RemoveByIdent(ident)
 
+    @command()
+    def proteome_poll(self, *args):
+        return True
+
 __all__ = ('ProteomeNvimPlugin', 'config')
