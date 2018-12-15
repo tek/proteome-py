@@ -4,7 +4,11 @@ defined set of projects, and providing additional functionality like project
 specific configuration, ctags handling and a git history.
 
 # Setup
-Install the plugin with [chromatin].
+Install the plugin with [chromatin]:
+
+```vim
+let g:chromatin_rplugins += [{ 'spec': 'proteome~=11.4.0', 'name': 'proteome', 'interpreter': 'python3.6' }]
+```
 
 # General functionality
 The core concept is the management of the current project, its dependencies on
